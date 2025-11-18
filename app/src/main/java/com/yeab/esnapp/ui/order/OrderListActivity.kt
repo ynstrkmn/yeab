@@ -1,0 +1,130 @@
+package com.yeab.esnapp.ui.order
+
+import android.content.Intent
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.ViewGroup
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.google.firebase.database.*
+import com.yeab.esnapp.R
+import com.yeab.esnapp.databinding.ActivityOrderListBinding
+import com.yeab.esnapp.databinding.ItemOrderBinding
+import com.yeab.esnapp.model.Order
+import com.yeab.esnapp.model.ProductStatus
+import com.yeab.esnapp.util.FirebasePaths
+import com.yeab.esnapp.util.IntentKeys
+
+data class OrderItem(
+    val orderId: String,
+    val order: Order
+)
+
+class OrderListActivity : AppCompatActivity() {
+
+    private lateinit var binding: ActivityOrderListBinding
+    private val dbRef = FirebaseDatabase.getInstance().reference
+
+    private var merchantUid: String? = null
+    private lateinit var phone: String
+
+    private val orders = mutableListOf<OrderItem>()
+    private lateinit var adapter: OrdersAdapter
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        binding = ActivityOrderListBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        merchantUid = intent.getStringExtra(IntentKeys.MERCHANT_UID)
+        phone = intent.getStringExtra(IntentKeys.PHONE) ?: ""
+
+        adapter = OrdersAdapter(orders) { orderItem ->
+            openUpdateScreen(orderItem)
+        }
+
+        binding.recyclerOrders.layoutManager = LinearLayoutManager(this)
+        binding.recyclerOrders.adapter = adapter
+
+        loadOrders()
+    }
+
+    private fun loadOrders() {
+        val uid = merchantUid ?: return
+
+        dbRef.child(FirebasePaths.ORDERS_ROOT)
+            .child(FirebasePaths.ORDERS_MERCHANT_ORDERS)
+            .child(uid)
+            .child(phone)
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    orders.clear()
+                    if (!snapshot.exists()) {
+                        Toast.makeText(
+                            this@OrderListActivity,
+                            getString(R.string.order_list_empty),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        adapter.notifyDataSetChanged()
+                        return
+                    }
+                    for (child in snapshot.children) {
+                        val order = child.getValue(Order::class.java) ?: continue
+                        val id = child.key ?: continue
+                        orders.add(OrderItem(id, order))
+                    }
+                    adapter.notifyDataSetChanged()
+                }
+
+                override fun onCancelled(error: DatabaseError) {}
+            })
+    }
+
+    private fun openUpdateScreen(orderItem: OrderItem) {
+        val i = Intent(this, OrderStatusUpdateActivity::class.java)
+        i.putExtra(IntentKeys.MERCHANT_UID, merchantUid)
+        i.putExtra(IntentKeys.PHONE, phone)
+        i.putExtra(IntentKeys.ORDER_ID, orderItem.orderId)
+        i.putExtra(IntentKeys.PRODUCT_NAME, orderItem.order.productName) // YENİ
+        startActivity(i)
+    }
+}
+
+class OrdersAdapter(
+    private val list: List<OrderItem>,
+    private val onClick: (OrderItem) -> Unit
+) : RecyclerView.Adapter<OrdersAdapter.OrderViewHolder>() {
+
+    class OrderViewHolder(val binding: ItemOrderBinding) : RecyclerView.ViewHolder(binding.root)
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): OrderViewHolder {
+        val inflater = LayoutInflater.from(parent.context)
+        val binding = ItemOrderBinding.inflate(inflater, parent, false)
+        return OrderViewHolder(binding)
+    }
+
+    override fun getItemCount(): Int = list.size
+
+    override fun onBindViewHolder(holder: OrderViewHolder, position: Int) {
+        val item = list[position]
+        val ctx = holder.itemView.context
+
+        holder.binding.txtProductName.text = item.order.productName
+
+        val statuses: List<ProductStatus>? = item.order.productStatus
+        val lastStatus = if (statuses != null && statuses.isNotEmpty()) {
+            statuses.last().status
+        } else {
+            ctx.getString(R.string.order_item_last_status_unknown)
+        }
+
+        holder.binding.txtLastStatus.text =
+            ctx.getString(R.string.order_item_status_label) + " " + lastStatus
+
+        holder.itemView.setOnClickListener {
+            onClick(item)
+        }
+    }
+}

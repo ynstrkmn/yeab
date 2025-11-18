@@ -1,0 +1,95 @@
+<resources>
+    <string name="app_name">EsnApp</string>
+    <string name="default_web_client_id">306751667039-1vrcsnsim921975ucp0s0ms7j8n8s2d9.apps.googleusercontent.com</string>
+
+    <!-- Login / Auth -->
+    <string name="login_title">ESNAPP</string>
+    <string name="login_button_create_account">Create Account</string>
+    <string name="login_button_sign_in">Sign In</string>
+
+    <string name="auth_title_register">Create account</string>
+    <string name="auth_title_login">Sign in</string>
+    <string name="auth_button_google">Continue with Google</string>
+
+    <!-- Merchant Info -->
+    <string name="merchant_info_birthdate_hint">Birth Date (01.01.1986)</string>
+    <string name="merchant_info_city_hint">City</string>
+    <string name="merchant_info_district_hint">District</string>
+    <string name="merchant_info_coordinates_hint">Coordinates (lat, lon)</string>
+    <string name="merchant_info_merchant_name_hint">Company Name (Uğur Tailor)</string>
+    <string name="merchant_info_merchant_type_hint">Company Type (Tailor)</string>
+    <string name="merchant_info_mobile_hint">Mobile Phone (10 digits)</string>
+    <string name="merchant_info_name_hint">Name</string>
+    <string name="merchant_info_surname_hint">Surname</string>
+    <string name="merchant_info_button_save">Save</string>
+
+    <!-- Home -->
+    <string name="home_button_new_order">Add New Product</string>
+    <string name="home_button_list_orders">List Products</string>
+
+    <!-- New Order -->
+    <string name="new_order_phone_hint">Phone (10 digits)</string>
+    <string name="new_order_search_phone_desc">Search</string>
+    <string name="new_order_name_hint">Name</string>
+    <string name="new_order_surname_hint">Surname</string>
+    <string name="new_order_email_hint">Email</string>
+    <string name="new_order_product_desc_hint">Product Description</string>
+    <string name="new_order_button_add_product">Add Product</string>
+
+    <!-- Search Order -->
+    <string name="search_order_button_by_image">Search by Image</string>
+    <string name="search_order_button_by_phone">Search by Phone</string>
+
+    <!-- Search By Phone -->
+    <string name="search_by_phone_phone_hint">Phone (10 digits)</string>
+    <string name="search_by_phone_button_search">Search</string>
+
+    <!-- Message Template -->
+    <string name="message_template_title">Select Template Message</string>
+    <string name="message_template_free_text_hint">Free format (max 100 characters)</string>
+    <string name="message_template_button_save_order">Save Order and Send Message</string>
+    <string name="message_template_button_update_order">Send Message and Update Status</string>
+
+    <!-- Order List -->
+    <string name="order_list_title">Select Products</string>
+    <string name="order_list_empty">No products found for this customer</string>
+
+    <!-- Toast & Error -->
+    <string name="error_fill_all_fields">Please fill in all fields</string>
+    <string name="error_phone_10_digits">Phone must be 10 digits</string>
+    <string name="error_customer_not_found">Customer not found, please enter details manually</string>
+    <string name="error_no_message_selected">Select or enter a message</string>
+    <string name="error_image_upload">Image upload error</string>
+    <string name="error_no_records_found">No records found</string>
+    <string name="info_merchant_saved">Saved</string>
+    <string name="info_order_saved">Order saved</string>
+    <string name="info_image_search_todo">Image search (simple matching applied)</string>
+
+    <!-- Order Item UI -->
+    <string name="order_item_status_label">Status:</string>
+    <string name="order_item_last_status_unknown">No status</string>
+
+    <string name="error_generic">An error occurred</string>
+    <string name="error_camera_permission_denied">Camera permission was denied</string>
+
+    <string name="error_no_image_match">No order found matching this image</string>
+    <string name="info_image_match_found">Order found with %1$d%% similarity</string>
+
+    <string name="order_status_matched_product">Matched product: %1$s</string>
+    <string name="order_status_matched_product_placeholder">Matched product: -</string>
+    <string name="order_status_history_title">Status History</string>
+    <string name="order_status_history_empty">There is no status history for this product</string>
+    <string name="message_template_hint_free_text">Write the note to send to the customer here (optional)</string>
+    <string name="order_status_customer_label">Customer: %1$s %2$s</string>
+    <string name="order_status_customer_placeholder">Customer: -</string>
+    <!-- WhatsApp message (EN) -->
+    <string name="whatsapp_status_message">
+    Hello %1$s,
+    \nThe latest status of your product "%4$s" (order %3$s, dated %2$s) is: %5$s
+    \nHave a nice day.
+    \nYou can see detailed information from the link below:
+    \n%6$s
+    </string>
+
+
+</resources>

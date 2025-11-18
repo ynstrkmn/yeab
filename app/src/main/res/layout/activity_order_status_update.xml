@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    tools:context=".ui.order.OrderStatusUpdateActivity">
+
+    <!-- Başlık -->
+    <TextView
+        android:id="@+id/txtTitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="@string/message_template_title"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Ürün görseli -->
+    <ImageView
+        android:id="@+id/imgProductThumbnail"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_marginTop="12dp"
+        android:scaleType="centerCrop"
+        android:contentDescription="@string/order_status_matched_product_placeholder"
+        android:src="@mipmap/ic_launcher"
+        app:layout_constraintTop_toBottomOf="@id/txtTitle"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <!-- Eşleşen ürün adı -->
+    <TextView
+        android:id="@+id/txtMatchedProduct"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:paddingStart="8dp"
+        android:text="@string/order_status_matched_product_placeholder"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:layout_constraintTop_toTopOf="@id/imgProductThumbnail"
+        app:layout_constraintBottom_toBottomOf="@id/imgProductThumbnail"
+        app:layout_constraintStart_toEndOf="@id/imgProductThumbnail"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Müşteri bilgisi -->
+    <TextView
+        android:id="@+id/txtCustomerName"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/order_status_customer_placeholder"
+        android:textSize="14sp"
+        app:layout_constraintTop_toBottomOf="@id/imgProductThumbnail"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Durum geçmişi başlığı -->
+    <TextView
+        android:id="@+id/txtHistoryTitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/order_status_history_title"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:layout_constraintTop_toBottomOf="@id/txtCustomerName"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Durum geçmişi listesi -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerStatusHistory"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintTop_toBottomOf="@id/txtHistoryTitle"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/radioGroupTemplates"
+        tools:listitem="@layout/item_product_status" />
+
+    <!-- Şablon mesaj RadioGroup -->
+    <RadioGroup
+        android:id="@+id/radioGroupTemplates"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/edtFreeText" />
+
+    <!-- Free text -->
+    <EditText
+        android:id="@+id/edtFreeText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:hint="@string/message_template_hint_free_text"
+        android:inputType="textCapSentences"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/btnUpdate" />
+
+    <!-- Güncelle butonu -->
+    <Button
+        android:id="@+id/btnUpdate"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="@string/message_template_button_update_order"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

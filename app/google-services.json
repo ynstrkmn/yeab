@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "306751667039",
+    "firebase_url": "https://esnapp-qr-default-rtdb.firebaseio.com",
+    "project_id": "esnapp-qr",
+    "storage_bucket": "esnapp-qr.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:306751667039:android:f3c5536e00d677ba82d4ea",
+        "android_client_info": {
+          "package_name": "com.yeab.esnapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "306751667039-tms6f7bvr93ilc92jhl2bidd4hbe2vpv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.yeab.esnapp",
+            "certificate_hash": "ed699ec8fad908b7c385d48d5e93ff48af959a5a"
+          }
+        },
+        {
+          "client_id": "306751667039-1vrcsnsim921975ucp0s0ms7j8n8s2d9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBX6Oxlst6Z0BnVOcFr9jvoTuU-TOU2Mdc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "306751667039-1vrcsnsim921975ucp0s0ms7j8n8s2d9.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

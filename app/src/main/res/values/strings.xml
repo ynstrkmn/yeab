@@ -1,0 +1,98 @@
+<resources>
+    <string name="app_name">EsnApp</string>
+    <string name="default_web_client_id">306751667039-1vrcsnsim921975ucp0s0ms7j8n8s2d9.apps.googleusercontent.com</string>
+
+    <!-- Login / Auth -->
+    <string name="login_title">ESNAPP</string>
+    <string name="login_button_create_account">Hesap Oluştur</string>
+    <string name="login_button_sign_in">Giriş Yap</string>
+
+    <string name="auth_title_register">Hesap oluştur</string>
+    <string name="auth_title_login">Giriş yap</string>
+    <string name="auth_button_google">Google ile devam et</string>
+
+    <!-- Merchant Info -->
+    <string name="merchant_info_birthdate_hint">Doğum Tarihi (01.01.1986)</string>
+    <string name="merchant_info_city_hint">Şehir</string>
+    <string name="merchant_info_district_hint">İlçe</string>
+    <string name="merchant_info_coordinates_hint">Koordinatlar (lat, lon)</string>
+    <string name="merchant_info_merchant_name_hint">Firma Adı (Uğur Terzi)</string>
+    <string name="merchant_info_merchant_type_hint">Firma Tipi (Terzi)</string>
+    <string name="merchant_info_mobile_hint">Cep Telefonu (10 hane)</string>
+    <string name="merchant_info_name_hint">Ad</string>
+    <string name="merchant_info_surname_hint">Soyad</string>
+    <string name="merchant_info_button_save">Kaydet</string>
+
+    <!-- Home -->
+    <string name="home_button_new_order">Yeni Ürün Ekle</string>
+    <string name="home_button_list_orders">Ürün Listele</string>
+
+    <!-- New Order -->
+    <string name="new_order_phone_hint">Telefon (10 hane)</string>
+    <string name="new_order_search_phone_desc">Ara</string>
+    <string name="new_order_name_hint">Ad</string>
+    <string name="new_order_surname_hint">Soyad</string>
+    <string name="new_order_email_hint">Mail</string>
+    <string name="new_order_product_desc_hint">Ürün Açıklaması</string>
+    <string name="new_order_button_add_product">Ürün Ekle</string>
+
+    <!-- Search Order -->
+    <string name="search_order_button_by_image">Resim ile arama</string>
+    <string name="search_order_button_by_phone">Cep telefonu ile arama</string>
+
+    <!-- Search By Phone -->
+    <string name="search_by_phone_phone_hint">Telefon (10 hane)</string>
+    <string name="search_by_phone_button_search">Ara</string>
+
+    <!-- Message Template -->
+    <string name="message_template_title">Şablon Mesaj Seçin</string>
+    <string name="message_template_free_text_hint">Free format (max 100 karakter)</string>
+    <string name="message_template_button_save_order">Ürünü Kaydet ve Mesaj Gönder</string>
+    <string name="message_template_button_update_order">Mesaj Gönder ve Durumu Güncelle</string>
+
+    <!-- Order List -->
+    <string name="order_list_title">Ürünleri Seçin</string>
+    <string name="order_list_empty">Bu müşteriye ait ürün bulunamadı</string>
+
+    <!-- Toast & Error -->
+    <string name="error_fill_all_fields">Lütfen tüm alanları doldurun</string>
+    <string name="error_phone_10_digits">Telefon 10 hane olmalı</string>
+    <string name="error_customer_not_found">Müşteri bulunamadı, bilgileri siz doldurun</string>
+    <string name="error_no_message_selected">Mesaj seçin veya girin</string>
+    <string name="error_image_upload">Görsel yükleme hatası</string>
+    <string name="error_no_records_found">Kayıt bulunamadı</string>
+    <string name="info_merchant_saved">Kaydedildi</string>
+    <string name="info_order_saved">Ürün kaydedildi</string>
+    <string name="info_image_search_todo">Resim ile arama (basit eşleştirme uygulanıyor)</string>
+
+    <!-- Order Item UI -->
+    <string name="order_item_status_label">Durum:</string>
+    <string name="order_item_last_status_unknown">Durum yok</string>
+
+    <string name="error_generic">Bir hata oluştu</string>
+    <string name="error_camera_permission_denied">Kamera izni verilmedi</string>
+
+    <string name="error_no_image_match">Benzer resimle eşleşen sipariş bulunamadı</string>
+    <string name="info_image_match_found">%1$d%% benzerlik ile sipariş bulundu</string>
+
+    <string name="order_status_matched_product">Eşleşen Ürün: %1$s</string>
+    <string name="order_status_matched_product_placeholder">Eşleşen Ürün: -</string>
+    <string name="order_status_history_title">Durum Geçmişi</string>
+    <string name="order_status_history_empty">Bu ürüne ait durum bilgisi bulunamadı</string>
+    <string name="message_template_hint_free_text">Müşteriye gönderilecek notu buraya yazın (opsiyonel)</string>
+    <string name="order_status_customer_label">Müşteri: %1$s %2$s</string>
+    <string name="order_status_customer_placeholder">Müşteri: -</string>
+    <!-- WhatsApp mesajı (TR) -->
+    <string name="whatsapp_status_message">
+    Merhaba %1$s,
+    \n%2$s tarihli %3$s numaralı %4$s isimli ürününüzün son durumu: %5$s
+    \nİyi günler dileriz.
+    \nÜrün ile ilgili detaylı bilgilere linkten ulaşabilirsiniz.
+    \n%6$s
+    </string>
+
+
+
+
+
+</resources>
