@@ -41,9 +41,9 @@ object ImageSimilarityUtils {
 
             // 4) ORB keypoint + descriptor çıkar
             val orb = ORB.create(
-                1000,           // maxFeatures
+                2000,           // maxFeatures
                 1.2f,          // scaleFactor
-                8,             // nLevels
+                10,             // nLevels
                 31,            // edgeThreshold
                 0,             // firstLevel
                 2,             // WTA_K
