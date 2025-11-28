@@ -49,8 +49,9 @@ object ImageSimilarityUtils {
                                 } catch (e: Exception) {
                                     Int.MAX_VALUE
                                 }
-                                if (dist <= threshold) {
-                                    matches.add(MatchResult(imageId, otherImageUrl, otherPhash, dist))
+                                if(threshold - dist >= 0){
+                                    val percentage = ((threshold - dist).toDouble()  * 5).toInt()
+                                    matches.add(MatchResult(imageId, otherImageUrl, otherPhash, dist, percentage))
                                 }
                             }
                         }

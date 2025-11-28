@@ -168,7 +168,7 @@ class SearchOrderActivity : AppCompatActivity() {
                                             val iv = android.widget.ImageView(this@SearchOrderActivity)
                                             iv.setImageBitmap(matchedBitmap)
                                             val dialog = androidx.appcompat.app.AlertDialog.Builder(this@SearchOrderActivity)
-                                                .setTitle(getString(R.string.info_image_match_found, (1))) // isteğe bağlı
+                                                .setTitle(getString(R.string.info_image_match_found, (best.percentage))) // isteğe bağlı
                                                 .setView(iv)
                                                 .setPositiveButton(android.R.string.ok) { _, _ ->
                                                     // Eğer sipariş bulunduysa direkt sipariş güncelleme ekranına git
