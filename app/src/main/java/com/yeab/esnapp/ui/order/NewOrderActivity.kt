@@ -3,6 +3,7 @@ package com.yeab.esnapp.ui.order
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.os.Bundle
 import android.provider.MediaStore
 import android.widget.Toast
@@ -16,7 +17,9 @@ import com.yeab.esnapp.databinding.ActivityNewOrderBinding
 import com.yeab.esnapp.model.MerchantUser
 import com.yeab.esnapp.util.FirebasePaths
 import com.yeab.esnapp.util.IntentKeys
+import java.math.BigInteger
 import java.util.UUID
+import kotlin.toString
 
 class NewOrderActivity : AppCompatActivity() {
 
@@ -138,12 +141,27 @@ class NewOrderActivity : AppCompatActivity() {
 
     private fun uploadImage(bitmap: android.graphics.Bitmap) {
         val uid = merchantUid ?: return
-        val fileName = "orders/$uid/${UUID.randomUUID()}.jpg"
+        val imageId = UUID.randomUUID().toString()
+        val fileName = "orders/$uid/$imageId.jpg"
         val imgRef = storageRef.child(fileName)
 
         val baos = java.io.ByteArrayOutputStream()
         bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 90, baos)
         val data = baos.toByteArray()
+
+        // SHA-256 hash hesapla
+        val sha256 = try {
+            sha256Hex(data)
+        } catch (e: Exception) {
+            ""
+        }
+
+        // Perceptual hash (aHash) hesapla ve kaydet
+        val phash = try {
+            averageHash(bitmap)
+        } catch (e: Exception) {
+            ""
+        }
 
         imgRef.putBytes(data)
             .continueWithTask { task ->
@@ -154,6 +172,23 @@ class NewOrderActivity : AppCompatActivity() {
             }
             .addOnSuccessListener { uri ->
                 productImageUrl = uri.toString()
+
+                // Database'e kaydetmek için metadata oluştur
+                val meta = HashMap<String, Any?>()
+                meta["imageUrl"] = productImageUrl
+                meta["hash"] = sha256
+                meta["phash"] = phash
+                meta["fileName"] = fileName
+                meta["timestamp"] = ServerValue.TIMESTAMP
+
+                dbRef.child("image_hashes")
+                    .child(uid)
+                    .child(imageId)
+                    .setValue(meta)
+                    .addOnCompleteListener {
+                        // İsteğe bağlı: burada log veya ek işlem yapılabilir
+                    }
+
                 goToMessageTemplateScreen()
             }
             .addOnFailureListener {
@@ -163,6 +198,42 @@ class NewOrderActivity : AppCompatActivity() {
                     Toast.LENGTH_SHORT
                 ).show()
             }
+    }
+
+    private fun sha256Hex(bytes: ByteArray): String {
+        val md = java.security.MessageDigest.getInstance("SHA-256")
+        val digest = md.digest(bytes)
+        return digest.joinToString("") { "%02x".format(it) }
+    }
+
+    // Basit average hash (aHash): resmi 8x8 küçült, grayscale, ortalama değere göre bit dizisi oluştur.
+    private fun averageHash(src: Bitmap): String {
+        val size = 8
+        val scaled = Bitmap.createScaledBitmap(src, size, size, true)
+        val pixels = IntArray(size * size)
+        scaled.getPixels(pixels, 0, size, 0, 0, size, size)
+
+        val luminances = IntArray(pixels.size)
+        var sum = 0
+        for (i in pixels.indices) {
+            val c = pixels[i]
+            val r = (c shr 16) and 0xFF
+            val g = (c shr 8) and 0xFF
+            val b = c and 0xFF
+            val lum = (0.299 * r + 0.587 * g + 0.114 * b).toInt()
+            luminances[i] = lum
+            sum += lum
+        }
+        val avg = sum / luminances.size
+
+        val bits = StringBuilder()
+        for (lum in luminances) {
+            bits.append(if (lum >= avg) '1' else '0')
+        }
+
+        // 64 bit -> hex (16 chars)
+        val bigInt = BigInteger(bits.toString(), 2)
+        return String.format("%016x", bigInt)
     }
 
     private fun goToMessageTemplateScreen() {

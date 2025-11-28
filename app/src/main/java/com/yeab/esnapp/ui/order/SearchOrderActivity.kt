@@ -101,6 +101,7 @@ class SearchOrderActivity : AppCompatActivity() {
      * Kameradan alınan bitmap ile Firebase'teki ProductImageUrl görsellerini
      * benzerlik hesabı yaparak karşılaştırır.
      */
+    // kotlin
     private fun searchByImage(capturedBitmap: Bitmap) {
         val uid = merchantUid ?: return
 
@@ -109,82 +110,118 @@ class SearchOrderActivity : AppCompatActivity() {
             .child(uid)
             .addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
+                    // Eşik: ImageSimilarityUtils Integer Hamming threshold kullanır
+                    val threshold = 20
 
-                    // Snapshot geldi, network + görsel işleri için background thread
-                    Thread {
+                    ImageSimilarityUtils.calculateSimilarity(
+                        capturedBitmap,
+                        uid,
+                        threshold,
+                        onResult = { matches ->
+                            if (matches.isEmpty()) {
+                                runOnUiThread {
+                                    Toast.makeText(
+                                        this@SearchOrderActivity,
+                                        getString(R.string.error_no_image_match).plus(".."),
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                                return@calculateSimilarity
+                            }
 
-                        var bestPhone: String? = null
-                        var bestOrderId: String? = null
-                        var bestProductName: String? = null
-                        var bestScore = 0.0
+                            // En iyi eşleşme (en küçük distance)
+                            val best = matches.firstOrNull() ?: run {
+                                runOnUiThread {
+                                    Toast.makeText(
+                                        this@SearchOrderActivity,
+                                        getString(R.string.error_no_image_match),
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                                return@calculateSimilarity
+                            }
 
-                        // Her telefon node'u
-                        for (phoneSnap in snapshot.children) {
-                            val phoneKey = phoneSnap.key ?: continue
+                            // Snapshot içinden bu imageUrl ile ilişkili siparişi bul
+                            var bestPhone: String? = null
+                            var bestOrderId: String? = null
+                            var bestProductName: String? = null
 
-                            // Her order
-                            for (orderSnap in phoneSnap.children) {
-                                val orderId = orderSnap.key ?: continue
-                                val order = orderSnap.getValue(Order::class.java) ?: continue
-
-                                // Java getter -> Kotlin property:
-                                // isFinished, productImageUrl, productName
-                                if (order.isFinished) continue
-                                if (order.productImageUrl.isNullOrEmpty()) continue
-
-                                val remoteBitmap =
-                                    loadBitmapFromUrl(order.productImageUrl!!)
-                                if (remoteBitmap != null) {
-                                    val score = ImageSimilarityUtils.calculateSimilarity(
-                                        capturedBitmap,
-                                        remoteBitmap
-                                    )
-                                    if (score > bestScore) {
-                                        bestScore = score
+                            loop@ for (phoneSnap in snapshot.children) {
+                                val phoneKey = phoneSnap.key ?: continue
+                                for (orderSnap in phoneSnap.children) {
+                                    val order = orderSnap.getValue(Order::class.java) ?: continue
+                                    if (!order.productImageUrl.isNullOrEmpty() && order.productImageUrl == best.imageUrl) {
                                         bestPhone = phoneKey
-                                        bestOrderId = orderId
+                                        bestOrderId = orderSnap.key
                                         bestProductName = order.productName
+                                        break@loop
                                     }
-                                    remoteBitmap.recycle()
                                 }
                             }
-                        }
 
-                        val threshold = 0.2
-
-                        runOnUiThread {
-                            if (bestPhone != null && bestOrderId != null && bestScore >= threshold) {
-                                Toast.makeText(
-                                    this@SearchOrderActivity,
-                                    getString(
-                                        R.string.info_image_match_found,
-                                        (bestScore * 100).toInt()
-                                    ),
-                                    Toast.LENGTH_SHORT
-                                ).show()
-
-                                val i = Intent(
-                                    this@SearchOrderActivity,
-                                    OrderStatusUpdateActivity::class.java
-                                )
-                                i.putExtra(IntentKeys.MERCHANT_UID, uid)
-                                i.putExtra(IntentKeys.PHONE, bestPhone)
-                                i.putExtra(IntentKeys.ORDER_ID, bestOrderId)
-                                i.putExtra(
-                                    IntentKeys.PRODUCT_NAME,
-                                    bestProductName
-                                ) // Eşleşen ürün adı
-                                startActivity(i)
+                            // Görseli indirip dialog ile göster, onaylanırsa ilgili ekrana git
+                            if (!best.imageUrl.isNullOrEmpty()) {
+                                Thread {
+                                    val matchedBitmap = loadBitmapFromUrl(best.imageUrl)
+                                    runOnUiThread {
+                                        if (matchedBitmap != null) {
+                                            val iv = android.widget.ImageView(this@SearchOrderActivity)
+                                            iv.setImageBitmap(matchedBitmap)
+                                            val dialog = androidx.appcompat.app.AlertDialog.Builder(this@SearchOrderActivity)
+                                                .setTitle(getString(R.string.info_image_match_found, (1))) // isteğe bağlı
+                                                .setView(iv)
+                                                .setPositiveButton(android.R.string.ok) { _, _ ->
+                                                    // Eğer sipariş bulunduysa direkt sipariş güncelleme ekranına git
+                                                    if (bestPhone != null && bestOrderId != null) {
+                                                        val i = Intent(
+                                                            this@SearchOrderActivity,
+                                                            OrderStatusUpdateActivity::class.java
+                                                        )
+                                                        i.putExtra(IntentKeys.MERCHANT_UID, uid)
+                                                        i.putExtra(IntentKeys.PHONE, bestPhone)
+                                                        i.putExtra(IntentKeys.ORDER_ID, bestOrderId)
+                                                        i.putExtra(IntentKeys.PRODUCT_NAME, bestProductName)
+                                                        startActivity(i)
+                                                    } else {
+                                                        Toast.makeText(
+                                                            this@SearchOrderActivity,
+                                                            getString(R.string.info_image_match_found).plus(" (sipariş bulunamadı)"),
+                                                            Toast.LENGTH_SHORT
+                                                        ).show()
+                                                    }
+                                                }
+                                                .setNegativeButton(android.R.string.cancel, null)
+                                                .create()
+                                            dialog.show()
+                                        } else {
+                                            Toast.makeText(
+                                                this@SearchOrderActivity,
+                                                getString(R.string.error_no_records_found),
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
+                                    }
+                                }.start()
                             } else {
+                                runOnUiThread {
+                                    Toast.makeText(
+                                        this@SearchOrderActivity,
+                                        getString(R.string.error_no_image_match),
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            }
+                        },
+                        onError = { e ->
+                            runOnUiThread {
                                 Toast.makeText(
                                     this@SearchOrderActivity,
-                                    getString(R.string.error_no_image_match).plus("..: ").plus(bestScore),
+                                    getString(R.string.error_generic) + ": " + e.message,
                                     Toast.LENGTH_SHORT
                                 ).show()
                             }
                         }
-
-                    }.start()
+                    )
                 }
 
                 override fun onCancelled(error: DatabaseError) {
@@ -198,6 +235,7 @@ class SearchOrderActivity : AppCompatActivity() {
                 }
             })
     }
+
 
     /**
      * URL'den bitmap indirir. Hata olursa null döner.

@@ -1,129 +1,112 @@
+// kotlin
 package com.yeab.esnapp.util
 
 import android.graphics.Bitmap
-import org.opencv.android.Utils
-import org.opencv.core.CvType
-import org.opencv.core.Mat
-import org.opencv.core.MatOfDMatch
-import org.opencv.core.MatOfKeyPoint
-import org.opencv.core.Size
-import org.opencv.features2d.DescriptorMatcher
-import org.opencv.features2d.ORB
-import org.opencv.imgproc.Imgproc
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
+import java.math.BigInteger
 
 object ImageSimilarityUtils {
 
     /**
-     * İki Bitmap arasındaki benzerliği 0.0 - 1.0 arası skor olarak döner.
-     * 1.0 -> birebir aynı / çok yüksek benzerlik
-     * 0.0 -> benzerlik yok
+     * Gelen resmin phash'ini hesaplayıp Firebase'deki phash'lerle karşılaştırır.
+     * Eşik (threshold) altında olan tüm eşleşmeleri callback ile döner.
      *
-     * DİKKAT: Bu method UI thread dışında (background thread) çağrılmalı.
+     * onResult -> eşleşen kayıtların listesi (boş olabilir)
+     * onError  -> hata varsa çağrılır
+     *
+     * Bu method UI thread üzerinde Firebase callback'leri kullanacağından güvenlidir.
      */
     @JvmStatic
-    fun calculateSimilarity(bitmap1: Bitmap, bitmap2: Bitmap): Double {
+    fun calculateSimilarity(
+        bitmap: Bitmap,
+        merchantUid: String,
+        threshold: Int = 10,
+        onResult: (List<MatchResult>) -> Unit,
+        onError: ((Exception) -> Unit)? = null
+    ) {
         try {
-            // 1) Performans için bitmap’leri küçült (max 600px genişlik/yükseklik)
-            val scaled1 = resizeBitmap(bitmap1, 600)
-            val scaled2 = resizeBitmap(bitmap2, 600)
+            val incomingPhash = averageHash(bitmap)
 
-            // 2) Bitmap -> Mat
-            val mat1 = Mat()
-            val mat2 = Mat()
-            Utils.bitmapToMat(scaled1, mat1)
-            Utils.bitmapToMat(scaled2, mat2)
+            val dbRef = FirebaseDatabase.getInstance().reference
+                .child("image_hashes")
+                .child(merchantUid)
 
-            // 3) Gri tonlamaya çevir
-            val gray1 = Mat()
-            val gray2 = Mat()
-            Imgproc.cvtColor(mat1, gray1, Imgproc.COLOR_RGBA2GRAY)
-            Imgproc.cvtColor(mat2, gray2, Imgproc.COLOR_RGBA2GRAY)
+            dbRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    try {
+                        val matches = ArrayList<MatchResult>()
 
-            // 4) ORB keypoint + descriptor çıkar
-            val orb = ORB.create(
-                1000,           // maxFeatures
-                1.2f,          // scaleFactor
-                8,             // nLevels
-                31,            // edgeThreshold
-                0,             // firstLevel
-                2,             // WTA_K
-                ORB.HARRIS_SCORE,
-                31,            // patchSize
-                20             // fastThreshold
-            )
+                        for (child in snapshot.children) {
+                            val otherPhash = child.child("phash").getValue(String::class.java)
+                            val otherImageUrl = child.child("imageUrl").getValue(String::class.java)
+                            val imageId = child.key ?: continue
+                            if (otherPhash != null) {
+                                val dist = try {
+                                    hammingDistanceHex(incomingPhash, otherPhash)
+                                } catch (e: Exception) {
+                                    Int.MAX_VALUE
+                                }
+                                if (dist <= threshold) {
+                                    matches.add(MatchResult(imageId, otherImageUrl, otherPhash, dist))
+                                }
+                            }
+                        }
 
-            val keypoints1 = MatOfKeyPoint()
-            val descriptors1 = Mat()
-            val keypoints2 = MatOfKeyPoint()
-            val descriptors2 = Mat()
-
-            orb.detectAndCompute(gray1, Mat(), keypoints1, descriptors1)
-            orb.detectAndCompute(gray2, Mat(), keypoints2, descriptors2)
-
-            // Keypoint yoksa benzerlik 0
-            if (descriptors1.empty() || descriptors2.empty()) {
-                return 0.0
-            }
-
-            // 5) BFMatcher + kNN (ratio test için k=2)
-            val matcher = DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE_HAMMING)
-            val knnMatches = ArrayList<MatOfDMatch>()
-            matcher.knnMatch(descriptors1, descriptors2, knnMatches, 2)
-
-            // 6) Lowe ratio test ile "iyi eşleşmeleri" say
-            val goodMatches = ArrayList<org.opencv.core.DMatch>()
-            val ratioThresh = 0.75f
-            val maxDist = 60f
-            for (matOfDMatch in knnMatches) {
-                val matches = matOfDMatch.toArray()
-                if (matches.size >= 2) {
-                    val m1 = matches[0]
-                    val m2 = matches[1]
-                    if (m1.distance < ratioThresh * m2.distance && m1.distance < maxDist) {
-                        goodMatches.add(m1)
+                        // En iyi eşleşmeleri uzaklığa göre sırala
+                        matches.sortBy { it.distance }
+                        onResult(matches)
+                    } catch (e: Exception) {
+                        onError?.invoke(e)
                     }
                 }
-            }
 
-            val minKeypoints = minOf(keypoints1.toArray().size, keypoints2.toArray().size)
-            if (minKeypoints == 0) return 0.0
-
-            // 7) Benzerlik skoru: iyi eşleşme oranı
-            val score = goodMatches.size.toDouble() / minKeypoints.toDouble()
-
-            // Clamp 0.0 - 1.0 arasına
-            return score.coerceIn(0.0, 1.0)
-
+                override fun onCancelled(error: DatabaseError) {
+                    onError?.invoke(Exception(error.message))
+                }
+            })
         } catch (e: Exception) {
-            // Hata durumunda benzerlik 0 say
-            return 0.0
+            onError?.invoke(e)
         }
     }
 
-    /**
-     * Bitmap'i orijinal oranı bozmadan maxSize (genişlik veya yükseklik) olacak şekilde küçültür.
-     */
-    private fun resizeBitmap(src: Bitmap, maxSize: Int): Bitmap {
-        val width = src.width
-        val height = src.height
-        if (width <= maxSize && height <= maxSize) {
-            return src
+    // Basit average hash (aHash): resmi 8x8 küçült, grayscale, ortalama değere göre bit dizisi oluştur.
+    private fun averageHash(src: Bitmap): String {
+        val size = 8
+        val scaled = Bitmap.createScaledBitmap(src, size, size, true)
+        val pixels = IntArray(size * size)
+        scaled.getPixels(pixels, 0, size, 0, 0, size, size)
+
+        val luminances = IntArray(pixels.size)
+        var sum = 0
+        for (i in pixels.indices) {
+            val c = pixels[i]
+            val r = (c shr 16) and 0xFF
+            val g = (c shr 8) and 0xFF
+            val b = c and 0xFF
+            val lum = (0.299 * r + 0.587 * g + 0.114 * b).toInt()
+            luminances[i] = lum
+            sum += lum
+        }
+        val avg = if (luminances.isNotEmpty()) sum / luminances.size else 0
+
+        val bits = StringBuilder()
+        for (lum in luminances) {
+            bits.append(if (lum >= avg) '1' else '0')
         }
 
-        val ratio = width.toFloat() / height.toFloat()
-        val newWidth: Int
-        val newHeight: Int
+        // 64 bit -> hex (16 chars)
+        val bigInt = BigInteger(bits.toString(), 2)
+        return String.format("%016x", bigInt)
+    }
 
-        if (ratio > 1f) {
-            // yatay
-            newWidth = maxSize
-            newHeight = (maxSize / ratio).toInt()
-        } else {
-            // dikey
-            newHeight = maxSize
-            newWidth = (maxSize * ratio).toInt()
-        }
-
-        return Bitmap.createScaledBitmap(src, newWidth, newHeight, true)
+    // Hex halinde verilen iki hash'in Hamming mesafesini hesaplar
+    private fun hammingDistanceHex(hex1: String, hex2: String): Int {
+        val b1 = BigInteger(hex1, 16)
+        val b2 = BigInteger(hex2, 16)
+        val xor = b1.xor(b2)
+        return xor.bitCount()
     }
 }
