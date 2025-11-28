@@ -1,7 +1,7 @@
-// kotlin
 package com.yeab.esnapp.util
 
 import android.graphics.Bitmap
+import android.graphics.Matrix
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
@@ -11,8 +11,13 @@ import java.math.BigInteger
 object ImageSimilarityUtils {
 
     /**
-     * Gelen resmin phash'ini hesaplayıp Firebase'deki phash'lerle karşılaştırır.
-     * Eşik (threshold) altında olan tüm eşleşmeleri callback ile döner.
+     * Gelen resmin phash'ini (artık 8 farklı açı için) hesaplayıp
+     * Firebase'deki phash'lerle karşılaştırır.
+     *
+     * - Bitmap, 0°, 45°, 90°, 135°, 180°, 225°, 270°, 315° açılarıyla döndürülerek
+     *   8 farklı pHash üretilir.
+     * - Her Firebase kaydı için bu 8 hash'e göre MIN Hamming mesafesi alınır.
+     * - Eğer minDistance <= threshold ise, kayıt MatchResult listesine eklenir.
      *
      * onResult -> eşleşen kayıtların listesi (boş olabilir)
      * onError  -> hata varsa çağrılır
@@ -28,8 +33,47 @@ object ImageSimilarityUtils {
         onError: ((Exception) -> Unit)? = null
     ) {
         try {
-            val incomingPhash = averageHash(bitmap)
+            // 1) Gelen bitmap için 8 farklı açıdan pHash üret
+            val rotatedHashes = mutableListOf<String>()
 
+            val angles = listOf(
+                0f,
+                45f,
+                90f,
+                135f,
+                180f,
+                225f,
+                270f,
+                315f
+            )
+
+            for (angle in angles) {
+                try {
+                    val bmpToHash: Bitmap =
+                        if (angle == 0f) {
+                            bitmap
+                        } else {
+                            rotateBitmap(bitmap, angle)
+                        }
+
+                    val hash = averageHash(bmpToHash)
+                    rotatedHashes.add(hash)
+
+                    // 0° olan orijinal bitmap'i recycle etmiyoruz, diğerlerini edebiliriz
+                    if (angle != 0f && bmpToHash != bitmap) {
+                        bmpToHash.recycle()
+                    }
+                } catch (_: Exception) {
+                    // Bu açıda bir problem olursa sadece o açıyı atla
+                }
+            }
+
+            if (rotatedHashes.isEmpty()) {
+                onError?.invoke(Exception("Failed to generate hashes for input bitmap"))
+                return
+            }
+
+            // 2) Firebase'den ilgili merchant için image_hashes node'unu oku
             val dbRef = FirebaseDatabase.getInstance().reference
                 .child("image_hashes")
                 .child(merchantUid)
@@ -41,22 +85,43 @@ object ImageSimilarityUtils {
 
                         for (child in snapshot.children) {
                             val otherPhash = child.child("phash").getValue(String::class.java)
-                            val otherImageUrl = child.child("imageUrl").getValue(String::class.java)
+                            val otherImageUrl =
+                                child.child("imageUrl").getValue(String::class.java)
                             val imageId = child.key ?: continue
-                            if (otherPhash != null) {
-                                val dist = try {
-                                    hammingDistanceHex(incomingPhash, otherPhash)
-                                } catch (e: Exception) {
-                                    Int.MAX_VALUE
+
+                            if (!otherPhash.isNullOrEmpty()) {
+                                var minDistance = Int.MAX_VALUE
+
+                                // Bu kayıt için tüm açılardaki hash’lere göre min distance hesapla
+                                for (incomingHash in rotatedHashes) {
+                                    val dist = try {
+                                        hammingDistanceHex(incomingHash, otherPhash)
+                                    } catch (e: Exception) {
+                                        Int.MAX_VALUE
+                                    }
+
+                                    if (dist < minDistance) {
+                                        minDistance = dist
+                                    }
                                 }
-                                if(threshold - dist >= 0){
-                                    val percentage = ((threshold - dist).toDouble()  * 5).toInt()
-                                    matches.add(MatchResult(imageId, otherImageUrl, otherPhash, dist, percentage))
+
+                                if (minDistance != Int.MAX_VALUE && threshold - minDistance >= 0) {
+                                    val percentage =
+                                        ((threshold - minDistance).toDouble() * 5).toInt()
+                                    matches.add(
+                                        MatchResult(
+                                            imageId = imageId,
+                                            imageUrl = otherImageUrl,
+                                            phash = otherPhash,
+                                            distance = minDistance,
+                                            percentage = percentage
+                                        )
+                                    )
                                 }
                             }
                         }
 
-                        // En iyi eşleşmeleri uzaklığa göre sırala
+                        // En iyi eşleşmeleri uzaklığa göre sırala (distance küçükten büyüğe)
                         matches.sortBy { it.distance }
                         onResult(matches)
                     } catch (e: Exception) {
@@ -109,5 +174,12 @@ object ImageSimilarityUtils {
         val b2 = BigInteger(hex2, 16)
         val xor = b1.xor(b2)
         return xor.bitCount()
+    }
+
+    // Bitmap'i verilen açı kadar döndürür
+    private fun rotateBitmap(src: Bitmap, angle: Float): Bitmap {
+        val matrix = Matrix()
+        matrix.postRotate(angle)
+        return Bitmap.createBitmap(src, 0, 0, src.width, src.height, matrix, true)
     }
 }

@@ -3,6 +3,7 @@ package com.yeab.esnapp.ui.order
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Bundle
+import android.view.View
 import android.widget.RadioButton
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -11,6 +12,7 @@ import com.google.firebase.database.*
 import com.yeab.esnapp.R
 import com.yeab.esnapp.databinding.ActivityOrderStatusUpdateBinding
 import com.yeab.esnapp.databinding.ItemProductStatusBinding
+import com.yeab.esnapp.model.MerchantMessageTemplate
 import com.yeab.esnapp.model.MerchantUser
 import com.yeab.esnapp.model.Order
 import com.yeab.esnapp.model.ProductStatus
@@ -36,6 +38,7 @@ class OrderStatusUpdateActivity : AppCompatActivity() {
 
     private var customerNameSurname: String = ""
     private var productName: String = ""
+    private val templateMap = mutableMapOf<Int, MerchantMessageTemplate>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,16 +69,25 @@ class OrderStatusUpdateActivity : AppCompatActivity() {
 
     private fun loadTemplates() {
         val uid = merchantUid ?: return
+
         dbRef.child(FirebasePaths.MERCHANT_MESSAGE_TEMPLATES)
             .child(uid)
             .get()
             .addOnSuccessListener { snapshot ->
                 binding.radioGroupTemplates.removeAllViews()
+                templateMap.clear()
+
                 for (child in snapshot.children) {
-                    val text = child.getValue(String::class.java) ?: continue
+                    val template = child.getValue(MerchantMessageTemplate::class.java) ?: continue
+                    val text = template.Text ?: continue
+
                     val radio = RadioButton(this)
                     radio.text = text
+                    val id = View.generateViewId()
+                    radio.id = id
+
                     binding.radioGroupTemplates.addView(radio)
+                    templateMap[id] = template
                 }
             }
     }

@@ -1,12 +1,14 @@
 package com.yeab.esnapp.ui.order
 
 import android.os.Bundle
+import android.view.View
 import android.widget.RadioButton
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.database.*
 import com.yeab.esnapp.R
 import com.yeab.esnapp.databinding.ActivityMessageTemplateBinding
+import com.yeab.esnapp.model.MerchantMessageTemplate
 import com.yeab.esnapp.model.MerchantUser
 import com.yeab.esnapp.model.Order
 import com.yeab.esnapp.model.ProductStatus
@@ -32,6 +34,8 @@ class MessageTemplateActivity : AppCompatActivity() {
     private var productImageUrl: String? = null
 
     private var customerNameSurname: String = ""
+    private val templateMap = mutableMapOf<Int, MerchantMessageTemplate>()
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -69,14 +73,26 @@ class MessageTemplateActivity : AppCompatActivity() {
             .get()
             .addOnSuccessListener { snapshot ->
                 binding.radioGroupTemplates.removeAllViews()
+                templateMap.clear()
+
                 for (child in snapshot.children) {
-                    val text = child.getValue(String::class.java) ?: continue
+                    // Template1, Template2, Template3...
+                    val template = child.getValue(MerchantMessageTemplate::class.java) ?: continue
+                    val text = template.Text ?: continue
+
                     val radio = RadioButton(this)
                     radio.text = text
+
+                    // ID verip map'e koyuyoruz ki gerekirse Finish/Start flag'lerine erişebilelim
+                    val id = View.generateViewId()
+                    radio.id = id
+
                     binding.radioGroupTemplates.addView(radio)
+                    templateMap[id] = template
                 }
             }
     }
+
 
     private fun onCompleteClicked() {
         val uid = merchantUid

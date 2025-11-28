@@ -110,7 +110,7 @@ class SearchOrderActivity : AppCompatActivity() {
             .child(uid)
             .addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    // Eşik: ImageSimilarityUtils Integer Hamming threshold kullanır
+                    // Hamming threshold (ImageSimilarityUtils içinde kullanılıyor)
                     val threshold = 20
 
                     ImageSimilarityUtils.calculateSimilarity(
@@ -129,8 +129,55 @@ class SearchOrderActivity : AppCompatActivity() {
                                 return@calculateSimilarity
                             }
 
-                            // En iyi eşleşme (en küçük distance)
-                            val best = matches.firstOrNull() ?: run {
+                            // 1) En iyi 3 eşleşmeyi al (distance küçükten büyüğe sıralanmış geliyor)
+                            val topMatches = matches.take(3)
+
+                            // 2) Snapshot'ı tek seferde dolaşıp imageUrl -> (phone, orderId, productName) map'i oluştur
+                            val urlToOrderInfo = mutableMapOf<String, Triple<String, String, String?>>()
+
+                            for (phoneSnap in snapshot.children) {
+                                val phoneKey = phoneSnap.key ?: continue
+                                for (orderSnap in phoneSnap.children) {
+                                    val order = orderSnap.getValue(Order::class.java) ?: continue
+                                    val url = order.productImageUrl
+                                    val orderId = orderSnap.key ?: continue
+
+                                    if (!url.isNullOrEmpty() && !urlToOrderInfo.containsKey(url)) {
+                                        urlToOrderInfo[url] =
+                                            Triple(phoneKey, orderId, order.productName)
+                                    }
+                                }
+                            }
+
+                            // 3) En iyi 3 eşleşmeden gerçekten siparişle eşleşenleri topla
+                            data class MatchedOrderUi(
+                                val match: com.yeab.esnapp.util.MatchResult,
+                                val phone: String,
+                                val orderId: String,
+                                val productName: String?
+                            )
+
+                            val matchedOrders = mutableListOf<MatchedOrderUi>()
+
+                            for (match in topMatches) {
+                                val url = match.imageUrl
+                                if (!url.isNullOrEmpty()) {
+                                    val info = urlToOrderInfo[url]
+                                    if (info != null) {
+                                        val (phone, orderId, productName) = info
+                                        matchedOrders.add(
+                                            MatchedOrderUi(
+                                                match = match,
+                                                phone = phone,
+                                                orderId = orderId,
+                                                productName = productName
+                                            )
+                                        )
+                                    }
+                                }
+                            }
+
+                            if (matchedOrders.isEmpty()) {
                                 runOnUiThread {
                                     Toast.makeText(
                                         this@SearchOrderActivity,
@@ -141,75 +188,34 @@ class SearchOrderActivity : AppCompatActivity() {
                                 return@calculateSimilarity
                             }
 
-                            // Snapshot içinden bu imageUrl ile ilişkili siparişi bul
-                            var bestPhone: String? = null
-                            var bestOrderId: String? = null
-                            var bestProductName: String? = null
+                            // 4) Kullanıcıya gösterilecek liste item text'lerini hazırla
+                            //    Format: "85% - Pantolon A1 (5311000001)"
+                            val items = matchedOrders.map { m ->
+                                val pct = m.match.percentage.coerceAtLeast(0)
+                                val name = m.productName ?: "-"
+                                "${pct}% - $name (${m.phone})"
+                            }.toTypedArray()
 
-                            loop@ for (phoneSnap in snapshot.children) {
-                                val phoneKey = phoneSnap.key ?: continue
-                                for (orderSnap in phoneSnap.children) {
-                                    val order = orderSnap.getValue(Order::class.java) ?: continue
-                                    if (!order.productImageUrl.isNullOrEmpty() && order.productImageUrl == best.imageUrl) {
-                                        bestPhone = phoneKey
-                                        bestOrderId = orderSnap.key
-                                        bestProductName = order.productName
-                                        break@loop
+                            runOnUiThread {
+                                // 5) Dialog ile kullanıcıya 3'lüyü sun, seçtiğini OrderStatusUpdateActivity'ye taşı
+                                val dialog = androidx.appcompat.app.AlertDialog.Builder(this@SearchOrderActivity)
+                                    .setTitle("")
+                                    .setItems(items) { _, which ->
+                                        val selected = matchedOrders[which]
+                                        val i = Intent(
+                                            this@SearchOrderActivity,
+                                            OrderStatusUpdateActivity::class.java
+                                        )
+                                        i.putExtra(IntentKeys.MERCHANT_UID, uid)
+                                        i.putExtra(IntentKeys.PHONE, selected.phone)
+                                        i.putExtra(IntentKeys.ORDER_ID, selected.orderId)
+                                        i.putExtra(IntentKeys.PRODUCT_NAME, selected.productName)
+                                        startActivity(i)
                                     }
-                                }
-                            }
+                                    .setNegativeButton(android.R.string.cancel, null)
+                                    .create()
 
-                            // Görseli indirip dialog ile göster, onaylanırsa ilgili ekrana git
-                            if (!best.imageUrl.isNullOrEmpty()) {
-                                Thread {
-                                    val matchedBitmap = loadBitmapFromUrl(best.imageUrl)
-                                    runOnUiThread {
-                                        if (matchedBitmap != null) {
-                                            val iv = android.widget.ImageView(this@SearchOrderActivity)
-                                            iv.setImageBitmap(matchedBitmap)
-                                            val dialog = androidx.appcompat.app.AlertDialog.Builder(this@SearchOrderActivity)
-                                                .setTitle(getString(R.string.info_image_match_found, (best.percentage))) // isteğe bağlı
-                                                .setView(iv)
-                                                .setPositiveButton(android.R.string.ok) { _, _ ->
-                                                    // Eğer sipariş bulunduysa direkt sipariş güncelleme ekranına git
-                                                    if (bestPhone != null && bestOrderId != null) {
-                                                        val i = Intent(
-                                                            this@SearchOrderActivity,
-                                                            OrderStatusUpdateActivity::class.java
-                                                        )
-                                                        i.putExtra(IntentKeys.MERCHANT_UID, uid)
-                                                        i.putExtra(IntentKeys.PHONE, bestPhone)
-                                                        i.putExtra(IntentKeys.ORDER_ID, bestOrderId)
-                                                        i.putExtra(IntentKeys.PRODUCT_NAME, bestProductName)
-                                                        startActivity(i)
-                                                    } else {
-                                                        Toast.makeText(
-                                                            this@SearchOrderActivity,
-                                                            getString(R.string.info_image_match_found).plus(" (sipariş bulunamadı)"),
-                                                            Toast.LENGTH_SHORT
-                                                        ).show()
-                                                    }
-                                                }
-                                                .setNegativeButton(android.R.string.cancel, null)
-                                                .create()
-                                            dialog.show()
-                                        } else {
-                                            Toast.makeText(
-                                                this@SearchOrderActivity,
-                                                getString(R.string.error_no_records_found),
-                                                Toast.LENGTH_SHORT
-                                            ).show()
-                                        }
-                                    }
-                                }.start()
-                            } else {
-                                runOnUiThread {
-                                    Toast.makeText(
-                                        this@SearchOrderActivity,
-                                        getString(R.string.error_no_image_match),
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                }
+                                dialog.show()
                             }
                         },
                         onError = { e ->
@@ -235,6 +241,7 @@ class SearchOrderActivity : AppCompatActivity() {
                 }
             })
     }
+
 
 
     /**
