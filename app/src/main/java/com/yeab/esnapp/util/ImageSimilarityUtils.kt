@@ -1,185 +1,204 @@
 package com.yeab.esnapp.util
 
 import android.graphics.Bitmap
-import android.graphics.Matrix
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
-import java.math.BigInteger
+import com.google.firebase.database.*
+import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.text.TextRecognition
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions
+import java.util.Locale
 
 object ImageSimilarityUtils {
 
     /**
-     * Gelen resmin phash'ini (artık 8 farklı açı için) hesaplayıp
-     * Firebase'deki phash'lerle karşılaştırır.
+     * Yeni mantık:
      *
-     * - Bitmap, 0°, 45°, 90°, 135°, 180°, 225°, 270°, 315° açılarıyla döndürülerek
-     *   8 farklı pHash üretilir.
-     * - Her Firebase kaydı için bu 8 hash'e göre MIN Hamming mesafesi alınır.
-     * - Eğer minDistance <= threshold ise, kayıt MatchResult listesine eklenir.
+     * 1) Gelen bitmap'ten ML Kit ile metni çıkar (queryText).
+     * 2) image_hashes/{merchantUid} altındaki her kayıt için 'recognizedText' alanını oku.
+     * 3) Query metni ile kayıt metni arasında kelime bazlı benzerlik (Jaccard) hesapla.
+     * 4) Yüzde (0..100) olarak hesaplanan similarity threshold'den büyükse MatchResult'a ekle.
      *
-     * onResult -> eşleşen kayıtların listesi (boş olabilir)
-     * onError  -> hata varsa çağrılır
-     *
-     * Bu method UI thread üzerinde Firebase callback'leri kullanacağından güvenlidir.
+     * threshold parametresini "minimum gerekli benzerlik yüzdesi" (örn. 40, 50) olarak düşünüyoruz.
      */
     @JvmStatic
     fun calculateSimilarity(
         bitmap: Bitmap,
         merchantUid: String,
-        threshold: Int = 10,
+        threshold: Int = 20,
         onResult: (List<MatchResult>) -> Unit,
         onError: ((Exception) -> Unit)? = null
     ) {
         try {
-            // 1) Gelen bitmap için 8 farklı açıdan pHash üret
-            val rotatedHashes = mutableListOf<String>()
+            val image = InputImage.fromBitmap(bitmap, 0)
+            val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
 
-            val angles = listOf(
-                0f,
-                45f,
-                90f,
-                135f,
-                180f,
-                225f,
-                270f,
-                315f
-            )
-
-            for (angle in angles) {
-                try {
-                    val bmpToHash: Bitmap =
-                        if (angle == 0f) {
-                            bitmap
-                        } else {
-                            rotateBitmap(bitmap, angle)
-                        }
-
-                    val hash = averageHash(bmpToHash)
-                    rotatedHashes.add(hash)
-
-                    // 0° olan orijinal bitmap'i recycle etmiyoruz, diğerlerini edebiliriz
-                    if (angle != 0f && bmpToHash != bitmap) {
-                        bmpToHash.recycle()
+            recognizer.process(image)
+                .addOnSuccessListener { visionText ->
+                    val rawText = visionText.text ?: ""
+                    val queryText = rawText.trim()
+                    if (queryText.isEmpty()) {
+                        onResult(emptyList())
+                        return@addOnSuccessListener
                     }
-                } catch (_: Exception) {
-                    // Bu açıda bir problem olursa sadece o açıyı atla
-                }
-            }
 
-            if (rotatedHashes.isEmpty()) {
-                onError?.invoke(Exception("Failed to generate hashes for input bitmap"))
-                return
-            }
+                    val queryTokens = normalizeTokens(queryText)
+                    if (queryTokens.isEmpty()) {
+                        onResult(emptyList())
+                        return@addOnSuccessListener
+                    }
 
-            // 2) Firebase'den ilgili merchant için image_hashes node'unu oku
-            val dbRef = FirebaseDatabase.getInstance().reference
-                .child("image_hashes")
-                .child(merchantUid)
+                    val minPercent = threshold.coerceIn(1, 100)
 
-            dbRef.addListenerForSingleValueEvent(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    try {
-                        val matches = ArrayList<MatchResult>()
+                    val dbRef = FirebaseDatabase.getInstance().reference
+                        .child("image_hashes")
+                        .child(merchantUid)
 
-                        for (child in snapshot.children) {
-                            val otherPhash = child.child("phash").getValue(String::class.java)
-                            val otherImageUrl =
-                                child.child("imageUrl").getValue(String::class.java)
-                            val imageId = child.key ?: continue
+                    dbRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                        override fun onDataChange(snapshot: DataSnapshot) {
+                            try {
+                                val matches = ArrayList<MatchResult>()
 
-                            if (!otherPhash.isNullOrEmpty()) {
-                                var minDistance = Int.MAX_VALUE
+                                for (child in snapshot.children) {
+                                    val storedText =
+                                        child.child("recognizedText")
+                                            .getValue(String::class.java)
+                                    val otherImageUrl =
+                                        child.child("imageUrl").getValue(String::class.java)
+                                    val imageId = child.key ?: continue
 
-                                // Bu kayıt için tüm açılardaki hash’lere göre min distance hesapla
-                                for (incomingHash in rotatedHashes) {
-                                    val dist = try {
-                                        hammingDistanceHex(incomingHash, otherPhash)
-                                    } catch (e: Exception) {
-                                        Int.MAX_VALUE
-                                    }
+                                    if (storedText.isNullOrBlank()) continue
 
-                                    if (dist < minDistance) {
-                                        minDistance = dist
-                                    }
-                                }
+                                    val storedTokens = normalizeTokens(storedText)
+                                    if (storedTokens.isEmpty()) continue
 
-                                if (minDistance != Int.MAX_VALUE && threshold - minDistance >= 0) {
-                                    val percentage =
-                                        ((threshold - minDistance).toDouble() * 5).toInt()
-                                    matches.add(
-                                        MatchResult(
+                                    val sim = tokenSetSimilarity(queryTokens, storedTokens)
+
+                                    val percentage = (sim * 100).toInt()
+
+                                    if (percentage >= minPercent) {
+                                        val distance = 100 - percentage
+
+                                        // phash alanını şimdilik boş geçiyoruz (veya DB'den okursun)
+                                        val match = MatchResult(
                                             imageId = imageId,
                                             imageUrl = otherImageUrl,
-                                            phash = otherPhash,
-                                            distance = minDistance,
+                                            phash = "", // eski anlamı şimdilik kullanılmıyor
+                                            distance = distance,
                                             percentage = percentage
                                         )
-                                    )
+                                        matches.add(match)
+                                    }
                                 }
+
+                                // En iyi eşleşmeler: distance küçükten büyüğe
+                                matches.sortBy { it.distance }
+                                onResult(matches)
+
+                            } catch (e: Exception) {
+                                onError?.invoke(e)
                             }
                         }
 
-                        // En iyi eşleşmeleri uzaklığa göre sırala (distance küçükten büyüğe)
-                        matches.sortBy { it.distance }
-                        onResult(matches)
-                    } catch (e: Exception) {
-                        onError?.invoke(e)
-                    }
+                        override fun onCancelled(error: DatabaseError) {
+                            onError?.invoke(Exception(error.message))
+                        }
+                    })
+                }
+                .addOnFailureListener { e ->
+                    onError?.invoke(e)
                 }
 
-                override fun onCancelled(error: DatabaseError) {
-                    onError?.invoke(Exception(error.message))
-                }
-            })
         } catch (e: Exception) {
             onError?.invoke(e)
         }
     }
 
-    // Basit average hash (aHash): resmi 8x8 küçült, grayscale, ortalama değere göre bit dizisi oluştur.
-    private fun averageHash(src: Bitmap): String {
-        val size = 8
-        val scaled = Bitmap.createScaledBitmap(src, size, size, true)
-        val pixels = IntArray(size * size)
-        scaled.getPixels(pixels, 0, size, 0, 0, size, size)
+    /**
+     * Metni normalize edip kelime seti döner:
+     * - Büyük harfe çevirir
+     * - Harf/rakam dışını boşluğa çevirir
+     * - 2 karakterden kısa token'ları atar
+     */
+    private fun normalizeTokens(text: String): Set<String> {
+        return text
+            .uppercase(Locale.getDefault())
+            .replace("[^A-Z0-9]".toRegex(), " ")
+            .split("\\s+".toRegex())
+            .filter { it.length >= 2 }
+            .toSet()
+    }
 
-        val luminances = IntArray(pixels.size)
-        var sum = 0
-        for (i in pixels.indices) {
-            val c = pixels[i]
-            val r = (c shr 16) and 0xFF
-            val g = (c shr 8) and 0xFF
-            val b = c and 0xFF
-            val lum = (0.299 * r + 0.587 * g + 0.114 * b).toInt()
-            luminances[i] = lum
-            sum += lum
+    /**
+     * Token setleri için daha zeki benzerlik:
+     *
+     * - Her token için karşı tarafta en benzer kelimeyi bulur (Levenshtein tabanlı).
+     * - A'daki tüm tokenlar için avg(maxSim(a_i, B)) hesaplanır => simAB
+     * - B'deki tüm tokenlar için avg(maxSim(b_j, A)) hesaplanır => simBA
+     * - Sonuç = (simAB + simBA) / 2  (0.0 .. 1.0)
+     */
+    private fun tokenSetSimilarity(a: Set<String>, b: Set<String>): Double {
+        if (a.isEmpty() || b.isEmpty()) return 0.0
+
+        // A'nın her elemanı için B'deki en yüksek token benzerliği
+        val simAB = a.map { tokenA ->
+            b.maxOfOrNull { tokenB -> tokenSimilarity(tokenA, tokenB) } ?: 0.0
+        }.average()
+
+        // B'nin her elemanı için A'daki en yüksek token benzerliği
+        val simBA = b.map { tokenB ->
+            a.maxOfOrNull { tokenA -> tokenSimilarity(tokenB, tokenA) } ?: 0.0
+        }.average()
+
+        return (simAB + simBA) / 2.0
+    }
+
+    /**
+     * Tekil iki kelime için benzerlik:
+     *  - 1.0 = tamamen aynı
+     *  - 0.0 = tamamen farklı
+     *
+     * Levenshtein distance / maxLength kullanıyoruz.
+     */
+    private fun tokenSimilarity(s1: String, s2: String): Double {
+        if (s1 == s2) return 1.0
+        if (s1.isEmpty() || s2.isEmpty()) return 0.0
+
+        val dist = levenshteinDistance(s1, s2)
+        val maxLen = maxOf(s1.length, s2.length)
+        if (maxLen == 0) return 0.0
+
+        val sim = 1.0 - (dist.toDouble() / maxLen.toDouble())
+        // Güvenlik için [0,1] aralığına kırp
+        return sim.coerceIn(0.0, 1.0)
+    }
+
+    /**
+     * Klasik Levenshtein mesafesi (edit distance):
+     * ekleme / silme / değiştirme maliyeti = 1
+     */
+    private fun levenshteinDistance(s1: String, s2: String): Int {
+        val len1 = s1.length
+        val len2 = s2.length
+
+        if (len1 == 0) return len2
+        if (len2 == 0) return len1
+
+        val dp = Array(len1 + 1) { IntArray(len2 + 1) }
+
+        for (i in 0..len1) dp[i][0] = i
+        for (j in 0..len2) dp[0][j] = j
+
+        for (i in 1..len1) {
+            for (j in 1..len2) {
+                val cost = if (s1[i - 1] == s2[j - 1]) 0 else 1
+                dp[i][j] = minOf(
+                    dp[i - 1][j] + 1,      // silme
+                    dp[i][j - 1] + 1,      // ekleme
+                    dp[i - 1][j - 1] + cost // değiştirme
+                )
+            }
         }
-        val avg = if (luminances.isNotEmpty()) sum / luminances.size else 0
 
-        val bits = StringBuilder()
-        for (lum in luminances) {
-            bits.append(if (lum >= avg) '1' else '0')
-        }
-
-        // 64 bit -> hex (16 chars)
-        val bigInt = BigInteger(bits.toString(), 2)
-        return String.format("%016x", bigInt)
+        return dp[len1][len2]
     }
 
-    // Hex halinde verilen iki hash'in Hamming mesafesini hesaplar
-    private fun hammingDistanceHex(hex1: String, hex2: String): Int {
-        val b1 = BigInteger(hex1, 16)
-        val b2 = BigInteger(hex2, 16)
-        val xor = b1.xor(b2)
-        return xor.bitCount()
-    }
-
-    // Bitmap'i verilen açı kadar döndürür
-    private fun rotateBitmap(src: Bitmap, angle: Float): Bitmap {
-        val matrix = Matrix()
-        matrix.postRotate(angle)
-        return Bitmap.createBitmap(src, 0, 0, src.width, src.height, matrix, true)
-    }
 }

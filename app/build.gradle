@@ -66,6 +66,7 @@ dependencies {
     implementation "com.google.firebase:firebase-storage"
     implementation "com.google.firebase:firebase-messaging"
     implementation "org.opencv:opencv:4.9.0"
+    implementation "com.google.mlkit:text-recognition:16.0.0"
 
     // --- Test bağımlılıkları (bunlar eksikti) ---
     testImplementation "junit:junit:4.13.2"

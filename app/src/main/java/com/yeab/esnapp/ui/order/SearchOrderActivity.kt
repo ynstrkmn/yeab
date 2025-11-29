@@ -5,12 +5,14 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import com.google.firebase.database.*
 import com.yeab.esnapp.R
 import com.yeab.esnapp.databinding.ActivitySearchOrderBinding
@@ -18,9 +20,7 @@ import com.yeab.esnapp.model.Order
 import com.yeab.esnapp.util.FirebasePaths
 import com.yeab.esnapp.util.ImageSimilarityUtils
 import com.yeab.esnapp.util.IntentKeys
-import java.net.URL
-import org.opencv.android.OpenCVLoader
-import android.util.Log
+import java.io.File
 
 class SearchOrderActivity : AppCompatActivity() {
 
@@ -28,13 +28,39 @@ class SearchOrderActivity : AppCompatActivity() {
     private var merchantUid: String? = null
     private val dbRef = FirebaseDatabase.getInstance().reference
 
-    // Kamera sonucu
+    // FULL-RES fotoğraf URI'si
+    private var photoUri: Uri? = null
+
+    // Kamera sonucu (artık thumbnail değil, full-res dosyadan okuyoruz)
     private val cameraLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == RESULT_OK && result.data != null) {
-                val bitmap = result.data!!.extras?.get("data") as? Bitmap
-                if (bitmap != null) {
-                    searchByImage(bitmap)
+            if (result.resultCode == RESULT_OK) {
+                val uri = photoUri
+                if (uri == null) {
+                    Toast.makeText(this, getString(R.string.error_generic), Toast.LENGTH_SHORT)
+                        .show()
+                    return@registerForActivityResult
+                }
+
+                try {
+                    contentResolver.openInputStream(uri)?.use { inputStream ->
+                        val bitmap = BitmapFactory.decodeStream(inputStream)
+                        if (bitmap != null) {
+                            searchByImage(bitmap)
+                        } else {
+                            Toast.makeText(
+                                this,
+                                getString(R.string.error_generic),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                } catch (e: Exception) {
+                    Toast.makeText(
+                        this,
+                        getString(R.string.error_generic) + ": " + e.message,
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
         }
@@ -57,14 +83,6 @@ class SearchOrderActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivitySearchOrderBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        if (OpenCVLoader.initLocal()) {
-            Log.i("OpenCV", "OpenCV loaded successfully")
-        } else {
-            Log.e("OpenCV", "OpenCV initialization failed")
-            Toast.makeText(this, getString(R.string.error_generic), Toast.LENGTH_LONG).show()
-            // İstersen burada return deyip image search’ü kapatabilirsin
-        }
 
         merchantUid = intent.getStringExtra(IntentKeys.MERCHANT_UID)
 
@@ -92,16 +110,37 @@ class SearchOrderActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Thumbnail yerine FULL RES fotoğraf çeken intent
+     */
     private fun openCameraForSearch() {
-        val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+        // Geçici dosya
+        val photoFile = File(
+            cacheDir,
+            "search_${System.currentTimeMillis()}.jpg"
+        )
+
+        // FileProvider üzerinden URI oluştur
+        photoUri = FileProvider.getUriForFile(
+            this,
+            "$packageName.fileprovider",
+            photoFile
+        )
+
+        val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE).apply {
+            putExtra(MediaStore.EXTRA_OUTPUT, photoUri)
+            addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+
         cameraLauncher.launch(intent)
     }
 
     /**
-     * Kameradan alınan bitmap ile Firebase'teki ProductImageUrl görsellerini
-     * benzerlik hesabı yaparak karşılaştırır.
+     * Kameradan alınan bitmap ile Firebase'teki kayıtları
+     * ImageSimilarityUtils (ML Kit + text similarity) üzerinden karşılaştırır.
+     * En iyi 3 eşleşmeyi kullanıcıya listeler, seçtiği siparişe gider.
      */
-    // kotlin
     private fun searchByImage(capturedBitmap: Bitmap) {
         val uid = merchantUid ?: return
 
@@ -110,8 +149,8 @@ class SearchOrderActivity : AppCompatActivity() {
             .child(uid)
             .addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    // Hamming threshold (ImageSimilarityUtils içinde kullanılıyor)
-                    val threshold = 20
+                    // MLKit + text similarity için threshold'u "minimum yüzde benzerlik" olarak kullanıyoruz
+                    val threshold = 60
 
                     ImageSimilarityUtils.calculateSimilarity(
                         capturedBitmap,
@@ -133,7 +172,8 @@ class SearchOrderActivity : AppCompatActivity() {
                             val topMatches = matches.take(3)
 
                             // 2) Snapshot'ı tek seferde dolaşıp imageUrl -> (phone, orderId, productName) map'i oluştur
-                            val urlToOrderInfo = mutableMapOf<String, Triple<String, String, String?>>()
+                            val urlToOrderInfo =
+                                mutableMapOf<String, Triple<String, String, String?>>()
 
                             for (phoneSnap in snapshot.children) {
                                 val phoneKey = phoneSnap.key ?: continue
@@ -149,7 +189,7 @@ class SearchOrderActivity : AppCompatActivity() {
                                 }
                             }
 
-                            // 3) En iyi 3 eşleşmeden gerçekten siparişle eşleşenleri topla
+                            // 3) Top 3 MatchResult içinden gerçekten siparişle eşleşenleri topla
                             data class MatchedOrderUi(
                                 val match: com.yeab.esnapp.util.MatchResult,
                                 val phone: String,
@@ -188,8 +228,8 @@ class SearchOrderActivity : AppCompatActivity() {
                                 return@calculateSimilarity
                             }
 
-                            // 4) Kullanıcıya gösterilecek liste item text'lerini hazırla
-                            //    Format: "85% - Pantolon A1 (5311000001)"
+                            // 4) Kullanıcıya gösterilecek liste text'leri
+                            //    Örn: "85% - Pantolon A1 (5311000001)"
                             val items = matchedOrders.map { m ->
                                 val pct = m.match.percentage.coerceAtLeast(0)
                                 val name = m.productName ?: "-"
@@ -198,22 +238,23 @@ class SearchOrderActivity : AppCompatActivity() {
 
                             runOnUiThread {
                                 // 5) Dialog ile kullanıcıya 3'lüyü sun, seçtiğini OrderStatusUpdateActivity'ye taşı
-                                val dialog = androidx.appcompat.app.AlertDialog.Builder(this@SearchOrderActivity)
-                                    .setTitle("")
-                                    .setItems(items) { _, which ->
-                                        val selected = matchedOrders[which]
-                                        val i = Intent(
-                                            this@SearchOrderActivity,
-                                            OrderStatusUpdateActivity::class.java
-                                        )
-                                        i.putExtra(IntentKeys.MERCHANT_UID, uid)
-                                        i.putExtra(IntentKeys.PHONE, selected.phone)
-                                        i.putExtra(IntentKeys.ORDER_ID, selected.orderId)
-                                        i.putExtra(IntentKeys.PRODUCT_NAME, selected.productName)
-                                        startActivity(i)
-                                    }
-                                    .setNegativeButton(android.R.string.cancel, null)
-                                    .create()
+                                val dialog =
+                                    androidx.appcompat.app.AlertDialog.Builder(this@SearchOrderActivity)
+                                        .setTitle(getString(R.string.info_image_match_found))
+                                        .setItems(items) { _, which ->
+                                            val selected = matchedOrders[which]
+                                            val i = Intent(
+                                                this@SearchOrderActivity,
+                                                OrderStatusUpdateActivity::class.java
+                                            )
+                                            i.putExtra(IntentKeys.MERCHANT_UID, uid)
+                                            i.putExtra(IntentKeys.PHONE, selected.phone)
+                                            i.putExtra(IntentKeys.ORDER_ID, selected.orderId)
+                                            i.putExtra(IntentKeys.PRODUCT_NAME, selected.productName)
+                                            startActivity(i)
+                                        }
+                                        .setNegativeButton(android.R.string.cancel, null)
+                                        .create()
 
                                 dialog.show()
                             }
@@ -240,24 +281,5 @@ class SearchOrderActivity : AppCompatActivity() {
                     }
                 }
             })
-    }
-
-
-
-    /**
-     * URL'den bitmap indirir. Hata olursa null döner.
-     * Bu method mutlaka background thread'de çağrılmalı.
-     */
-    private fun loadBitmapFromUrl(url: String): Bitmap? {
-        return try {
-            val connection = URL(url).openConnection()
-            connection.connect()
-            val input = connection.getInputStream()
-            val bitmap = BitmapFactory.decodeStream(input)
-            input.close()
-            bitmap
-        } catch (e: Exception) {
-            null
-        }
     }
 }
