@@ -91,6 +91,11 @@
     \n%6$s
     </string>
 
+    <string name="button_logout">Çıkış Yap</string>
+    <string name="logout_confirm_title">Çıkış</string>
+    <string name="logout_confirm_message">Hesabınızdan çıkmak istiyor musunuz?</string>
+    <string name="logout_yes">Evet</string>
+    <string name="logout_no">Hayır</string>
 
 
 

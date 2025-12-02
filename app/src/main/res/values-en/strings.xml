@@ -91,5 +91,11 @@
     \n%6$s
     </string>
 
+    <string name="button_logout">Logout</string>
+    <string name="logout_confirm_title">Logout</string>
+    <string name="logout_confirm_message">Do you really want to logout?</string>
+    <string name="logout_yes">Yes</string>
+    <string name="logout_no">No</string>
+
 
 </resources>
