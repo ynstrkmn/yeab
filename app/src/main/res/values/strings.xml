@@ -26,6 +26,7 @@
     <!-- Home -->
     <string name="home_button_new_order">Yeni Ürün Ekle</string>
     <string name="home_button_list_orders">Ürün Listele</string>
+    <string name="home_button_only_add">Ekle</string>
 
     <!-- New Order -->
     <string name="new_order_phone_hint">Telefon (10 hane)</string>
@@ -65,10 +66,6 @@
     <string name="info_order_saved">Ürün kaydedildi</string>
     <string name="info_image_search_todo">Resim ile arama (basit eşleştirme uygulanıyor)</string>
 
-    <!-- Order Item UI -->
-    <string name="order_item_status_label">Durum:</string>
-    <string name="order_item_last_status_unknown">Durum yok</string>
-
     <string name="error_generic">Bir hata oluştu</string>
     <string name="error_camera_permission_denied">Kamera izni verilmedi</string>
 
@@ -101,5 +98,15 @@
 
     <string name="loading_default">Lütfen bekleyin…</string>
 
+
+    <string name="order_list_subtitle">Müşterilerinize ait tüm siparişleri görüntüleyin</string>
+    <string name="order_list_last_status_format">Son durum: %1$s</string>
+
+    <string name="order_item_last_status_unknown">Bilinmiyor</string>
+    <string name="order_item_status_label">Son durum:</string>
+    <string name="order_list_item_image_desc">Ürün görseli</string>
+
+
+    <string name="founded_with_percent">eşleşme oranı ile bulundu.</string>
 
 </resources>

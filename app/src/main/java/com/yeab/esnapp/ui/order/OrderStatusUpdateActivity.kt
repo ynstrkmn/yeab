@@ -1,13 +1,16 @@
 package com.yeab.esnapp.ui.order
 
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
+import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.View
 import android.widget.RadioButton
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.DataSource
+import com.bumptech.glide.load.engine.GlideException
+import com.bumptech.glide.request.RequestListener
+import com.bumptech.glide.request.target.Target
 import com.google.firebase.database.*
 import com.yeab.esnapp.R
 import com.yeab.esnapp.databinding.ActivityOrderStatusUpdateBinding
@@ -21,7 +24,6 @@ import com.yeab.esnapp.util.DateFormats
 import com.yeab.esnapp.util.FirebasePaths
 import com.yeab.esnapp.util.IntentKeys
 import com.yeab.esnapp.util.WhatsAppUtils
-import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -50,16 +52,19 @@ class OrderStatusUpdateActivity : BaseActivity() {
         phone = intent.getStringExtra(IntentKeys.PHONE) ?: ""
         orderId = intent.getStringExtra(IntentKeys.ORDER_ID) ?: ""
 
-        binding.txtTitle.text = getString(R.string.message_template_title)
         binding.btnUpdate.text = getString(R.string.message_template_button_update_order)
         binding.txtCustomerName.text =
             getString(R.string.order_status_customer_placeholder)
+        binding.txtMatchedProduct.text =
+            getString(R.string.order_status_matched_product_placeholder)
 
         statusAdapter = ProductStatusAdapter()
         binding.recyclerStatusHistory.layoutManager = LinearLayoutManager(this)
         binding.recyclerStatusHistory.adapter = statusAdapter
 
+        // Global loading başlat
         showLoading()
+
         loadTemplates()
         loadOrderDetails()
         loadCustomerInfo()
@@ -110,6 +115,7 @@ class OrderStatusUpdateActivity : BaseActivity() {
 
             val order = snapshot.getValue(Order::class.java)
             if (order == null) {
+                hideLoading()
                 Toast.makeText(
                     this,
                     getString(R.string.error_no_records_found),
@@ -118,10 +124,10 @@ class OrderStatusUpdateActivity : BaseActivity() {
                 return@addOnSuccessListener
             }
 
-            // 1) Ürün adı: Intent'ten geldiyse onu kullan, yoksa DB'dekini
+            // Ürün adı: Intent'ten geldiyse onu kullan, yoksa DB'dekini
             val productNameFromIntent = intent.getStringExtra(IntentKeys.PRODUCT_NAME)
             val finalProductName = productNameFromIntent
-                ?: order.productName  // Java getter getProductName()
+                ?: order.productName
                 ?: ""
 
             productName = finalProductName
@@ -134,13 +140,16 @@ class OrderStatusUpdateActivity : BaseActivity() {
                     getString(R.string.order_status_matched_product_placeholder)
             }
 
-            // 2) Ürün görseli: ProductImageUrl doluysa thumbnail'e yükle
+            // Ürün görseli: ProductImageUrl doluysa thumbnail'e yükle
             val imageUrl = order.productImageUrl
             if (!imageUrl.isNullOrEmpty()) {
                 loadProductImage(imageUrl)
+            } else {
+                // Görsel yoksa global loading'i kapat
+                hideLoading()
             }
 
-            // 3) Durum geçmişi: ProductStatus listesini adapter'a ver
+            // Durum geçmişi: ProductStatus listesini adapter'a ver
             val statusList = order.productStatus ?: emptyList<ProductStatus>()
             if (statusList.isEmpty()) {
                 Toast.makeText(
@@ -150,33 +159,49 @@ class OrderStatusUpdateActivity : BaseActivity() {
                 ).show()
             }
             statusAdapter.submitList(statusList)
+        }.addOnFailureListener {
+            hideLoading()
+            Toast.makeText(
+                this,
+                it.message ?: getString(R.string.error_generic),
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 
     private fun loadProductImage(url: String) {
-        Thread {
-            val bitmap = loadBitmapFromUrl(url)
-            if (bitmap != null) {
-                runOnUiThread {
-                    binding.imgProductThumbnail.setImageBitmap(bitmap)
-                    // ✅ Veriyi aldık, loading’i kapat
-                    hideLoading()
-                }
-            }
-        }.start()
-    }
+        binding.imgLoading.visibility = View.VISIBLE
 
-    private fun loadBitmapFromUrl(url: String): Bitmap? {
-        return try {
-            val conn = URL(url).openConnection()
-            conn.connect()
-            val input = conn.getInputStream()
-            val bitmap = BitmapFactory.decodeStream(input)
-            input.close()
-            bitmap
-        } catch (e: Exception) {
-            null
-        }
+        Glide.with(this)
+            .load(url)
+            .centerCrop()
+            .placeholder(android.R.drawable.ic_menu_report_image)
+            .error(android.R.drawable.ic_menu_report_image)
+            .listener(object : RequestListener<Drawable> {
+                override fun onLoadFailed(
+                    e: GlideException?,
+                    model: Any?,
+                    target: Target<Drawable>?,
+                    isFirstResource: Boolean
+                ): Boolean {
+                    binding.imgLoading.visibility = View.GONE
+                    hideLoading()
+                    return false // Glide'in kendi error handling'i de çalışsın
+                }
+
+                override fun onResourceReady(
+                    resource: Drawable?,
+                    model: Any?,
+                    target: Target<Drawable>?,
+                    dataSource: DataSource?,
+                    isFirstResource: Boolean
+                ): Boolean {
+                    binding.imgLoading.visibility = View.GONE
+                    hideLoading()
+                    return false
+                }
+            })
+            .into(binding.imgProductThumbnail)
     }
 
     /**
@@ -193,8 +218,8 @@ class OrderStatusUpdateActivity : BaseActivity() {
             .addOnSuccessListener { snapshot ->
                 if (snapshot.exists()) {
                     val user = snapshot.getValue(MerchantUser::class.java)
-                    val name = user?.Name ?: user?.Name ?: ""
-                    val surname = user?.Surname ?: user?.Surname ?: ""
+                    val name = user?.Name ?: ""
+                    val surname = user?.Surname ?: ""
 
                     if (name.isNotEmpty() || surname.isNotEmpty()) {
                         customerNameSurname = "$name $surname"
@@ -239,9 +264,12 @@ class OrderStatusUpdateActivity : BaseActivity() {
             .child(phone)
             .child(orderId)
 
+        showLoading()
+
         merchantOrderRef.get().addOnSuccessListener { snapshot ->
             val order = snapshot.getValue(Order::class.java)
             if (order == null) {
+                hideLoading()
                 Toast.makeText(
                     this,
                     getString(R.string.error_no_records_found),
@@ -260,7 +288,7 @@ class OrderStatusUpdateActivity : BaseActivity() {
             order.productStatus = newList
 
             // CreatedDate yoksa bir defaya mahsus set et (geri uyumluluk)
-            if (order.createdDate == null || order.createdDate!!.isEmpty()) {
+            if (order.createdDate.isNullOrEmpty()) {
                 order.createdDate = nowIso
             }
 
@@ -330,16 +358,24 @@ class OrderStatusUpdateActivity : BaseActivity() {
                     detailLink             // %6$s
                 )
 
+                hideLoading()
                 WhatsAppUtils.sendMessage(this, phone, formattedMessage)
-
                 finish()
             }.addOnFailureListener {
+                hideLoading()
                 Toast.makeText(
                     this,
                     it.message ?: getString(R.string.error_generic),
                     Toast.LENGTH_SHORT
                 ).show()
             }
+        }.addOnFailureListener {
+            hideLoading()
+            Toast.makeText(
+                this,
+                it.message ?: getString(R.string.error_generic),
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 

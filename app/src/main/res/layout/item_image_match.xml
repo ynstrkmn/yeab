@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/layoutItemMatch"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="8dp"
+    android:gravity="center_vertical">
+
+    <FrameLayout
+        android:layout_width="150dp"
+        android:layout_height="150dp">
+
+        <ProgressBar
+            android:id="@+id/progressImage"
+            style="?android:attr/progressBarStyleSmall"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="center" />
+
+        <ImageView
+            android:id="@+id/imgMatch"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:background="#DDDDDD"
+            android:contentDescription="@string/app_name" />
+    </FrameLayout>
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:orientation="vertical"
+        android:layout_weight="1">
+
+        <TextView
+            android:id="@+id/txtProductName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="-"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF" />
+
+        <TextView
+            android:id="@+id/txtPhone"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="5310000000"
+            android:textSize="12sp"
+            android:textColor="#FFFFFF" />
+
+        <TextView
+            android:id="@+id/txtSimilarity"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="85%"
+            android:textSize="12sp"
+            android:textColor="#00897B"
+            android:layout_marginTop="2dp" />
+    </LinearLayout>
+
+</LinearLayout>

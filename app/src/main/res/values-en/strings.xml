@@ -26,6 +26,7 @@
     <!-- Home -->
     <string name="home_button_new_order">Add New Product</string>
     <string name="home_button_list_orders">List Products</string>
+    <string name="home_button_only_add">Add</string>
 
     <!-- New Order -->
     <string name="new_order_phone_hint">Phone (10 digits)</string>
@@ -65,10 +66,6 @@
     <string name="info_order_saved">Order saved</string>
     <string name="info_image_search_todo">Image search (simple matching applied)</string>
 
-    <!-- Order Item UI -->
-    <string name="order_item_status_label">Status:</string>
-    <string name="order_item_last_status_unknown">No status</string>
-
     <string name="error_generic">An error occurred</string>
     <string name="error_camera_permission_denied">Camera permission was denied</string>
 
@@ -99,6 +96,14 @@
 
 
     <string name="loading_default">Please wait…</string>
+
+    <string name="order_list_subtitle">View all orders from your customers</string>
+    <string name="order_list_last_status_format">Latest situation: %1$s</string>
+    <string name="order_item_last_status_unknown">Unknown</string>
+    <string name="order_item_status_label">Last Status:</string>
+    <string name="order_list_item_image_desc">Product image</string>
+
+    <string name="founded_with_percent">found with matching rate.</string>
 
 
 </resources>

@@ -1,13 +1,19 @@
 package com.yeab.esnapp.ui.order
 
 import android.content.Intent
+import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.DataSource
+import com.bumptech.glide.load.engine.GlideException
+import com.bumptech.glide.request.RequestListener
+import com.bumptech.glide.request.target.Target
 import com.google.firebase.database.*
 import com.yeab.esnapp.R
 import com.yeab.esnapp.databinding.ActivityOrderListBinding
@@ -88,7 +94,7 @@ class OrderListActivity : BaseActivity() {
         i.putExtra(IntentKeys.MERCHANT_UID, merchantUid)
         i.putExtra(IntentKeys.PHONE, phone)
         i.putExtra(IntentKeys.ORDER_ID, orderItem.orderId)
-        i.putExtra(IntentKeys.PRODUCT_NAME, orderItem.order.productName) // YENİ
+        i.putExtra(IntentKeys.PRODUCT_NAME, orderItem.order.productName)
         startActivity(i)
     }
 }
@@ -98,7 +104,8 @@ class OrdersAdapter(
     private val onClick: (OrderItem) -> Unit
 ) : RecyclerView.Adapter<OrdersAdapter.OrderViewHolder>() {
 
-    class OrderViewHolder(val binding: ItemOrderBinding) : RecyclerView.ViewHolder(binding.root)
+    class OrderViewHolder(val binding: ItemOrderBinding) :
+        RecyclerView.ViewHolder(binding.root)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): OrderViewHolder {
         val inflater = LayoutInflater.from(parent.context)
@@ -114,18 +121,59 @@ class OrdersAdapter(
 
         holder.binding.txtProductName.text = item.order.productName
 
-        val statuses: List<ProductStatus>? = item.order.productStatus
-        val lastStatus = if (statuses != null && statuses.isNotEmpty()) {
-            statuses.last().status
-        } else {
-            ctx.getString(R.string.order_item_last_status_unknown)
-        }
+        val statuses = item.order.productStatus
+        val lastStatus =
+            if (!statuses.isNullOrEmpty()) statuses.last().status
+            else ctx.getString(R.string.order_item_last_status_unknown)
 
         holder.binding.txtLastStatus.text =
             ctx.getString(R.string.order_item_status_label) + " " + lastStatus
+
+        val imageUrl = item.order.productImageUrl
+        val progress = holder.binding.imgLoading
+
+        progress.visibility = View.VISIBLE
+
+        if (!imageUrl.isNullOrEmpty()) {
+
+            Glide.with(ctx)
+                .load(imageUrl)
+                .centerCrop()
+                .placeholder(android.R.drawable.ic_menu_report_image)
+                .error(android.R.drawable.ic_menu_report_image)
+                .listener(object : RequestListener<Drawable> {
+                    override fun onLoadFailed(
+                        e: GlideException?,
+                        model: Any?,
+                        target: Target<Drawable>?,
+                        isFirstResource: Boolean
+                    ): Boolean {
+                        progress.visibility = View.GONE
+                        return false
+                    }
+
+                    override fun onResourceReady(
+                        resource: Drawable?,
+                        model: Any?,
+                        target: Target<Drawable>?,
+                        dataSource: DataSource?,
+                        isFirstResource: Boolean
+                    ): Boolean {
+                        progress.visibility = View.GONE
+                        return false
+                    }
+                })
+                .into(holder.binding.imgProduct)
+
+        } else {
+            progress.visibility = View.GONE
+            holder.binding.imgProduct.setImageResource(android.R.drawable.ic_menu_report_image)
+        }
 
         holder.itemView.setOnClickListener {
             onClick(item)
         }
     }
+
+
 }

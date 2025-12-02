@@ -1,5 +1,6 @@
 package com.yeab.esnapp.ui.order
 
+import ImageMatchAdapter
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -179,14 +180,7 @@ class SearchOrderActivity : BaseActivity() {
                                 }
                             }
 
-                            data class MatchedOrderUi(
-                                val match: com.yeab.esnapp.util.MatchResult,
-                                val phone: String,
-                                val orderId: String,
-                                val productName: String?
-                            )
-
-                            val matchedOrders = mutableListOf<MatchedOrderUi>()
+                            val matchedOrders = mutableListOf<ImageMatchAdapter.MatchedOrderUi>()
 
                             for (match in topMatches) {
                                 val url = match.imageUrl
@@ -195,7 +189,7 @@ class SearchOrderActivity : BaseActivity() {
                                     if (info != null) {
                                         val (phone, orderId, productName) = info
                                         matchedOrders.add(
-                                            MatchedOrderUi(
+                                            ImageMatchAdapter.MatchedOrderUi(
                                                 match = match,
                                                 phone = phone,
                                                 orderId = orderId,
@@ -218,33 +212,44 @@ class SearchOrderActivity : BaseActivity() {
                                 return@calculateSimilarity
                             }
 
-                            val items = matchedOrders.map { m ->
-                                val pct = m.match.percentage.coerceAtLeast(0)
-                                val name = m.productName ?: "-"
-                                "${pct}% - $name (${m.phone})"
-                            }.toTypedArray()
-
                             runOnUiThread {
                                 hideLoading()
-                                val dialog =
+
+                                val dialogView = layoutInflater.inflate(
+                                    R.layout.dialog_image_matches,
+                                    null
+                                )
+                                val recycler =
+                                    dialogView.findViewById<androidx.recyclerview.widget.RecyclerView>(
+                                        R.id.recyclerImageMatches
+                                    )
+                                recycler.layoutManager =
+                                    androidx.recyclerview.widget.LinearLayoutManager(this@SearchOrderActivity)
+
+                                // Dialog referansı, tıklamada kapatmak için
+                                var alertDialog: androidx.appcompat.app.AlertDialog? = null
+
+                                val adapter = ImageMatchAdapter(matchedOrders) { selected ->
+                                    val intent = Intent(
+                                        this@SearchOrderActivity,
+                                        OrderStatusUpdateActivity::class.java
+                                    )
+                                    intent.putExtra(IntentKeys.MERCHANT_UID, uid)
+                                    intent.putExtra(IntentKeys.PHONE, selected.phone)
+                                    intent.putExtra(IntentKeys.ORDER_ID, selected.orderId)
+                                    intent.putExtra(IntentKeys.PRODUCT_NAME, selected.productName)
+                                    startActivity(intent)
+                                    alertDialog?.dismiss()
+                                }
+
+                                recycler.adapter = adapter
+
+                                alertDialog =
                                     androidx.appcompat.app.AlertDialog.Builder(this@SearchOrderActivity)
-                                        .setTitle(getString(R.string.info_image_match_found))
-                                        .setItems(items) { _, which ->
-                                            val selected = matchedOrders[which]
-                                            val i = Intent(
-                                                this@SearchOrderActivity,
-                                                OrderStatusUpdateActivity::class.java
-                                            )
-                                            i.putExtra(IntentKeys.MERCHANT_UID, uid)
-                                            i.putExtra(IntentKeys.PHONE, selected.phone)
-                                            i.putExtra(IntentKeys.ORDER_ID, selected.orderId)
-                                            i.putExtra(IntentKeys.PRODUCT_NAME, selected.productName)
-                                            startActivity(i)
-                                        }
-                                        .setNegativeButton(android.R.string.cancel, null)
+                                        .setView(dialogView)
                                         .create()
 
-                                dialog.show()
+                                alertDialog.show()
                             }
                         },
                         onError = { e ->
@@ -271,5 +276,6 @@ class SearchOrderActivity : BaseActivity() {
                     }
                 }
             })
+
     }
 }

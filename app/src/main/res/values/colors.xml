@@ -7,4 +7,26 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+
+
+    <color name="colorPrimary">#4A90E2</color>
+    <color name="colorPrimaryLight">#7DB7FF</color>
+    <color name="colorPrimaryDark">#2C6CBF</color>
+
+    <color name="background">#F9F9FB</color>
+    <color name="cardBackground">#FFFFFF</color>
+    <color name="cardStroke">#E5E5E5</color>
+
+    <color name="textPrimary">#333333</color>
+    <color name="textSecondary">#666666</color>
+
+    <color name="accentPeach">#FFBFAE</color>
+    <color name="accentMint">#A7E8BD</color>
+    <color name="accentYellow">#9E7A0D</color>
+
+
+    <color name="backgrnd">#4A90E2</color>
+    <color name="deneme">#888888</color>
+
 </resources>

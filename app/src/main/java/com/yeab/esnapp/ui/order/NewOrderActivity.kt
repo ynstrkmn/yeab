@@ -330,5 +330,6 @@ class NewOrderActivity : BaseActivity() {
         intent.putExtra(IntentKeys.PRODUCT_DESC, binding.edtProductDesc.text.toString().trim())
         intent.putExtra(IntentKeys.PRODUCT_IMAGE_URL, productImageUrl)
         startActivity(intent)
+        finish()
     }
 }

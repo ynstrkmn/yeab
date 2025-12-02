@@ -1,22 +1,96 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
-    android:padding="12dp"
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:layout_marginTop="8dp"
+    android:layout_marginBottom="4dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="1dp"
+    app:cardBackgroundColor="#FFFFFF"
+    app:strokeWidth="1dp"
+    app:strokeColor="#E5E5E5">
 
-    <TextView
-        android:id="@+id/txtProductName"
-        android:textStyle="bold"
-        android:textSize="16sp"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Pantolon A1" />
+        android:orientation="horizontal"
+        android:padding="12dp"
+        android:gravity="center_vertical">
 
-    <TextView
-        android:id="@+id/txtLastStatus"
-        android:layout_marginTop="4dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/order_item_status_label" />
-</LinearLayout>
+        <RelativeLayout
+            android:id="@+id/imgContainer"
+            android:layout_width="56dp"
+            android:layout_height="56dp">
+
+            <!-- Loading ProgressBar -->
+            <ProgressBar
+                android:id="@+id/imgLoading"
+                style="?android:attr/progressBarStyleSmall"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_centerInParent="true"
+                android:visibility="visible" />
+
+            <!-- Ürün Resmi -->
+            <ImageView
+                android:id="@+id/imgProduct"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:background="#EEEEEE"
+                android:contentDescription="@string/order_list_item_image_desc"/>
+        </RelativeLayout>
+
+        <!-- Sağ tarafta bilgiler -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_marginStart="12dp">
+
+            <!-- Ürün adı -->
+            <TextView
+                android:id="@+id/txtProductName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Pantolon A1"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:textColor="#333333" />
+
+            <!-- Telefon + Merchant bilgisi (opsiyonel) -->
+            <TextView
+                android:id="@+id/txtPhone"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="+90 531 000 0000"
+                android:textSize="12sp"
+                android:textColor="#777777" />
+
+            <!-- Son durum -->
+            <TextView
+                android:id="@+id/txtLastStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Son durum: Devam Ediyor"
+                android:textSize="12sp"
+                android:textColor="#4A90E2" />
+
+            <!-- Tarih -->
+            <TextView
+                android:id="@+id/txtDate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="21.10.2025 10:15"
+                android:textSize="11sp"
+                android:textColor="#999999" />
+        </LinearLayout>
+
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

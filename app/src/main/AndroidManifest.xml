@@ -25,18 +25,29 @@
             </intent-filter>
         </service>
 
-        <activity android:name=".ui.order.OrderStatusUpdateActivity" />
-        <activity android:name=".ui.order.OrderListActivity" />
-        <activity android:name=".ui.order.SearchByPhoneActivity" />
-        <activity android:name=".ui.order.SearchOrderActivity" />
-        <activity android:name=".ui.order.MessageTemplateActivity" />
-        <activity android:name=".ui.order.NewOrderActivity" />
-        <activity android:name=".ui.home.HomeActivity" />
-        <activity android:name=".ui.auth.MerchantInfoActivity" />
-        <activity android:name=".ui.auth.AuthChoiceActivity" />
-        <activity android:name=".ui.auth.MerchantLoginActivity"/>
+        <activity android:name=".ui.order.OrderStatusUpdateActivity"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".ui.order.OrderListActivity"
+            android:screenOrientation="portrait" />
+        <activity android:name=".ui.order.SearchByPhoneActivity"
+            android:screenOrientation="portrait" />
+        <activity android:name=".ui.order.SearchOrderActivity"
+            android:screenOrientation="portrait" />
+        <activity android:name=".ui.order.MessageTemplateActivity"
+            android:screenOrientation="portrait" />
+        <activity android:name=".ui.order.NewOrderActivity"
+            android:screenOrientation="portrait" />
+        <activity android:name=".ui.home.HomeActivity"
+            android:screenOrientation="portrait" />
+        <activity android:name=".ui.auth.MerchantInfoActivity"
+            android:screenOrientation="portrait" />
+        <activity android:name=".ui.auth.AuthChoiceActivity"
+            android:screenOrientation="portrait" />
+        <activity android:name=".ui.auth.MerchantLoginActivity"
+            android:screenOrientation="portrait"/>
         <activity
             android:name=".ui.splash.SplashActivity"
+            android:screenOrientation="portrait"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
