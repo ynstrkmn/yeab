@@ -7,10 +7,11 @@ import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.database.*
 import com.yeab.esnapp.R
 import com.yeab.esnapp.databinding.ActivitySearchByPhoneBinding
+import com.yeab.esnapp.ui.base.BaseActivity
 import com.yeab.esnapp.util.FirebasePaths
 import com.yeab.esnapp.util.IntentKeys
 
-class SearchByPhoneActivity : AppCompatActivity() {
+class SearchByPhoneActivity : BaseActivity() {
 
     private lateinit var binding: ActivitySearchByPhoneBinding
     private val dbRef = FirebaseDatabase.getInstance().reference
@@ -37,12 +38,15 @@ class SearchByPhoneActivity : AppCompatActivity() {
             return
         }
 
+        showLoading()
+
         dbRef.child(FirebasePaths.ORDERS_ROOT)
             .child(FirebasePaths.ORDERS_MERCHANT_ORDERS)
             .child(uid)
             .child(phone)
             .addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
+                    hideLoading()
                     if (!snapshot.exists()) {
                         Toast.makeText(this@SearchByPhoneActivity, getString(R.string.error_no_records_found), Toast.LENGTH_SHORT).show()
                         return
@@ -54,7 +58,9 @@ class SearchByPhoneActivity : AppCompatActivity() {
                     startActivity(i)
                 }
 
-                override fun onCancelled(error: DatabaseError) {}
+                override fun onCancelled(error: DatabaseError) {
+                    hideLoading()
+                }
             })
     }
 }

@@ -12,6 +12,7 @@ import com.yeab.esnapp.model.MerchantMessageTemplate
 import com.yeab.esnapp.model.MerchantUser
 import com.yeab.esnapp.model.Order
 import com.yeab.esnapp.model.ProductStatus
+import com.yeab.esnapp.ui.base.BaseActivity
 import com.yeab.esnapp.util.DateFormats
 import com.yeab.esnapp.util.FirebasePaths
 import com.yeab.esnapp.util.IntentKeys
@@ -20,7 +21,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-class MessageTemplateActivity : AppCompatActivity() {
+class MessageTemplateActivity : BaseActivity() {
 
     private lateinit var binding: ActivityMessageTemplateBinding
     private val dbRef = FirebaseDatabase.getInstance().reference

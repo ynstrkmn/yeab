@@ -4,13 +4,10 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.google.firebase.database.*
@@ -18,6 +15,7 @@ import com.google.firebase.storage.FirebaseStorage
 import com.yeab.esnapp.R
 import com.yeab.esnapp.databinding.ActivityNewOrderBinding
 import com.yeab.esnapp.model.MerchantUser
+import com.yeab.esnapp.ui.base.BaseActivity
 import com.yeab.esnapp.util.FirebasePaths
 import com.yeab.esnapp.util.IntentKeys
 import com.google.mlkit.vision.common.InputImage
@@ -27,7 +25,7 @@ import java.io.File
 import java.math.BigInteger
 import java.util.UUID
 
-class NewOrderActivity : AppCompatActivity() {
+class NewOrderActivity : BaseActivity() {
 
     private lateinit var binding: ActivityNewOrderBinding
     private val dbRef = FirebaseDatabase.getInstance().reference
@@ -35,25 +33,42 @@ class NewOrderActivity : AppCompatActivity() {
 
     private var merchantUid: String? = null
     private var productImageUrl: String? = null
-    private var photoUri: Uri? = null
 
+    // FULL RES fotoğraf URI'si
+    private var photoUri: android.net.Uri? = null
 
     // Kamera sonucu
     private val cameraLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == RESULT_OK) {
-                // Full resolution bitmapi buradan okuyoruz
-                val uri = photoUri ?: return@registerForActivityResult
-                val bitmap = BitmapFactory.decodeStream(contentResolver.openInputStream(uri))
-
-                if (bitmap != null) {
-                    uploadImage(bitmap)  // <-- MLKit için artık yüksek çözünürlük
-                } else {
-                    Toast.makeText(this, "Fotoğraf okunamadı", Toast.LENGTH_SHORT).show()
+                val uri = photoUri
+                if (uri == null) {
+                    Toast.makeText(this, getString(R.string.error_generic), Toast.LENGTH_SHORT)
+                        .show()
+                    return@registerForActivityResult
+                }
+                try {
+                    contentResolver.openInputStream(uri)?.use { inputStream ->
+                        val bitmap = android.graphics.BitmapFactory.decodeStream(inputStream)
+                        if (bitmap != null) {
+                            uploadImage(bitmap)
+                        } else {
+                            Toast.makeText(
+                                this,
+                                getString(R.string.error_generic),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                } catch (e: Exception) {
+                    Toast.makeText(
+                        this,
+                        getString(R.string.error_generic) + ": " + e.message,
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
         }
-
 
     // Kamera izni sonucu
     private val cameraPermissionLauncher =
@@ -95,11 +110,14 @@ class NewOrderActivity : AppCompatActivity() {
             return
         }
 
+        showLoading()
+
         dbRef.child(FirebasePaths.MERCHANTS_USERS)
             .child(uid)
             .child(phone)
             .addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
+                    hideLoading()
                     if (snapshot.exists()) {
                         val user = snapshot.getValue(MerchantUser::class.java)
                         user?.let {
@@ -116,7 +134,14 @@ class NewOrderActivity : AppCompatActivity() {
                     }
                 }
 
-                override fun onCancelled(error: DatabaseError) {}
+                override fun onCancelled(error: DatabaseError) {
+                    hideLoading()
+                    Toast.makeText(
+                        this@NewOrderActivity,
+                        error.message,
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
             })
     }
 
@@ -133,7 +158,6 @@ class NewOrderActivity : AppCompatActivity() {
             return
         }
 
-        // Burada direkt kamera açmak yerine önce izin kontrolü yapıyoruz
         checkCameraPermissionAndOpen()
     }
 
@@ -153,7 +177,7 @@ class NewOrderActivity : AppCompatActivity() {
     private fun openCameraForProduct() {
         val photoFile = File(
             cacheDir,
-            "photo_${System.currentTimeMillis()}.jpg"
+            "neworder_${System.currentTimeMillis()}.jpg"
         )
 
         photoUri = FileProvider.getUriForFile(
@@ -162,12 +186,13 @@ class NewOrderActivity : AppCompatActivity() {
             photoFile
         )
 
-        val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-        intent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri)
-        intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE).apply {
+            putExtra(MediaStore.EXTRA_OUTPUT, photoUri)
+            addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
 
-        cameraLauncher.launch(intent)
+        cameraLauncher.launch(cameraIntent)
     }
 
     /**
@@ -179,7 +204,8 @@ class NewOrderActivity : AppCompatActivity() {
     private fun uploadImage(bitmap: Bitmap) {
         val uid = merchantUid ?: return
 
-        // 1) ML Kit Text Recognition ile resmi oku
+        showLoading()
+
         val image = InputImage.fromBitmap(bitmap, 0)
         val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
 
@@ -189,7 +215,7 @@ class NewOrderActivity : AppCompatActivity() {
                 uploadImageInternal(uid, bitmap, recognizedText)
             }
             .addOnFailureListener {
-                // OCR başarısız olursa da siparişi bozma; sadece recognizedText boş gitsin
+                // OCR başarısız olursa recognizedText boş gitsin
                 uploadImageInternal(uid, bitmap, "")
             }
     }
@@ -210,14 +236,12 @@ class NewOrderActivity : AppCompatActivity() {
         bitmap.compress(Bitmap.CompressFormat.JPEG, 90, baos)
         val data = baos.toByteArray()
 
-        // SHA-256 hash
         val sha256 = try {
             sha256Hex(data)
         } catch (e: Exception) {
             ""
         }
 
-        // Eski phash yapını bozmayalım, ileride tekrar lazım olabilir
         val phash = try {
             averageHash(bitmap)
         } catch (e: Exception) {
@@ -234,14 +258,12 @@ class NewOrderActivity : AppCompatActivity() {
             .addOnSuccessListener { uri ->
                 productImageUrl = uri.toString()
 
-                // Database'e kaydedilecek metadata
                 val meta = HashMap<String, Any?>()
                 meta["imageUrl"] = productImageUrl
                 meta["hash"] = sha256
                 meta["phash"] = phash
                 meta["fileName"] = fileName
                 meta["timestamp"] = ServerValue.TIMESTAMP
-                // 🔴 YENİ: ML Kit ile okunan metni de kaydediyoruz
                 meta["recognizedText"] = recognizedText
 
                 dbRef.child("image_hashes")
@@ -249,12 +271,13 @@ class NewOrderActivity : AppCompatActivity() {
                     .child(imageId)
                     .setValue(meta)
                     .addOnCompleteListener {
-                        // Meta yazımı tamamlandıktan sonra şablon ekranına geç
+                        hideLoading()
                         goToMessageTemplateScreen()
                     }
 
             }
             .addOnFailureListener {
+                hideLoading()
                 Toast.makeText(
                     this,
                     getString(R.string.error_image_upload) + ": " + (it.message ?: ""),
@@ -269,7 +292,6 @@ class NewOrderActivity : AppCompatActivity() {
         return digest.joinToString("") { "%02x".format(it) }
     }
 
-    // Eski averageHash duruyor; ister kullanırsın ister ileride temizlersin
     private fun averageHash(src: Bitmap): String {
         val size = 8
         val scaled = Bitmap.createScaledBitmap(src, size, size, true)

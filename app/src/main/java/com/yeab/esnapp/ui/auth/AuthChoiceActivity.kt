@@ -13,11 +13,12 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.messaging.FirebaseMessaging
 import com.yeab.esnapp.R
 import com.yeab.esnapp.databinding.ActivityAuthChoiceBinding
+import com.yeab.esnapp.ui.base.BaseActivity
 import com.yeab.esnapp.ui.home.HomeActivity
 import com.yeab.esnapp.util.FirebasePaths
 import com.yeab.esnapp.util.IntentKeys
 
-class AuthChoiceActivity : AppCompatActivity() {
+class AuthChoiceActivity : BaseActivity() {
 
     private lateinit var binding: ActivityAuthChoiceBinding
     private lateinit var auth: FirebaseAuth

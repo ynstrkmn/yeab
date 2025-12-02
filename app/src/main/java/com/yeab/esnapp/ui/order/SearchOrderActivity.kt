@@ -10,28 +10,27 @@ import android.os.Bundle
 import android.provider.MediaStore
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.google.firebase.database.*
 import com.yeab.esnapp.R
 import com.yeab.esnapp.databinding.ActivitySearchOrderBinding
 import com.yeab.esnapp.model.Order
+import com.yeab.esnapp.ui.base.BaseActivity
 import com.yeab.esnapp.util.FirebasePaths
 import com.yeab.esnapp.util.ImageSimilarityUtils
 import com.yeab.esnapp.util.IntentKeys
 import java.io.File
 
-class SearchOrderActivity : AppCompatActivity() {
+class SearchOrderActivity : BaseActivity() {
 
     private lateinit var binding: ActivitySearchOrderBinding
     private var merchantUid: String? = null
     private val dbRef = FirebaseDatabase.getInstance().reference
 
-    // FULL-RES fotoğraf URI'si
     private var photoUri: Uri? = null
 
-    // Kamera sonucu (artık thumbnail değil, full-res dosyadan okuyoruz)
+    // Kamera sonucu
     private val cameraLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == RESULT_OK) {
@@ -110,17 +109,12 @@ class SearchOrderActivity : AppCompatActivity() {
         }
     }
 
-    /**
-     * Thumbnail yerine FULL RES fotoğraf çeken intent
-     */
     private fun openCameraForSearch() {
-        // Geçici dosya
         val photoFile = File(
             cacheDir,
             "search_${System.currentTimeMillis()}.jpg"
         )
 
-        // FileProvider üzerinden URI oluştur
         photoUri = FileProvider.getUriForFile(
             this,
             "$packageName.fileprovider",
@@ -136,21 +130,18 @@ class SearchOrderActivity : AppCompatActivity() {
         cameraLauncher.launch(intent)
     }
 
-    /**
-     * Kameradan alınan bitmap ile Firebase'teki kayıtları
-     * ImageSimilarityUtils (ML Kit + text similarity) üzerinden karşılaştırır.
-     * En iyi 3 eşleşmeyi kullanıcıya listeler, seçtiği siparişe gider.
-     */
     private fun searchByImage(capturedBitmap: Bitmap) {
         val uid = merchantUid ?: return
+
+        showLoading()
 
         dbRef.child(FirebasePaths.ORDERS_ROOT)
             .child(FirebasePaths.ORDERS_MERCHANT_ORDERS)
             .child(uid)
             .addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    // MLKit + text similarity için threshold'u "minimum yüzde benzerlik" olarak kullanıyoruz
-                    val threshold = 60
+
+                    val threshold = 40
 
                     ImageSimilarityUtils.calculateSimilarity(
                         capturedBitmap,
@@ -159,6 +150,7 @@ class SearchOrderActivity : AppCompatActivity() {
                         onResult = { matches ->
                             if (matches.isEmpty()) {
                                 runOnUiThread {
+                                    hideLoading()
                                     Toast.makeText(
                                         this@SearchOrderActivity,
                                         getString(R.string.error_no_image_match).plus(".."),
@@ -168,10 +160,8 @@ class SearchOrderActivity : AppCompatActivity() {
                                 return@calculateSimilarity
                             }
 
-                            // 1) En iyi 3 eşleşmeyi al (distance küçükten büyüğe sıralanmış geliyor)
                             val topMatches = matches.take(3)
 
-                            // 2) Snapshot'ı tek seferde dolaşıp imageUrl -> (phone, orderId, productName) map'i oluştur
                             val urlToOrderInfo =
                                 mutableMapOf<String, Triple<String, String, String?>>()
 
@@ -189,7 +179,6 @@ class SearchOrderActivity : AppCompatActivity() {
                                 }
                             }
 
-                            // 3) Top 3 MatchResult içinden gerçekten siparişle eşleşenleri topla
                             data class MatchedOrderUi(
                                 val match: com.yeab.esnapp.util.MatchResult,
                                 val phone: String,
@@ -219,6 +208,7 @@ class SearchOrderActivity : AppCompatActivity() {
 
                             if (matchedOrders.isEmpty()) {
                                 runOnUiThread {
+                                    hideLoading()
                                     Toast.makeText(
                                         this@SearchOrderActivity,
                                         getString(R.string.error_no_image_match),
@@ -228,8 +218,6 @@ class SearchOrderActivity : AppCompatActivity() {
                                 return@calculateSimilarity
                             }
 
-                            // 4) Kullanıcıya gösterilecek liste text'leri
-                            //    Örn: "85% - Pantolon A1 (5311000001)"
                             val items = matchedOrders.map { m ->
                                 val pct = m.match.percentage.coerceAtLeast(0)
                                 val name = m.productName ?: "-"
@@ -237,7 +225,7 @@ class SearchOrderActivity : AppCompatActivity() {
                             }.toTypedArray()
 
                             runOnUiThread {
-                                // 5) Dialog ile kullanıcıya 3'lüyü sun, seçtiğini OrderStatusUpdateActivity'ye taşı
+                                hideLoading()
                                 val dialog =
                                     androidx.appcompat.app.AlertDialog.Builder(this@SearchOrderActivity)
                                         .setTitle(getString(R.string.info_image_match_found))
@@ -261,6 +249,7 @@ class SearchOrderActivity : AppCompatActivity() {
                         },
                         onError = { e ->
                             runOnUiThread {
+                                hideLoading()
                                 Toast.makeText(
                                     this@SearchOrderActivity,
                                     getString(R.string.error_generic) + ": " + e.message,
@@ -273,6 +262,7 @@ class SearchOrderActivity : AppCompatActivity() {
 
                 override fun onCancelled(error: DatabaseError) {
                     runOnUiThread {
+                        hideLoading()
                         Toast.makeText(
                             this@SearchOrderActivity,
                             error.message,

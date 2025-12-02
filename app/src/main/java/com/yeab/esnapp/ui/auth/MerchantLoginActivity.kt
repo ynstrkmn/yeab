@@ -4,9 +4,10 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.yeab.esnapp.databinding.ActivityMerchantLoginBinding
+import com.yeab.esnapp.ui.base.BaseActivity
 import com.yeab.esnapp.util.IntentKeys
 
-class MerchantLoginActivity : AppCompatActivity() {
+class MerchantLoginActivity : BaseActivity() {
 
     private lateinit var binding: ActivityMerchantLoginBinding
 

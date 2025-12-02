@@ -9,11 +9,12 @@ import com.google.firebase.messaging.FirebaseMessaging
 import com.yeab.esnapp.R
 import com.yeab.esnapp.databinding.ActivityMerchantInfoBinding
 import com.yeab.esnapp.model.Merchant
+import com.yeab.esnapp.ui.base.BaseActivity
 import com.yeab.esnapp.ui.home.HomeActivity
 import com.yeab.esnapp.util.FirebasePaths
 import com.yeab.esnapp.util.IntentKeys
 
-class MerchantInfoActivity : AppCompatActivity() {
+class MerchantInfoActivity : BaseActivity() {
 
     private lateinit var binding: ActivityMerchantInfoBinding
     private val dbRef = FirebaseDatabase.getInstance().reference

@@ -8,10 +8,11 @@ import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.yeab.esnapp.databinding.ActivitySplashBinding
 import com.yeab.esnapp.ui.auth.MerchantLoginActivity
+import com.yeab.esnapp.ui.base.BaseActivity
 import com.yeab.esnapp.ui.home.HomeActivity
 import com.yeab.esnapp.util.IntentKeys
 
-class SplashActivity : AppCompatActivity() {
+class SplashActivity : BaseActivity() {
 
     private lateinit var binding: ActivitySplashBinding
 

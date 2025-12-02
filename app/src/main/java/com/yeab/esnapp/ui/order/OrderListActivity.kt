@@ -14,6 +14,7 @@ import com.yeab.esnapp.databinding.ActivityOrderListBinding
 import com.yeab.esnapp.databinding.ItemOrderBinding
 import com.yeab.esnapp.model.Order
 import com.yeab.esnapp.model.ProductStatus
+import com.yeab.esnapp.ui.base.BaseActivity
 import com.yeab.esnapp.util.FirebasePaths
 import com.yeab.esnapp.util.IntentKeys
 
@@ -22,7 +23,7 @@ data class OrderItem(
     val order: Order
 )
 
-class OrderListActivity : AppCompatActivity() {
+class OrderListActivity : BaseActivity() {
 
     private lateinit var binding: ActivityOrderListBinding
     private val dbRef = FirebaseDatabase.getInstance().reference

@@ -98,4 +98,7 @@
     <string name="logout_no">No</string>
 
 
+    <string name="loading_default">Please wait…</string>
+
+
 </resources>

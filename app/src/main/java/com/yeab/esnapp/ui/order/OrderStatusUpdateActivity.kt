@@ -16,6 +16,7 @@ import com.yeab.esnapp.model.MerchantMessageTemplate
 import com.yeab.esnapp.model.MerchantUser
 import com.yeab.esnapp.model.Order
 import com.yeab.esnapp.model.ProductStatus
+import com.yeab.esnapp.ui.base.BaseActivity
 import com.yeab.esnapp.util.DateFormats
 import com.yeab.esnapp.util.FirebasePaths
 import com.yeab.esnapp.util.IntentKeys
@@ -25,7 +26,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-class OrderStatusUpdateActivity : AppCompatActivity() {
+class OrderStatusUpdateActivity : BaseActivity() {
 
     private lateinit var binding: ActivityOrderStatusUpdateBinding
     private val dbRef = FirebaseDatabase.getInstance().reference
@@ -58,6 +59,7 @@ class OrderStatusUpdateActivity : AppCompatActivity() {
         binding.recyclerStatusHistory.layoutManager = LinearLayoutManager(this)
         binding.recyclerStatusHistory.adapter = statusAdapter
 
+        showLoading()
         loadTemplates()
         loadOrderDetails()
         loadCustomerInfo()
@@ -105,6 +107,7 @@ class OrderStatusUpdateActivity : AppCompatActivity() {
             .child(orderId)
 
         merchantOrderRef.get().addOnSuccessListener { snapshot ->
+
             val order = snapshot.getValue(Order::class.java)
             if (order == null) {
                 Toast.makeText(
@@ -156,6 +159,8 @@ class OrderStatusUpdateActivity : AppCompatActivity() {
             if (bitmap != null) {
                 runOnUiThread {
                     binding.imgProductThumbnail.setImageBitmap(bitmap)
+                    // ✅ Veriyi aldık, loading’i kapat
+                    hideLoading()
                 }
             }
         }.start()
