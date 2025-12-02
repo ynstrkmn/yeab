@@ -4,9 +4,9 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AppCompatActivity
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.database.FirebaseDatabase
@@ -26,9 +26,21 @@ class AuthChoiceActivity : BaseActivity() {
 
     private val googleSignInLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-            if (task.isSuccessful) {
-                val account = task.result
+            val data = result.data
+            if (result.resultCode != RESULT_OK || data == null) {
+                Log.e("AuthChoice", "Google sign in canceled or data is null")
+                return@registerForActivityResult
+            }
+
+            try {
+                val task = GoogleSignIn.getSignedInAccountFromIntent(data)
+                val account = task.getResult(ApiException::class.java)
+
+                if (account == null) {
+                    Log.e("AuthChoice", "Google account is null")
+                    return@registerForActivityResult
+                }
+
                 val credential = GoogleAuthProvider.getCredential(account.idToken, null)
                 auth.signInWithCredential(credential).addOnCompleteListener { authResult ->
                     if (authResult.isSuccessful) {
@@ -51,8 +63,8 @@ class AuthChoiceActivity : BaseActivity() {
                         Log.e("AuthChoice", "Firebase auth failed", authResult.exception)
                     }
                 }
-            } else {
-                Log.e("AuthChoice", "Google sign in failed", task.exception)
+            } catch (e: ApiException) {
+                Log.e("AuthChoice", "Google sign in failed", e)
             }
         }
 
@@ -76,13 +88,21 @@ class AuthChoiceActivity : BaseActivity() {
     }
 
     private fun signInWithGoogle() {
+        // Google Sign-In konfigürasyonu
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken(getString(R.string.default_web_client_id))
             .requestEmail()
             .build()
 
         val client = GoogleSignIn.getClient(this, gso)
-        googleSignInLauncher.launch(client.signInIntent)
+
+        // 🔴 ÖNEMLİ: Önce signOut çağırıp cache'deki hesabı temizliyoruz ki
+        // kullanıcıya her seferinde hesap seçme ekranı gelsin.
+        client.signOut().addOnCompleteListener {
+            // İstersek burada showLoading/hideLoading de kullanabiliriz ama
+            // sadece çok kısa bir signOut olduğu için şimdilik sade bıraktım.
+            googleSignInLauncher.launch(client.signInIntent)
+        }
     }
 
     private fun updatePushToken(uid: String) {
