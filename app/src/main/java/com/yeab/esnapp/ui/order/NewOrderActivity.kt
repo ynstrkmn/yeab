@@ -10,6 +10,7 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.google.firebase.database.*
 import com.google.firebase.storage.FirebaseStorage
 import com.yeab.esnapp.R
@@ -217,6 +218,7 @@ class NewOrderActivity : BaseActivity() {
             .addOnFailureListener {
                 // OCR başarısız olursa recognizedText boş gitsin
                 uploadImageInternal(uid, bitmap, "")
+                FirebaseCrashlytics.getInstance().recordException(Throwable("OCR failed: ${it.message}"))
             }
     }
 
