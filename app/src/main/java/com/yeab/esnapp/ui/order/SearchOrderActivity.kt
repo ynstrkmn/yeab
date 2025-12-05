@@ -246,6 +246,7 @@ class SearchOrderActivity : BaseActivity() {
 
                                 alertDialog =
                                     androidx.appcompat.app.AlertDialog.Builder(this@SearchOrderActivity)
+                                        .setTitle(getString(R.string.search_results_title))
                                         .setView(dialogView)
                                         .create()
 

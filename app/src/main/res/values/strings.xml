@@ -72,7 +72,7 @@
     <string name="error_no_image_match">Benzer resimle eşleşen sipariş bulunamadı</string>
     <string name="info_image_match_found">%1$d%% benzerlik ile sipariş bulundu</string>
 
-    <string name="order_status_matched_product">Eşleşen Ürün: %1$s</string>
+    <string name="order_status_matched_product">Ürün: %1$s</string>
     <string name="order_status_matched_product_placeholder">Eşleşen Ürün: -</string>
     <string name="order_status_history_title">Durum Geçmişi</string>
     <string name="order_status_history_empty">Bu ürüne ait durum bilgisi bulunamadı</string>
@@ -108,5 +108,6 @@
 
 
     <string name="founded_with_percent">eşleşme oranı ile bulundu.</string>
+    <string name="search_results_title">Arama Sonuçları</string>
 
 </resources>

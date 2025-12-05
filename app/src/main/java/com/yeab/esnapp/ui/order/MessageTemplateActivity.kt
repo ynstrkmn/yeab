@@ -2,9 +2,8 @@ package com.yeab.esnapp.ui.order
 
 import android.os.Bundle
 import android.view.View
-import android.widget.RadioButton
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.chip.Chip
 import com.google.firebase.database.*
 import com.yeab.esnapp.R
 import com.yeab.esnapp.databinding.ActivityMessageTemplateBinding
@@ -56,7 +55,7 @@ class MessageTemplateActivity : BaseActivity() {
             .joinToString(" ")
 
         binding.txtTitle.text = getString(R.string.message_template_title)
-        binding.btnSaveOrder.text = getString(R.string.message_template_button_update_order)
+        binding.btnSaveOrder.text = getString(R.string.message_template_button_save_order)
         binding.edtFreeText.hint = getString(R.string.message_template_hint_free_text)
 
         loadTemplates()
@@ -66,6 +65,9 @@ class MessageTemplateActivity : BaseActivity() {
         }
     }
 
+    /**
+     * RadioButton yerine modern Chip oluşturuyoruz.
+     */
     private fun loadTemplates() {
         val uid = merchantUid ?: return
 
@@ -77,40 +79,40 @@ class MessageTemplateActivity : BaseActivity() {
                 templateMap.clear()
 
                 for (child in snapshot.children) {
-                    // Template1, Template2, Template3...
                     val template = child.getValue(MerchantMessageTemplate::class.java) ?: continue
                     val text = template.Text ?: continue
 
-                    val radio = RadioButton(this)
-                    radio.text = text
+                    val chip = Chip(this).apply {
+                        id = View.generateViewId()
+                        this.text = text
+                        isCheckable = true
+                        isClickable = true
+                        isCheckedIconVisible = false
+                    }
 
-                    // ID verip map'e koyuyoruz ki gerekirse Finish/Start flag'lerine erişebilelim
-                    val id = View.generateViewId()
-                    radio.id = id
-
-                    binding.radioGroupTemplates.addView(radio)
-                    templateMap[id] = template
+                    binding.radioGroupTemplates.addView(chip)
+                    templateMap[chip.id] = template
                 }
             }
     }
 
 
     private fun onCompleteClicked() {
-        val uid = merchantUid
-        if (uid.isNullOrEmpty() || phone.isEmpty()) {
+        val uid = merchantUid ?: return
+        if (phone.isEmpty()) {
             Toast.makeText(this, getString(R.string.error_generic), Toast.LENGTH_SHORT).show()
             return
         }
 
-        val selectedId = binding.radioGroupTemplates.checkedRadioButtonId
-        val selectedTemplate = if (selectedId != -1) {
-            findViewById<RadioButton>(selectedId).text.toString()
+        val selectedChipId = binding.radioGroupTemplates.checkedChipId
+        val selectedTemplateText = if (selectedChipId != -1) {
+            binding.radioGroupTemplates.findViewById<Chip>(selectedChipId)?.text?.toString()
         } else null
 
         val freeText = binding.edtFreeText.text.toString().trim()
 
         val messageText = when {
-            !selectedTemplate.isNullOrEmpty() -> selectedTemplate
+            !selectedTemplateText.isNullOrEmpty() -> selectedTemplateText
             freeText.isNotEmpty() -> freeText
             else -> {
                 Toast.makeText(
@@ -131,7 +133,7 @@ class MessageTemplateActivity : BaseActivity() {
     }
 
     /**
-     * MerchantsUsers/{uid}/{phone} altında kayıt yoksa müşteri kaydını oluşturur.
+     * MerchantsUsers/{uid}/{phone} altında müşteri kaydı yoksa ekler.
      */
     private fun saveCustomerIfNeeded(uid: String, onDone: () -> Unit) {
         val userRef = dbRef.child(FirebasePaths.MERCHANTS_USERS)
@@ -141,23 +143,17 @@ class MessageTemplateActivity : BaseActivity() {
         userRef.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 if (!snapshot.exists()) {
-                    val user = MerchantUser()
-                    user.MobilePhoneNumber = phone.toLongOrNull() ?: 0L
-                    user.Name = name
-                    user.Surname = surname
-                    user.Email = email
-
-                    userRef.setValue(user).addOnCompleteListener {
-                        onDone()
+                    val user = MerchantUser().apply {
+                        MobilePhoneNumber = phone.toLongOrNull() ?: 0L
+                        Name = name
+                        Surname = surname
+                        Email = email
                     }
-                } else {
-                    onDone()
-                }
+                    userRef.setValue(user).addOnCompleteListener { onDone() }
+                } else onDone()
             }
 
-            override fun onCancelled(error: DatabaseError) {
-                onDone()
-            }
+            override fun onCancelled(error: DatabaseError) = onDone()
         })
     }
 
@@ -174,10 +170,7 @@ class MessageTemplateActivity : BaseActivity() {
         val isoFormatter = SimpleDateFormat(DateFormats.ORDER_STATUS_ISO, Locale.getDefault())
         val nowIso = isoFormatter.format(now)
 
-        val initialStatus = ProductStatus(messageText, nowIso)
-
-        val statusList = mutableListOf<ProductStatus>()
-        statusList.add(initialStatus)
+        val statusList = mutableListOf(ProductStatus(messageText, nowIso))
 
         val order = Order(
             false,              // isFinished
@@ -206,10 +199,8 @@ class MessageTemplateActivity : BaseActivity() {
         dbRef.updateChildren(updates).addOnSuccessListener {
 
             // Tarihi display formatına çevir
-            val displayFormatter = SimpleDateFormat(
-                DateFormats.ORDER_STATUS_DISPLAY,
-                Locale.getDefault()
-            )
+            val displayFormatter =
+                SimpleDateFormat(DateFormats.ORDER_STATUS_DISPLAY, Locale.getDefault())
             val displayDate = displayFormatter.format(now)
 
             // Müşteri adı yoksa telefon göster
@@ -224,12 +215,12 @@ class MessageTemplateActivity : BaseActivity() {
 
             val formattedMessage = getString(
                 R.string.whatsapp_status_message,
-                customerDisplayName,   // %1$s
-                displayDate,           // %2$s
-                orderId,               // %3$s (artık sadece millis string)
-                safeProductName,       // %4$s
-                messageText,           // %5$s
-                detailLink             // %6$s
+                customerDisplayName,
+                displayDate,
+                orderId,
+                safeProductName,
+                messageText,
+                detailLink
             )
 
             WhatsAppUtils.sendMessage(this, phone, formattedMessage)

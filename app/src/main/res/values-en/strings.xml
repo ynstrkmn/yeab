@@ -72,7 +72,7 @@
     <string name="error_no_image_match">No order found matching this image</string>
     <string name="info_image_match_found">Order found with %1$d%% similarity</string>
 
-    <string name="order_status_matched_product">Matched product: %1$s</string>
+    <string name="order_status_matched_product">Product: %1$s</string>
     <string name="order_status_matched_product_placeholder">Matched product: -</string>
     <string name="order_status_history_title">Status History</string>
     <string name="order_status_history_empty">There is no status history for this product</string>
@@ -103,7 +103,8 @@
     <string name="order_item_status_label">Last Status:</string>
     <string name="order_list_item_image_desc">Product image</string>
 
-    <string name="founded_with_percent">found with matching rate.</string>
+    <string name="founded_with_percent">Found with matching rate.</string>
+    <string name="search_results_title">Search Results</string>
 
 
 </resources>

@@ -48,7 +48,7 @@ class OrderListActivity : BaseActivity() {
         merchantUid = intent.getStringExtra(IntentKeys.MERCHANT_UID)
         phone = intent.getStringExtra(IntentKeys.PHONE) ?: ""
 
-        adapter = OrdersAdapter(orders) { orderItem ->
+        adapter = OrdersAdapter(orders, phone) { orderItem ->
             openUpdateScreen(orderItem)
         }
 
@@ -82,6 +82,7 @@ class OrderListActivity : BaseActivity() {
                         val id = child.key ?: continue
                         orders.add(OrderItem(id, order))
                     }
+                    orders.sortByDescending { it.order.createdDate }
                     adapter.notifyDataSetChanged()
                 }
 
@@ -101,6 +102,7 @@ class OrderListActivity : BaseActivity() {
 
 class OrdersAdapter(
     private val list: List<OrderItem>,
+    private val phone: String,
     private val onClick: (OrderItem) -> Unit
 ) : RecyclerView.Adapter<OrdersAdapter.OrderViewHolder>() {
 
@@ -131,6 +133,9 @@ class OrdersAdapter(
 
         val imageUrl = item.order.productImageUrl
         val progress = holder.binding.imgLoading
+
+        holder.binding.txtDate.text = item.order.createdDate
+        holder.binding.txtPhone.text = phone
 
         progress.visibility = View.VISIBLE
 

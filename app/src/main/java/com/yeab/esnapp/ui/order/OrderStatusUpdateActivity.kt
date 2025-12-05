@@ -3,7 +3,6 @@ package com.yeab.esnapp.ui.order
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.View
-import android.widget.RadioButton
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
@@ -11,6 +10,7 @@ import com.bumptech.glide.load.DataSource
 import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
+import com.google.android.material.chip.Chip
 import com.google.firebase.database.*
 import com.yeab.esnapp.R
 import com.yeab.esnapp.databinding.ActivityOrderStatusUpdateBinding
@@ -55,16 +55,15 @@ class OrderStatusUpdateActivity : BaseActivity() {
         binding.btnUpdate.text = getString(R.string.message_template_button_update_order)
         binding.txtCustomerName.text =
             getString(R.string.order_status_customer_placeholder)
-        binding.txtMatchedProduct.text =
-            getString(R.string.order_status_matched_product_placeholder)
+
+        // ChipGroup: tek seçim
+        binding.radioGroupTemplates.isSingleSelection = true
 
         statusAdapter = ProductStatusAdapter()
         binding.recyclerStatusHistory.layoutManager = LinearLayoutManager(this)
         binding.recyclerStatusHistory.adapter = statusAdapter
 
-        // Global loading başlat
         showLoading()
-
         loadTemplates()
         loadOrderDetails()
         loadCustomerInfo()
@@ -88,13 +87,16 @@ class OrderStatusUpdateActivity : BaseActivity() {
                     val template = child.getValue(MerchantMessageTemplate::class.java) ?: continue
                     val text = template.Text ?: continue
 
-                    val radio = RadioButton(this)
-                    radio.text = text
-                    val id = View.generateViewId()
-                    radio.id = id
+                    val chip = Chip(this).apply {
+                        id = View.generateViewId()
+                        this.text = text
+                        isCheckable = true
+                        isClickable = true
+                        isCheckedIconVisible = false
+                    }
 
-                    binding.radioGroupTemplates.addView(radio)
-                    templateMap[id] = template
+                    binding.radioGroupTemplates.addView(chip)
+                    templateMap[chip.id] = template
                 }
             }
     }
@@ -233,15 +235,16 @@ class OrderStatusUpdateActivity : BaseActivity() {
     private fun updateOrderStatus() {
         val uid = merchantUid ?: return
 
-        val selectedId = binding.radioGroupTemplates.checkedRadioButtonId
-        val selectedTemplate = if (selectedId != -1) {
-            findViewById<RadioButton>(selectedId).text.toString()
+        val checkedId = binding.radioGroupTemplates.checkedChipId
+        val selectedTemplateText = if (checkedId != View.NO_ID) {
+            val chip = binding.radioGroupTemplates.findViewById<Chip>(checkedId)
+            chip?.text?.toString()
         } else null
 
         val freeText = binding.edtFreeText.text.toString().trim()
 
         val messageText = when {
-            !selectedTemplate.isNullOrEmpty() -> selectedTemplate
+            !selectedTemplateText.isNullOrEmpty() -> selectedTemplateText
             freeText.isNotEmpty() -> freeText
             else -> {
                 Toast.makeText(
