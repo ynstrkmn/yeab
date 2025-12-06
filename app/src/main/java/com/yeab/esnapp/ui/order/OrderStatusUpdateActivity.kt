@@ -126,6 +126,9 @@ class OrderStatusUpdateActivity : BaseActivity() {
                 return@addOnSuccessListener
             }
 
+            // Ödeme durumunu ayarla
+            binding.chkPaymentDone.isChecked = order.isPaymentDone
+
             // Ürün adı: Intent'ten geldiyse onu kullan, yoksa DB'dekini
             val productNameFromIntent = intent.getStringExtra(IntentKeys.PRODUCT_NAME)
             val finalProductName = productNameFromIntent
@@ -289,6 +292,9 @@ class OrderStatusUpdateActivity : BaseActivity() {
             }
             newList.add(newStatus)
             order.productStatus = newList
+
+            // Ödeme durumunu güncelle
+            order.isPaymentDone = binding.chkPaymentDone.isChecked
 
             // CreatedDate yoksa bir defaya mahsus set et (geri uyumluluk)
             if (order.createdDate.isNullOrEmpty()) {

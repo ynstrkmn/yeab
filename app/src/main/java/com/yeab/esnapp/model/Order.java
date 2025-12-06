@@ -5,6 +5,7 @@ import java.util.List;
 public class Order {
 
     private boolean IsFinished;
+    private  boolean IsPaymentDone;
     private String ProductImageUrl;
     private String ProductName;
     private List<ProductStatus> ProductStatus;
@@ -18,12 +19,14 @@ public class Order {
                  String productImageUrl,
                  String productName,
                  List<ProductStatus> productStatus,
-                 String createdDate) {
+                 String createdDate,
+                 boolean isPaymentDone) {
         IsFinished = isFinished;
         ProductImageUrl = productImageUrl;
         ProductName = productName;
         ProductStatus = productStatus;
         CreatedDate = createdDate;
+        this.IsPaymentDone = isPaymentDone;
     }
 
     public boolean isFinished() {
@@ -33,6 +36,15 @@ public class Order {
     public void setFinished(boolean finished) {
         IsFinished = finished;
     }
+
+    public boolean isPaymentDone() {
+        return IsPaymentDone;
+    }
+
+    public void setPaymentDone(boolean paymentDone) {
+        IsPaymentDone = paymentDone;
+    }
+
 
     public String getProductImageUrl() {
         return ProductImageUrl;

@@ -44,7 +44,7 @@
         android:layout_height="0dp"
         android:fillViewport="true"
         app:layout_constraintTop_toBottomOf="@id/txtSubtitleNewOrder"
-        app:layout_constraintBottom_toTopOf="@id/btnAddProduct"
+        app:layout_constraintBottom_toTopOf="@+id/chkPaymentDone"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
@@ -209,6 +209,18 @@
         </LinearLayout>
     </ScrollView>
 
+    <CheckBox
+        android:id="@+id/chkPaymentDone"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:text="Ödeme Yapıldı"
+        android:textColor="@android:color/white"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark"
+        app:layout_constraintBottom_toTopOf="@+id/btnAddProduct"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
     <!-- Alt buton -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnAddProduct"
@@ -219,7 +231,8 @@
         android:textAllCaps="false"
         app:cornerRadius="24dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

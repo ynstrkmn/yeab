@@ -31,9 +31,11 @@ class NewOrderActivity : BaseActivity() {
     private lateinit var binding: ActivityNewOrderBinding
     private val dbRef = FirebaseDatabase.getInstance().reference
     private val storageRef = FirebaseStorage.getInstance().reference
-
     private var merchantUid: String? = null
     private var productImageUrl: String? = null
+
+    // State preservation için anahtar
+    private val KEY_IS_PAYMENT_DONE = "key_is_payment_done"
 
     // FULL RES fotoğraf URI'si
     private var photoUri: android.net.Uri? = null
@@ -92,6 +94,12 @@ class NewOrderActivity : BaseActivity() {
 
         merchantUid = intent.getStringExtra(IntentKeys.MERCHANT_UID)
 
+        // Aktivite yeniden oluşturulduğunda CheckBox durumunu geri yükle
+        savedInstanceState?.let {
+            val isPaymentDone = it.getBoolean(KEY_IS_PAYMENT_DONE, false)
+            binding.chkPaymentDone.isChecked = isPaymentDone
+        }
+
         binding.btnSearchPhone.setOnClickListener {
             searchCustomer()
         }
@@ -99,6 +107,12 @@ class NewOrderActivity : BaseActivity() {
         binding.btnAddProduct.setOnClickListener {
             startAddProductFlow()
         }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        // Aktivite yok edilmeden önce CheckBox'ın durumunu kaydet
+        outState.putBoolean(KEY_IS_PAYMENT_DONE, binding.chkPaymentDone.isChecked)
     }
 
     private fun searchCustomer() {
@@ -331,6 +345,7 @@ class NewOrderActivity : BaseActivity() {
         intent.putExtra(IntentKeys.EMAIL, binding.edtEmail.text.toString().trim())
         intent.putExtra(IntentKeys.PRODUCT_DESC, binding.edtProductDesc.text.toString().trim())
         intent.putExtra(IntentKeys.PRODUCT_IMAGE_URL, productImageUrl)
+        intent.putExtra(IntentKeys.IS_PAYMENT_DONE, binding.chkPaymentDone.isChecked)
         startActivity(intent)
         finish()
     }

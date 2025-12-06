@@ -32,6 +32,7 @@ class MessageTemplateActivity : BaseActivity() {
     private var email: String = ""
     private var productDesc: String = ""
     private var productImageUrl: String? = null
+    private var isPaymentDone: Boolean = false
 
     private var customerNameSurname: String = ""
     private val templateMap = mutableMapOf<Int, MerchantMessageTemplate>()
@@ -48,6 +49,7 @@ class MessageTemplateActivity : BaseActivity() {
         surname = intent.getStringExtra(IntentKeys.SURNAME) ?: ""
         email = intent.getStringExtra(IntentKeys.EMAIL) ?: ""
         productDesc = intent.getStringExtra(IntentKeys.PRODUCT_DESC) ?: ""
+        isPaymentDone = intent.getBooleanExtra(IntentKeys.IS_PAYMENT_DONE,false)
         productImageUrl = intent.getStringExtra(IntentKeys.PRODUCT_IMAGE_URL)
 
         customerNameSurname = listOf(name, surname)
@@ -177,7 +179,8 @@ class MessageTemplateActivity : BaseActivity() {
             productImageUrl,    // productImageUrl
             productDesc,        // productName
             statusList,         // productStatus
-            nowIso              // createdDate
+            nowIso,              // createdDate
+            isPaymentDone,
         )
 
         val merchantOrderRef = dbRef.child(FirebasePaths.ORDERS_ROOT)

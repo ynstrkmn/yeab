@@ -13,4 +13,6 @@ object IntentKeys {
 
     // YENİ: OrderStatusUpdateActivity'de göstereceğimiz ürün adı
     const val PRODUCT_NAME = "productName"
+
+    const val IS_PAYMENT_DONE = "isPaymentDone"
 }
