@@ -36,6 +36,7 @@
     <string name="new_order_email_hint">Mail</string>
     <string name="new_order_product_desc_hint">Ürün Açıklaması</string>
     <string name="new_order_button_add_product">Ürün Ekle</string>
+    <string name="home_info_user_welcome_messsage">Merhaba,</string>
 
     <!-- Search Order -->
     <string name="search_order_button_by_image">Resim ile arama</string>

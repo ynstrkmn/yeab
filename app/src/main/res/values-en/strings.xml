@@ -22,6 +22,7 @@
     <string name="merchant_info_name_hint">Name</string>
     <string name="merchant_info_surname_hint">Surname</string>
     <string name="merchant_info_button_save">Save</string>
+    <string name="home_info_user_welcome_messsage">Hello, </string>
 
     <!-- Home -->
     <string name="home_button_new_order">Add New Product</string>

@@ -26,6 +26,9 @@ class HomeActivity : BaseActivity() {
         // Login sonrası buraya MERCHANT_UID gönderiyorduk
         merchantUid = intent.getStringExtra(IntentKeys.MERCHANT_UID)
 
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        binding.txtWelcomeMessage.text = "${binding.txtWelcomeMessage.text} ${currentUser?.displayName}"
+
         // Yeni Ürün Ekle
         binding.btnNewOrder.setOnClickListener {
             val i = Intent(this, NewOrderActivity::class.java)

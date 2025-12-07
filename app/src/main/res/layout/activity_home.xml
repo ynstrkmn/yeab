@@ -2,119 +2,130 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/layoutHome"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@android:color/white"
     android:padding="16dp">
 
-    <!-- Üst başlık -->
-    <TextView
-        android:id="@+id/txtHomeTitle"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="@string/app_name"
-        android:textSize="22sp"
-        android:textStyle="bold"
-        android:textColor="#333333"
-        android:gravity="center"
+    <!-- App Logo -->
+    <ImageView
+        android:id="@+id/imgAppLogo"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_marginTop="24dp"
+        android:contentDescription="@string/app_name"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        android:src="@mipmap/ic_launcher" />
 
-    <!-- Alt başlık -->
+    <!-- Welcome Message -->
+
+    <!-- Buttons Container -->
+
     <TextView
-        android:id="@+id/txtHomeSubtitle"
+        android:id="@+id/txtWelcomeMessage"
+        android:layout_width="205dp"
+        android:layout_height="26dp"
+        android:layout_marginTop="104dp"
+        android:gravity="left"
+        android:text="@string/home_info_user_welcome_messsage"
+        android:textColor="#333333"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/imgAppLogo" />
+
+    <LinearLayout
+        android:id="@+id/layoutButtons"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="@string/home_button_list_orders"
-        android:textSize="14sp"
-        android:textColor="#777777"
-        android:gravity="center"
-        android:layout_marginTop="4dp"
-        app:layout_constraintTop_toBottomOf="@id/txtHomeTitle"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toTopOf="@id/btnLogout"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/txtWelcomeMessage"
+        app:layout_constraintVertical_bias="0.172">
 
-    <!-- Yeni Ürün Ekle -->
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/btnNewOrder"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="50dp"
-        app:cardCornerRadius="18dp"
-        app:cardElevation="2dp"
-        app:strokeWidth="1dp"
-        app:strokeColor="#E0E0E0"
-        app:layout_constraintTop_toBottomOf="@id/txtHomeSubtitle"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <LinearLayout
+        <!-- Yeni Ürün Ekle -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/btnNewOrder"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="18dp"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
+            app:cardCornerRadius="18dp"
+            app:cardElevation="2dp"
+            app:strokeColor="#E0E0E0"
+            app:strokeWidth="1dp">
 
-            <ImageView
-                android:layout_width="34dp"
-                android:layout_height="34dp"
-                android:tint="#757575"
-                android:src="@android:drawable/ic_input_add"
-                android:contentDescription="@string/home_button_new_order" />
-
-            <TextView
-                android:layout_width="0dp"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_weight="1"
-                android:text="@string/home_button_new_order"
-                android:textSize="17sp"
-                android:textStyle="bold"
-                android:textColor="#DDDDDD" />
-        </LinearLayout>
-    </com.google.android.material.card.MaterialCardView>
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="18dp">
 
-    <!-- Ürün Listele -->
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/btnListOrders"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        app:cardCornerRadius="18dp"
-        app:cardElevation="2dp"
-        app:strokeWidth="1dp"
-        app:strokeColor="#E0E0E0"
-        app:layout_constraintTop_toBottomOf="@id/btnNewOrder"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+                <ImageView
+                    android:layout_width="34dp"
+                    android:layout_height="34dp"
+                    android:contentDescription="@string/home_button_new_order"
+                    android:src="@android:drawable/ic_input_add"
+                    app:tint="#757575" />
 
-        <LinearLayout
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_weight="1"
+                    android:text="@string/home_button_new_order"
+                    android:textColor="#424242"
+                    android:textSize="17sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Ürün Listele -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/btnListOrders"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="18dp"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
+            android:layout_marginTop="20dp"
+            app:cardCornerRadius="18dp"
+            app:cardElevation="2dp"
+            app:strokeColor="#E0E0E0"
+            app:strokeWidth="1dp">
 
-            <ImageView
-                android:layout_width="34dp"
-                android:layout_height="34dp"
-                android:tint="#757575"
-                android:src="@android:drawable/ic_menu_search"
-                android:contentDescription="@string/home_button_list_orders" />
-
-            <TextView
-                android:layout_width="0dp"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_weight="1"
-                android:text="@string/home_button_list_orders"
-                android:textSize="17sp"
-                android:textStyle="bold"
-                android:textColor="#DDDDDD" />
-        </LinearLayout>
-    </com.google.android.material.card.MaterialCardView>
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="18dp">
+
+                <ImageView
+                    android:layout_width="34dp"
+                    android:layout_height="34dp"
+                    android:contentDescription="@string/home_button_list_orders"
+                    android:src="@android:drawable/ic_menu_search"
+                    app:tint="#757575" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_weight="1"
+                    android:text="@string/home_button_list_orders"
+                    android:textColor="#424242"
+                    android:textSize="17sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+    </LinearLayout>
 
     <!-- Çıkış Yap -->
     <com.google.android.material.button.MaterialButton
@@ -122,13 +133,13 @@
         style="@style/Widget.MaterialComponents.Button.OutlinedButton"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
         android:text="@string/button_logout"
         android:textColor="#000000"
-        app:strokeColor="#000000"
-        android:layout_marginTop="40dp"
         app:cornerRadius="24dp"
-        app:layout_constraintTop_toBottomOf="@id/btnListOrders"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:strokeColor="#000000" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
