@@ -129,6 +129,11 @@ class OrderStatusUpdateActivity : BaseActivity() {
             // Ödeme durumunu ayarla
             binding.chkPaymentDone.isChecked = order.isPaymentDone
 
+            // Eğer giriş aşamasında veya önceden ödeme yapıldıysan karıştırma olmaması için disable edildi.
+            if(binding.chkPaymentDone.isChecked){
+                binding.chkPaymentDone.isEnabled = false
+            }
+
             // Ürün adı: Intent'ten geldiyse onu kullan, yoksa DB'dekini
             val productNameFromIntent = intent.getStringExtra(IntentKeys.PRODUCT_NAME)
             val finalProductName = productNameFromIntent

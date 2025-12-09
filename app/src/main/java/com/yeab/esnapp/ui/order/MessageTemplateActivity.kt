@@ -33,6 +33,7 @@ class MessageTemplateActivity : BaseActivity() {
     private var productDesc: String = ""
     private var productImageUrl: String? = null
     private var isPaymentDone: Boolean = false
+    private var paymentDate: String = ""
 
     private var customerNameSurname: String = ""
     private val templateMap = mutableMapOf<Int, MerchantMessageTemplate>()
@@ -174,6 +175,14 @@ class MessageTemplateActivity : BaseActivity() {
 
         val statusList = mutableListOf(ProductStatus(messageText, nowIso))
 
+        // Eğer ödeme yapıldısa ödeme olarak şuan tarih atılmalıdır.
+
+        if (isPaymentDone){
+            paymentDate = nowIso
+        }else{
+            paymentDate = ""
+        }
+
         val order = Order(
             false,              // isFinished
             productImageUrl,    // productImageUrl
@@ -181,6 +190,7 @@ class MessageTemplateActivity : BaseActivity() {
             statusList,         // productStatus
             nowIso,              // createdDate
             isPaymentDone,
+            paymentDate
         )
 
         val merchantOrderRef = dbRef.child(FirebasePaths.ORDERS_ROOT)

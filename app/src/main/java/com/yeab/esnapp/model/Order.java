@@ -6,6 +6,7 @@ public class Order {
 
     private boolean IsFinished;
     private  boolean IsPaymentDone;
+    private String PaymentDate;
     private String ProductImageUrl;
     private String ProductName;
     private List<ProductStatus> ProductStatus;
@@ -20,13 +21,15 @@ public class Order {
                  String productName,
                  List<ProductStatus> productStatus,
                  String createdDate,
-                 boolean isPaymentDone) {
+                 boolean isPaymentDone,
+                 String PaymentDate) {
         IsFinished = isFinished;
         ProductImageUrl = productImageUrl;
         ProductName = productName;
         ProductStatus = productStatus;
         CreatedDate = createdDate;
         this.IsPaymentDone = isPaymentDone;
+        this.PaymentDate = PaymentDate;
     }
 
     public boolean isFinished() {
@@ -44,6 +47,15 @@ public class Order {
     public void setPaymentDone(boolean paymentDone) {
         IsPaymentDone = paymentDone;
     }
+
+    public String getPaymentDate() {
+        return PaymentDate;
+    }
+
+    public void setPaymentDate(String paymentDate) {
+        PaymentDate = paymentDate;
+    }
+
 
 
     public String getProductImageUrl() {
