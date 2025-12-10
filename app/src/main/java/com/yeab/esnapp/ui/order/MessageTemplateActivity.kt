@@ -3,6 +3,9 @@ package com.yeab.esnapp.ui.order
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
+import androidx.annotation.AttrRes
+import androidx.annotation.ColorInt
+import androidx.core.content.ContextCompat
 import com.google.android.material.chip.Chip
 import com.google.firebase.database.*
 import com.yeab.esnapp.R
@@ -66,11 +69,12 @@ class MessageTemplateActivity : BaseActivity() {
         binding.btnSaveOrder.setOnClickListener {
             onCompleteClicked()
         }
+
+        setupChipGroupListener();
+
     }
 
-    /**
-     * RadioButton yerine modern Chip oluşturuyoruz.
-     */
+
     private fun loadTemplates() {
         val uid = merchantUid ?: return
 
@@ -78,6 +82,8 @@ class MessageTemplateActivity : BaseActivity() {
             .child(uid)
             .get()
             .addOnSuccessListener { snapshot ->
+                // Listener'ı geçici olarak kaldır, çipler eklenirken tetiklenmesin
+                binding.radioGroupTemplates.setOnCheckedStateChangeListener(null)
                 binding.radioGroupTemplates.removeAllViews()
                 templateMap.clear()
 
@@ -91,13 +97,74 @@ class MessageTemplateActivity : BaseActivity() {
                         isCheckable = true
                         isClickable = true
                         isCheckedIconVisible = false
+                        // Başlangıç stilini de burada ayarlayabiliriz.
+                        // (Bu kısım setupChipGroupListener içinde de yönetilecek)
                     }
 
                     binding.radioGroupTemplates.addView(chip)
                     templateMap[chip.id] = template
                 }
+
+                // Çipler eklendikten sonra listener'ı tekrar kur.
+                setupChipGroupListener()
+                // Başlangıçta tüm stilleri sıfırla.
+                resetAllChipStyles()
             }
     }
+
+
+    // YARDIMCI FONKSİYON: Tüm çipleri varsayılan stiline döndürür.
+    private fun resetAllChipStyles() {
+        val defaultBackgroundColor = com.google.android.material.R.attr.colorSurface
+        val colorStateList = android.content.res.ColorStateList.valueOf(getThemeColor(defaultBackgroundColor))
+
+        for (i in 0 until binding.radioGroupTemplates.childCount) {
+            val view = binding.radioGroupTemplates.getChildAt(i)
+            if (view is Chip) {
+                view.chipBackgroundColor = colorStateList
+                view.chipStrokeWidth = 0f
+            }
+        }
+    }
+
+    // ANA LISTENER FONKSİYONU
+    private fun setupChipGroupListener() {
+        val selectedColor = ContextCompat.getColor(this, R.color.chip_selected_background)
+        val selectedStrokeColor = ContextCompat.getColor(this, R.color.chip_selected_stroke)
+
+        binding.radioGroupTemplates.setOnCheckedStateChangeListener { group, checkedIds ->
+            // Önce tüm çiplerin stilini sıfırla
+            resetAllChipStyles()
+
+            if (checkedIds.isNotEmpty()) {
+                // 1. BİR ÇİP SEÇİLDİ
+                val selectedChipId = checkedIds.first()
+                val selectedChip = group.findViewById<Chip>(selectedChipId)
+
+                if (selectedChip != null) {
+                    // a) Seçilen çipin stilini YEŞİL yap
+                    selectedChip.chipBackgroundColor = android.content.res.ColorStateList.valueOf(selectedColor)
+                    selectedChip.chipStrokeWidth = 4f // Çerçeveyi belirgin yap
+                    selectedChip.setChipStrokeColor(android.content.res.ColorStateList.valueOf(selectedStrokeColor))
+
+                }
+
+            } else {
+                // 2. SEÇİM KALDIRILDI
+                // EditText'i tekrar aktif hale getir
+            }
+        }
+    }
+
+    // Bu yardımcı fonksiyonu da sınıfınıza ekleyin (eğer yoksa)
+    @ColorInt
+    private fun getThemeColor(@AttrRes attrRes: Int): Int {
+        val typedValue = android.util.TypedValue()
+        theme.resolveAttribute(attrRes, typedValue, true)
+        return typedValue.data
+    }
+
+
 
 
     private fun onCompleteClicked() {

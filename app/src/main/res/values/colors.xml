@@ -29,4 +29,8 @@
     <color name="backgrnd">#4A90E2</color>
     <color name="deneme">#888888</color>
 
+    <!-- ... diğer renkleriniz ... -->
+    <color name="chip_selected_background">#4CAF50</color> <!-- Seçim için canlı yeşil -->
+    <color name="chip_selected_stroke">#FFFFFF</color>     <!-- Seçim için beyaz çerçeve -->
+
 </resources>
