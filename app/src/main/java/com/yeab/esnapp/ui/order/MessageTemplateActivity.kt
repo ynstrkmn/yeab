@@ -145,7 +145,7 @@ class MessageTemplateActivity : BaseActivity() {
                     // a) Seçilen çipin stilini YEŞİL yap
                     selectedChip.chipBackgroundColor = android.content.res.ColorStateList.valueOf(selectedColor)
                     selectedChip.chipStrokeWidth = 4f // Çerçeveyi belirgin yap
-                    selectedChip.setChipStrokeColor(android.content.res.ColorStateList.valueOf(selectedStrokeColor))
+                    selectedChip.chipStrokeColor = android.content.res.ColorStateList.valueOf(selectedStrokeColor)
 
                 }
 
