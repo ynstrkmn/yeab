@@ -2,6 +2,7 @@ package com.yeab.esnapp.ui.order
 
 import ImageMatchAdapter
 import android.Manifest
+import android.app.Dialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
@@ -9,10 +10,13 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
+import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import com.bumptech.glide.Glide
 import com.google.firebase.database.*
 import com.yeab.esnapp.R
 import com.yeab.esnapp.databinding.ActivitySearchOrderBinding
@@ -229,18 +233,24 @@ class SearchOrderActivity : BaseActivity() {
                                 // Dialog referansı, tıklamada kapatmak için
                                 var alertDialog: androidx.appcompat.app.AlertDialog? = null
 
-                                val adapter = ImageMatchAdapter(matchedOrders) { selected ->
-                                    val intent = Intent(
-                                        this@SearchOrderActivity,
-                                        OrderStatusUpdateActivity::class.java
-                                    )
-                                    intent.putExtra(IntentKeys.MERCHANT_UID, uid)
-                                    intent.putExtra(IntentKeys.PHONE, selected.phone)
-                                    intent.putExtra(IntentKeys.ORDER_ID, selected.orderId)
-                                    intent.putExtra(IntentKeys.PRODUCT_NAME, selected.productName)
-                                    startActivity(intent)
-                                    alertDialog?.dismiss()
-                                }
+                                val adapter = ImageMatchAdapter(
+                                    matchedOrders,
+                                    onClick = { selected ->
+                                        val intent = Intent(
+                                            this@SearchOrderActivity,
+                                            OrderStatusUpdateActivity::class.java
+                                        )
+                                        intent.putExtra(IntentKeys.MERCHANT_UID, uid)
+                                        intent.putExtra(IntentKeys.PHONE, selected.phone)
+                                        intent.putExtra(IntentKeys.ORDER_ID, selected.orderId)
+                                        intent.putExtra(IntentKeys.PRODUCT_NAME, selected.productName)
+                                        startActivity(intent)
+                                        alertDialog?.dismiss()
+                                    },
+                                    onImageClick = { imageUrl ->
+                                        showImageDialog(imageUrl)
+                                    }
+                                )
 
                                 recycler.adapter = adapter
 
@@ -278,5 +288,17 @@ class SearchOrderActivity : BaseActivity() {
                 }
             })
 
+    }
+
+    private fun showImageDialog(imageUrl: String) {
+        val dialog = Dialog(this)
+        dialog.setContentView(R.layout.dialog_image_preview)
+        val imageView = dialog.findViewById<ImageView>(R.id.imgPreview)
+        Glide.with(this)
+            .load(imageUrl)
+            .fitCenter()
+            .into(imageView)
+        dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        dialog.show()
     }
 }

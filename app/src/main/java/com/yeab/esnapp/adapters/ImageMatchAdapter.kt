@@ -5,7 +5,8 @@ import com.yeab.esnapp.R
 
 class ImageMatchAdapter(
     private val items: List<MatchedOrderUi>,
-    private val onClick: (MatchedOrderUi) -> Unit
+    private val onClick: (MatchedOrderUi) -> Unit,
+    private val onImageClick: (String) -> Unit
 ) : androidx.recyclerview.widget.RecyclerView.Adapter<ImageMatchAdapter.MatchViewHolder>() {
 
 
@@ -72,9 +73,14 @@ class ImageMatchAdapter(
                     }
                 })
                 .into(holder.imgMatch)
+
+            holder.imgMatch.setOnClickListener {
+                onImageClick(url)
+            }
         } else {
             holder.progressImage.visibility = View.GONE
             holder.imgMatch.setImageResource(android.R.drawable.ic_menu_report_image)
+            holder.imgMatch.setOnClickListener(null)
         }
 
         holder.itemView.setOnClickListener {
