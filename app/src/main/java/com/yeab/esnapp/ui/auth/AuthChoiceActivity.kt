@@ -9,7 +9,10 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import com.google.firebase.messaging.FirebaseMessaging
 import com.yeab.esnapp.R
 import com.yeab.esnapp.databinding.ActivityAuthChoiceBinding
@@ -46,19 +49,29 @@ class AuthChoiceActivity : BaseActivity() {
                     if (authResult.isSuccessful) {
                         val uid = auth.currentUser?.uid ?: return@addOnCompleteListener
 
-                        // Login veya register sonrası push token’ı Merchant kaydına yaz
-                        updatePushToken(uid)
+                        val dbRef = FirebaseDatabase.getInstance().reference
+                        dbRef.child(FirebasePaths.MERCHANTS)
+                            .child(uid).addListenerForSingleValueEvent(object: ValueEventListener {
+                                override fun onDataChange(snapshot: DataSnapshot) {
+                                    if (snapshot.exists()) {
+                                        // Login veya register sonrası push token’ı Merchant kaydına yaz
+                                        updatePushToken(uid)
+                                        val intent = Intent(applicationContext, HomeActivity::class.java)
+                                        intent.putExtra(IntentKeys.MERCHANT_UID, uid)
+                                        startActivity(intent)
+                                        finish()
+                                    } else {
+                                        val intent = Intent(applicationContext, MerchantInfoActivity::class.java)
+                                        intent.putExtra(IntentKeys.MERCHANT_UID, uid)
+                                        startActivity(intent)
+                                    }
+                                }
 
-                        if (mode == "register") {
-                            val intent = Intent(this, MerchantInfoActivity::class.java)
-                            intent.putExtra(IntentKeys.MERCHANT_UID, uid)
-                            startActivity(intent)
-                        } else {
-                            val intent = Intent(this, HomeActivity::class.java)
-                            intent.putExtra(IntentKeys.MERCHANT_UID, uid)
-                            startActivity(intent)
-                            finish()
-                        }
+                                override fun onCancelled(error: DatabaseError) {
+
+                                }
+
+                            } )
                     } else {
                         Log.e("AuthChoice", "Firebase auth failed", authResult.exception)
                     }
