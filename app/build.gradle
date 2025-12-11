@@ -70,6 +70,18 @@ dependencies {
     implementation "com.google.mlkit:text-recognition:16.0.0"
     implementation libs.firebase.crashlytics
 
+    // material components (en azından)
+    implementation 'com.google.android.material:material:1.10.0'
+
+    // fused location
+    implementation 'com.google.android.gms:play-services-location:21.0.1'
+
+    // firebase dependencies zaten projende varsa bunlar olabilir:
+    implementation 'com.google.firebase:firebase-database-ktx:20.2.0'
+    implementation 'com.google.firebase:firebase-messaging-ktx:23.1.2'
+    implementation 'com.google.android.gms:play-services-maps:18.1.0'
+    implementation 'com.google.android.gms:play-services-location:21.0.1'
+
 
     implementation "com.google.android.material:material:1.10.0"
 

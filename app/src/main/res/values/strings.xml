@@ -12,16 +12,10 @@
     <string name="auth_button_google">Google ile devam et</string>
 
     <!-- Merchant Info -->
-    <string name="merchant_info_birthdate_hint">Doğum Tarihi (01.01.1986)</string>
-    <string name="merchant_info_city_hint">Şehir</string>
+    <string name="merchant_info_birthdate_hint">Doğum Tarihi</string>
+    <string name="merchant_info_city_hint">İl</string>
     <string name="merchant_info_district_hint">İlçe</string>
     <string name="merchant_info_coordinates_hint">Koordinatlar (lat, lon)</string>
-    <string name="merchant_info_merchant_name_hint">Firma Adı (Uğur Terzi)</string>
-    <string name="merchant_info_merchant_type_hint">Firma Tipi (Terzi)</string>
-    <string name="merchant_info_mobile_hint">Cep Telefonu (10 hane)</string>
-    <string name="merchant_info_name_hint">Ad</string>
-    <string name="merchant_info_surname_hint">Soyad</string>
-    <string name="merchant_info_button_save">Kaydet</string>
 
     <!-- Home -->
     <string name="home_button_new_order">Yeni Ürün Ekle</string>
@@ -63,7 +57,6 @@
     <string name="error_no_message_selected">Mesaj seçin veya girin</string>
     <string name="error_image_upload">Görsel yükleme hatası</string>
     <string name="error_no_records_found">Kayıt bulunamadı</string>
-    <string name="info_merchant_saved">Kaydedildi</string>
     <string name="info_order_saved">Ürün kaydedildi</string>
     <string name="info_image_search_todo">Resim ile arama (basit eşleştirme uygulanıyor)</string>
 
@@ -110,5 +103,32 @@
 
     <string name="founded_with_percent">eşleşme oranı ile bulundu.</string>
     <string name="search_results_title">Arama Sonuçları</string>
+
+    <string name="merchant_info_header">İşyeri Bilgileri</string>
+    <string name="merchant_info_sub">Lütfen bilgilerinizi eksiksiz doldurun.</string>
+
+    <string name="merchant_info_merchant_name_hint">İşyeri Adı</string>
+    <string name="merchant_info_merchant_type_hint">İşyeri Türü</string>
+    <string name="merchant_info_mobile_hint">Cep Telefonu (5XX XXX XX XX)</string>
+    <string name="merchant_info_name_hint">Ad</string>
+    <string name="merchant_info_surname_hint">Soyad</string>
+
+    <string name="merchant_info_coords_placeholder">Konum seçilmedi</string>
+    <string name="merchant_info_get_location">Konumu Al</string>
+    <string name="merchant_info_button_save">Kaydet</string>
+
+    <string name="error_location_unavailable">Konum bilgisine ulaşılamadı.</string>
+    <string name="error_location_permission_denied">Konum izni verilmedi.</string>
+
+    <string name="info_merchant_saved">İş yeri bilgileri kaydedildi.</string>
+
+    <string name="mappicker_instructions">Haritaya dokunarak ürünü işaretleyin, ardından "Onayla"ya basın.</string>
+    <string name="mappicker_confirm">Onayla</string>
+    <string name="mappicker_marker_title">Seçilen konum</string>
+    <string name="mappicker_no_selection">Lütfen haritada bir konum seçin</string>
+    <string name="merchant_info_country_hint">Ülke</string>
+    <string name="info_select_location_first">Ülke, il ve ilçe bilgileri konumu seçtiğinizde otomatik olarak alınacaktır.</string>
+    <string name="location_selection_go_take_loc_button">Ülke, il ve ilçe bilgisi değişikliği için Konumu Al butonuna tıklayarak lokasyon seçmelisiniz.</string>
+
 
 </resources>

@@ -12,16 +12,10 @@
     <string name="auth_button_google">Continue with Google</string>
 
     <!-- Merchant Info -->
-    <string name="merchant_info_birthdate_hint">Birth Date (01.01.1986)</string>
+    <string name="merchant_info_birthdate_hint">Birth Date</string>
     <string name="merchant_info_city_hint">City</string>
     <string name="merchant_info_district_hint">District</string>
     <string name="merchant_info_coordinates_hint">Coordinates (lat, lon)</string>
-    <string name="merchant_info_merchant_name_hint">Company Name (Uğur Tailor)</string>
-    <string name="merchant_info_merchant_type_hint">Company Type (Tailor)</string>
-    <string name="merchant_info_mobile_hint">Mobile Phone (10 digits)</string>
-    <string name="merchant_info_name_hint">Name</string>
-    <string name="merchant_info_surname_hint">Surname</string>
-    <string name="merchant_info_button_save">Save</string>
     <string name="home_info_user_welcome_messsage">Hello, </string>
 
     <!-- Home -->
@@ -63,7 +57,6 @@
     <string name="error_no_message_selected">Select or enter a message</string>
     <string name="error_image_upload">Image upload error</string>
     <string name="error_no_records_found">No records found</string>
-    <string name="info_merchant_saved">Saved</string>
     <string name="info_order_saved">Order saved</string>
     <string name="info_image_search_todo">Image search (simple matching applied)</string>
 
@@ -106,6 +99,32 @@
 
     <string name="founded_with_percent">Found with matching rate.</string>
     <string name="search_results_title">Search Results</string>
+
+    <string name="merchant_info_header">Business Information</string>
+    <string name="merchant_info_sub">Please fill in your information completely.</string>
+
+    <string name="merchant_info_merchant_name_hint">Business Name</string>
+    <string name="merchant_info_merchant_type_hint">Business Type</string>
+    <string name="merchant_info_mobile_hint">Phone Number (5XX XXX XX XX)</string>
+    <string name="merchant_info_name_hint">First Name</string>
+    <string name="merchant_info_surname_hint">Last Name</string>
+
+    <string name="merchant_info_coords_placeholder">Location not selected</string>
+    <string name="merchant_info_get_location">Get Location</string>
+    <string name="merchant_info_button_save">Save</string>
+
+    <string name="error_location_unavailable">Unable to obtain location.</string>
+    <string name="error_location_permission_denied">Location permission denied.</string>
+
+    <string name="info_merchant_saved">Business information saved successfully.</string>
+
+    <string name="mappicker_instructions">Tap on the map to select a location, then press "Confirm".</string>
+    <string name="mappicker_confirm">Confirm</string>
+    <string name="mappicker_marker_title">Selected location</string>
+    <string name="mappicker_no_selection">Please select a location on the map</string>
+    <string name="merchant_info_country_hint">Country</string>
+    <string name="info_select_location_first">Country, city and district will be filled automatically when you select your business location.</string>
+    <string name="location_selection_go_take_loc_button">To change the country, province, and district information, you must select a location by clicking the Get Location button.</string>
 
 
 </resources>
