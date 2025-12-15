@@ -177,8 +177,8 @@ class SearchOrderActivity : BaseActivity() {
                                     val url = order.productImageUrl
                                     val orderId = orderSnap.key ?: continue
 
-                                    if (!url.isNullOrEmpty() && !urlToOrderInfo.containsKey(url)) {
-                                        urlToOrderInfo[url] =
+                                    if ( !urlToOrderInfo.containsKey(orderId)) {
+                                        urlToOrderInfo[orderId] =
                                             Triple(phoneKey, orderId, order.productName)
                                     }
                                 }
@@ -187,9 +187,9 @@ class SearchOrderActivity : BaseActivity() {
                             val matchedOrders = mutableListOf<ImageMatchAdapter.MatchedOrderUi>()
 
                             for (match in topMatches) {
-                                val url = match.imageUrl
-                                if (!url.isNullOrEmpty()) {
-                                    val info = urlToOrderInfo[url]
+                                val orderId = match.imageId
+                                if (!orderId.isNullOrEmpty()) {
+                                    val info = urlToOrderInfo[orderId]
                                     if (info != null) {
                                         val (phone, orderId, productName) = info
                                         matchedOrders.add(

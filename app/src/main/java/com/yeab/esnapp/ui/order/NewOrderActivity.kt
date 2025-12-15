@@ -39,6 +39,8 @@ class NewOrderActivity : BaseActivity() {
 
     // FULL RES fotoğraf URI'si
     private var photoUri: android.net.Uri? = null
+    // Order Id burada oluşturup bir sonraki sayfaya geçiyoruz, ilişkiyi sağlamak için
+    private var orderId: String? = null
 
     // Kamera sonucu
     private val cameraLauncher =
@@ -226,13 +228,20 @@ class NewOrderActivity : BaseActivity() {
 
         recognizer.process(image)
             .addOnSuccessListener { visionText ->
-                val recognizedText = visionText.text ?: ""
-                uploadImageInternal(uid, bitmap, recognizedText)
+                val recognizedText = visionText.text
+                if (recognizedText.isNullOrBlank()) {
+                    hideLoading()
+                    Toast.makeText(this, "Çektiğiniz fotoğraf düzgün alınmadı, lütfen ürünü daha net bir şekilde tekrar çekin.", Toast.LENGTH_LONG).show()
+                    openCameraForProduct()
+                } else {
+                    uploadImageInternal(uid, bitmap, recognizedText)
+                }
             }
             .addOnFailureListener {
-                // OCR başarısız olursa recognizedText boş gitsin
-                uploadImageInternal(uid, bitmap, "")
+                hideLoading()
+                Toast.makeText(this, "Çektiğiniz fotoğraf düzgün alınmadı, lütfen ürünü daha net bir şekilde tekrar çekin.", Toast.LENGTH_LONG).show()
                 FirebaseCrashlytics.getInstance().recordException(Throwable("OCR failed: ${it.message}"))
+                openCameraForProduct()
             }
     }
 
@@ -247,6 +256,8 @@ class NewOrderActivity : BaseActivity() {
         val imageId = UUID.randomUUID().toString()
         val fileName = "orders/$uid/$imageId.jpg"
         val imgRef = storageRef.child(fileName)
+        val refOrderId = System.currentTimeMillis().toString()
+        orderId = refOrderId
 
         val baos = java.io.ByteArrayOutputStream()
         bitmap.compress(Bitmap.CompressFormat.JPEG, 90, baos)
@@ -284,7 +295,7 @@ class NewOrderActivity : BaseActivity() {
 
                 dbRef.child("image_hashes")
                     .child(uid)
-                    .child(imageId)
+                    .child(refOrderId)
                     .setValue(meta)
                     .addOnCompleteListener {
                         hideLoading()
@@ -346,6 +357,7 @@ class NewOrderActivity : BaseActivity() {
         intent.putExtra(IntentKeys.PRODUCT_DESC, binding.edtProductDesc.text.toString().trim())
         intent.putExtra(IntentKeys.PRODUCT_IMAGE_URL, productImageUrl)
         intent.putExtra(IntentKeys.IS_PAYMENT_DONE, binding.chkPaymentDone.isChecked)
+        intent.putExtra(IntentKeys.ORDER_ID, orderId)
         startActivity(intent)
         finish()
     }

@@ -40,6 +40,7 @@ class MessageTemplateActivity : BaseActivity() {
 
     private var customerNameSurname: String = ""
     private val templateMap = mutableMapOf<Int, MerchantMessageTemplate>()
+    private var orderIdOrigin: String = ""
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -55,6 +56,7 @@ class MessageTemplateActivity : BaseActivity() {
         productDesc = intent.getStringExtra(IntentKeys.PRODUCT_DESC) ?: ""
         isPaymentDone = intent.getBooleanExtra(IntentKeys.IS_PAYMENT_DONE,false)
         productImageUrl = intent.getStringExtra(IntentKeys.PRODUCT_IMAGE_URL)
+        orderIdOrigin = intent.getStringExtra(IntentKeys.ORDER_ID) ?: ""
 
         customerNameSurname = listOf(name, surname)
             .filter { it.isNotEmpty() }
@@ -197,7 +199,7 @@ class MessageTemplateActivity : BaseActivity() {
         // Önce MerchantsUsers altında müşteri kaydı yoksa ekleyelim
         saveCustomerIfNeeded(uid) {
             // 🔴 BURASI ÖNEMLİ: OrderId artık sadece System.currentTimeMillis()
-            val orderId = System.currentTimeMillis().toString()
+            val orderId = orderIdOrigin
             saveOrderAndSendWhatsApp(uid, orderId, messageText)
         }
     }
