@@ -1,11 +1,13 @@
 package com.yeab.esnapp.ui.order
 
+import android.app.Dialog
 import android.content.Intent
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -48,9 +50,9 @@ class OrderListActivity : BaseActivity() {
         merchantUid = intent.getStringExtra(IntentKeys.MERCHANT_UID)
         phone = intent.getStringExtra(IntentKeys.PHONE) ?: ""
 
-        adapter = OrdersAdapter(orders, phone) { orderItem ->
+        adapter = OrdersAdapter(orders, phone, { orderItem ->
             openUpdateScreen(orderItem)
-        }
+        }, { orderItem -> showImageDialog(orderItem.order.productImageUrl)})
 
         binding.recyclerOrders.layoutManager = LinearLayoutManager(this)
         binding.recyclerOrders.adapter = adapter
@@ -98,12 +100,25 @@ class OrderListActivity : BaseActivity() {
         i.putExtra(IntentKeys.PRODUCT_NAME, orderItem.order.productName)
         startActivity(i)
     }
+
+    private fun showImageDialog(imageUrl: String) {
+        val dialog = Dialog(this)
+        dialog.setContentView(R.layout.dialog_image_preview)
+        val imageView = dialog.findViewById<ImageView>(R.id.imgPreview)
+        Glide.with(this)
+            .load(imageUrl)
+            .fitCenter()
+            .into(imageView)
+        dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        dialog.show()
+    }
 }
 
 class OrdersAdapter(
     private val list: List<OrderItem>,
     private val phone: String,
-    private val onClick: (OrderItem) -> Unit
+    private val onClick: (OrderItem) -> Unit,
+    private val onPictureClick: (OrderItem) -> Unit
 ) : RecyclerView.Adapter<OrdersAdapter.OrderViewHolder>() {
 
     class OrderViewHolder(val binding: ItemOrderBinding) :
@@ -177,6 +192,10 @@ class OrdersAdapter(
 
         holder.itemView.setOnClickListener {
             onClick(item)
+        }
+
+        holder.binding.imgProduct.setOnClickListener {
+            onPictureClick(item)
         }
     }
 

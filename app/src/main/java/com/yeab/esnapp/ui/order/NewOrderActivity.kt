@@ -25,6 +25,7 @@ import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import java.io.File
 import java.math.BigInteger
 import java.util.UUID
+import kotlin.toString
 
 class NewOrderActivity : BaseActivity() {
 
@@ -259,8 +260,15 @@ class NewOrderActivity : BaseActivity() {
         val refOrderId = System.currentTimeMillis().toString()
         orderId = refOrderId
 
+        // EXIF'e göre resmi düzelt
+        val correctedBitmap = try {
+            photoUri?.let { fixBitmapOrientation(bitmap, it) } ?: bitmap
+        } catch (e: Exception) {
+            bitmap
+        }
+
         val baos = java.io.ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 90, baos)
+        correctedBitmap.compress(Bitmap.CompressFormat.JPEG, 90, baos)
         val data = baos.toByteArray()
 
         val sha256 = try {
@@ -270,7 +278,7 @@ class NewOrderActivity : BaseActivity() {
         }
 
         val phash = try {
-            averageHash(bitmap)
+            averageHash(correctedBitmap)
         } catch (e: Exception) {
             ""
         }
@@ -311,6 +319,43 @@ class NewOrderActivity : BaseActivity() {
                     Toast.LENGTH_SHORT
                 ).show()
             }
+    }
+
+    private fun fixBitmapOrientation(src: Bitmap, uri: android.net.Uri): Bitmap {
+        return try {
+            contentResolver.openInputStream(uri)?.use { stream ->
+                val exif = androidx.exifinterface.media.ExifInterface(stream)
+                val orientation = exif.getAttributeInt(
+                    androidx.exifinterface.media.ExifInterface.TAG_ORIENTATION,
+                    androidx.exifinterface.media.ExifInterface.ORIENTATION_NORMAL
+                )
+                val matrix = android.graphics.Matrix()
+                when (orientation) {
+                    androidx.exifinterface.media.ExifInterface.ORIENTATION_ROTATE_90 ->
+                        matrix.postRotate(90f)
+                    androidx.exifinterface.media.ExifInterface.ORIENTATION_ROTATE_180 ->
+                        matrix.postRotate(180f)
+                    androidx.exifinterface.media.ExifInterface.ORIENTATION_ROTATE_270 ->
+                        matrix.postRotate(270f)
+                    androidx.exifinterface.media.ExifInterface.ORIENTATION_FLIP_HORIZONTAL ->
+                        matrix.preScale(-1f, 1f)
+                    androidx.exifinterface.media.ExifInterface.ORIENTATION_FLIP_VERTICAL ->
+                        matrix.preScale(1f, -1f)
+                    androidx.exifinterface.media.ExifInterface.ORIENTATION_TRANSPOSE -> {
+                        matrix.postRotate(90f)
+                        matrix.preScale(-1f, 1f)
+                    }
+                    androidx.exifinterface.media.ExifInterface.ORIENTATION_TRANSVERSE -> {
+                        matrix.postRotate(270f)
+                        matrix.preScale(-1f, 1f)
+                    }
+                    else -> { /* normal */ }
+                }
+                android.graphics.Bitmap.createBitmap(src, 0, 0, src.width, src.height, matrix, true)
+            } ?: src
+        } catch (e: Exception) {
+            src
+        }
     }
 
     private fun sha256Hex(bytes: ByteArray): String {
