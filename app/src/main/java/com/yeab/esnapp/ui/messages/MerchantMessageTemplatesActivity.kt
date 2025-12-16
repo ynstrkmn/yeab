@@ -36,6 +36,50 @@ class MerchantMessageTemplatesActivity : BaseActivity() {
             saveTemplates()
         }
 
+        loadTemplatesOnce()
+    }
+
+    private fun loadTemplatesOnce() {
+        // Tek seferlik oku ve UI'ı doldur
+        database.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                if (!snapshot.exists()) return
+
+                val container = binding.root.findViewById<LinearLayout>(R.id.rootLayout)
+                // Döngü yerine snapshot içindeki TemplateN anahtarlarını kullanıyoruz
+                for (child in snapshot.children) {
+                    val key = child.key ?: continue
+                    if (!key.startsWith("Template", ignoreCase = true)) continue
+
+                    // TemplateN'den N değerini al
+                    val indexStr = key.removePrefix("Template")
+                    val index = indexStr.toIntOrNull() ?: continue
+                    val childPosition = index - 1
+                    if (childPosition < 0 || childPosition >= container.childCount) continue
+
+                    val rowView = container.getChildAt(childPosition)
+                    val etMessage = rowView.findViewById<EditText>(R.id.etMessage)
+                    val cbFinish = rowView.findViewById<CheckBox>(R.id.cbFinish)
+                    // varsa start checkbox'ı da alabilirsiniz: val cbStart = rowView.findViewById<CheckBox>(R.id.cbStart)
+
+                    val textVal = child.child("text").getValue(String::class.java) ?: ""
+                    val finishVal = when (val v = child.child("finish").value) {
+                        is Boolean -> v
+                        is String -> v.toBoolean()
+                        else -> false
+                    }
+                    // val startVal = when (val v = child.child("Start").value) { ... }
+
+                    etMessage?.setText(textVal)
+                    cbFinish?.isChecked = finishVal
+                    // cbStart?.isChecked = startVal
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                Toast.makeText(this@MerchantMessageTemplatesActivity, "Veri okunamadı: ${error.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
     }
 
     private fun saveTemplates() {
