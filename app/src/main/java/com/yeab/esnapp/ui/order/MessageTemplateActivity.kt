@@ -66,6 +66,9 @@ class MessageTemplateActivity : BaseActivity() {
         binding.btnSaveOrder.text = getString(R.string.message_template_button_save_order)
         binding.edtFreeText.hint = getString(R.string.message_template_hint_free_text)
 
+        // ChipGroup: tek seçim
+        binding.radioGroupTemplates.isSingleSelection = true
+
         loadTemplates()
 
         binding.btnSaveOrder.setOnClickListener {

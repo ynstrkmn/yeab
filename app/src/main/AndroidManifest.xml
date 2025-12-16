@@ -54,6 +54,8 @@
             android:screenOrientation="portrait" />
         <activity android:name=".ui.auth.MerchantLoginActivity"
             android:screenOrientation="portrait"/>
+        <activity android:name=".ui.messages.MerchantMessageTemplatesActivity"
+            android:screenOrientation="portrait" />
         <activity
             android:name=".ui.splash.SplashActivity"
             android:screenOrientation="portrait"

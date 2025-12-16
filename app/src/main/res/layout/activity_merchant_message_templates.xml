@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:id="@+id/rootLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <!-- 5 template aynı yapıda -->
+        <include layout="@layout/item_message_template" />
+        <include layout="@layout/item_message_template" />
+        <include layout="@layout/item_message_template" />
+        <include layout="@layout/item_message_template" />
+        <include layout="@layout/item_message_template" />
+
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btnAddTemplates"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Ekle"
+        android:layout_marginTop="24dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Kayıtlı Mesaj Şablonları"
+        android:textStyle="bold"
+        android:textSize="16sp"
+        android:layout_marginTop="32dp"/>
+
+    <LinearLayout
+        android:id="@+id/llExistingTemplates"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"/>
+
+</LinearLayout>

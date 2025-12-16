@@ -9,6 +9,7 @@ import com.yeab.esnapp.R
 import com.yeab.esnapp.databinding.ActivityHomeBinding
 import com.yeab.esnapp.ui.auth.MerchantLoginActivity   // <-- login ekranının gerçek paketini burada düzelt
 import com.yeab.esnapp.ui.base.BaseActivity
+import com.yeab.esnapp.ui.messages.MerchantMessageTemplatesActivity
 import com.yeab.esnapp.ui.order.NewOrderActivity
 import com.yeab.esnapp.ui.order.SearchOrderActivity
 import com.yeab.esnapp.util.IntentKeys
@@ -39,6 +40,12 @@ class HomeActivity : BaseActivity() {
         // Ürün Listele
         binding.btnListOrders.setOnClickListener {
             val i = Intent(this, SearchOrderActivity::class.java)
+            i.putExtra(IntentKeys.MERCHANT_UID, merchantUid)
+            startActivity(i)
+        }
+
+        binding.btnMessageTemplates.setOnClickListener {
+            val i = Intent(this, MerchantMessageTemplatesActivity::class.java)
             i.putExtra(IntentKeys.MERCHANT_UID, merchantUid)
             startActivity(i)
         }
