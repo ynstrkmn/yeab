@@ -13,6 +13,7 @@ import com.yeab.esnapp.ui.messages.MerchantMessageTemplatesActivity
 import com.yeab.esnapp.ui.order.NewOrderActivity
 import com.yeab.esnapp.ui.order.SearchOrderActivity
 import com.yeab.esnapp.util.IntentKeys
+import com.yeab.esnapp.ui.order.OrdersActivity
 
 class HomeActivity : BaseActivity() {
 
@@ -49,6 +50,12 @@ class HomeActivity : BaseActivity() {
             i.putExtra(IntentKeys.MERCHANT_UID, merchantUid)
             startActivity(i)
         }
+
+        // binding zaten setup edildiğini varsayıyorum. onCreate içinde uygun yere ekleyin:
+        binding.btnMyOrders.setOnClickListener {
+            startActivity(Intent(this, OrdersActivity::class.java))
+        }
+
 
         // Çıkış Yap
         binding.btnLogout.setOnClickListener {
