@@ -60,6 +60,10 @@
             android:screenOrientation="portrait" />
         <activity android:name=".ui.order.MerchantOrdersActivity"
             android:screenOrientation="portrait" />
+        <activity android:name=".ui.order.PastOrdersFilterActivity"
+            android:screenOrientation="portrait" />
+        <activity android:name=".ui.order.SearchResultsActivity"
+            android:screenOrientation="portrait" />
         <activity
             android:name=".ui.splash.SplashActivity"
             android:screenOrientation="portrait"

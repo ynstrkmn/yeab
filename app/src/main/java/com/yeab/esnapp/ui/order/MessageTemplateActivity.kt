@@ -262,7 +262,8 @@ class MessageTemplateActivity : BaseActivity() {
             statusList,         // productStatus
             nowIso,              // createdDate
             isPaymentDone,
-            paymentDate
+            paymentDate,
+            phone
         )
 
         val merchantOrderRef = dbRef.child(FirebasePaths.ORDERS_ROOT)

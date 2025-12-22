@@ -45,9 +45,9 @@ class OrdersActivity : BaseActivity() {
         }
 
         binding.btnPastOrders.setOnClickListener {
-            // Geçmiş siparişler ekranına yönlendirme ekleyin (örnek toast)
-            Toast.makeText(this, "Geçmiş Siparişler tıklandı", Toast.LENGTH_SHORT).show()
-            // startActivity(Intent(this, PastOrdersActivity::class.java))
+            startActivity(
+                android.content.Intent(this, PastOrdersFilterActivity::class.java)
+            )
         }
     }
 }

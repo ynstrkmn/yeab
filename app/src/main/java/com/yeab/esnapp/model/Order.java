@@ -11,6 +11,7 @@ public class Order {
     private String ProductName;
     private List<ProductStatus> ProductStatus;
     private String CreatedDate; // YENİ EKLEDİĞİMİZ ALAN
+    private String PhoneNumber;
 
     // Boş constructor (Firebase için zorunlu)
     public Order() {
@@ -22,7 +23,8 @@ public class Order {
                  List<ProductStatus> productStatus,
                  String createdDate,
                  boolean isPaymentDone,
-                 String PaymentDate) {
+                 String PaymentDate,
+                 String PhoneNumber) {
         IsFinished = isFinished;
         ProductImageUrl = productImageUrl;
         ProductName = productName;
@@ -30,6 +32,7 @@ public class Order {
         CreatedDate = createdDate;
         this.IsPaymentDone = isPaymentDone;
         this.PaymentDate = PaymentDate;
+        this.PhoneNumber = PhoneNumber;
     }
 
     public boolean isFinished() {
@@ -88,5 +91,13 @@ public class Order {
 
     public void setCreatedDate(String createdDate) {
         CreatedDate = createdDate;
+    }
+
+    public String getPhoneNumber() {
+        return PhoneNumber;
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        PhoneNumber = phoneNumber;
     }
 }

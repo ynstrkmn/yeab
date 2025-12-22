@@ -30,6 +30,9 @@ import com.yeab.esnapp.util.WhatsAppUtils
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.text.format
+import kotlin.text.get
+import kotlin.toString
 
 class OrderStatusUpdateActivity : BaseActivity() {
 
@@ -304,6 +307,7 @@ class OrderStatusUpdateActivity : BaseActivity() {
             }
     }
 
+    // kotlin
     private fun updateOrderStatus() {
         val uid = merchantUid ?: return
 
@@ -365,75 +369,78 @@ class OrderStatusUpdateActivity : BaseActivity() {
             // Ödeme durumunu güncelle
             order.isPaymentDone = binding.chkPaymentDone.isChecked
 
-            // CreatedDate yoksa bir defaya mahsus set et (geri uyumluluk)
+            // CreatedDate yoksa set et
             if (order.createdDate.isNullOrEmpty()) {
                 order.createdDate = nowIso
             }
 
+            // \[FIX] WhatsApp öncesi ana kayıtları güncelle (path API'lerini kullanmadan)
             val userOrderRef = dbRef.child(FirebasePaths.USER_ORDERS_ROOT)
                 .child(phone).child(uid).child(orderId)
 
-            val updates = hashMapOf<String, Any>(
-                merchantOrderRef.path.toString().substring(1) to order,
-                userOrderRef.path.toString().substring(1) to order
+            val baseUpdates = hashMapOf<String, Any?>(
+                "${FirebasePaths.ORDERS_ROOT}/${FirebasePaths.ORDERS_MERCHANT_ORDERS}/$uid/$phone/$orderId" to order,
+                "${FirebasePaths.USER_ORDERS_ROOT}/$phone/$uid/$orderId" to order
             )
 
-            dbRef.updateChildren(updates).addOnSuccessListener {
+            // chkOperationDone işaretliyse CompletedOrders node'larına taşı
+            val moveToCompleted = binding.chkOperationDone.isChecked;
+            if (moveToCompleted) {
+                // JSON yapısına uygun ek alanlar
+                order.isFinished = true
+                order.phoneNumber = phone
 
-                // 1) CreatedDate'i görüntülenecek formata çevir
+                // DateOrders için YYYYMMDD
+                val dateKey = try {
+                    val parser = SimpleDateFormat(DateFormats.ORDER_STATUS_ISO, Locale.getDefault())
+                    val created = parser.parse(order.createdDate!!)
+                    val ymd = SimpleDateFormat("yyyyMMdd", Locale.getDefault())
+                    ymd.format(created!!)
+                } catch (_: Exception) {
+                    SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(now)
+                }
+
+                baseUpdates["CompletedOrders/MerchantOrders/PhoneOrders/$uid/$phone/$orderId"] = order
+                baseUpdates["CompletedOrders/MerchantOrders/DateOrders/$uid/$dateKey/$orderId"] = order
+                baseUpdates["CompletedOrders/UserOrders/$phone/$uid/$orderId"] = order
+                baseUpdates["${FirebasePaths.ORDERS_ROOT}/${FirebasePaths.ORDERS_MERCHANT_ORDERS}/$uid/$phone/$orderId"] = null
+                baseUpdates["${FirebasePaths.USER_ORDERS_ROOT}/$phone/$uid/$orderId"] = null
+            }
+
+            dbRef.updateChildren(baseUpdates).addOnSuccessListener {
+                // WhatsApp mesajı hazırlığı
                 val displayDate = try {
                     val createdIso = order.createdDate
                     if (!createdIso.isNullOrEmpty()) {
-                        val parser = SimpleDateFormat(
-                            DateFormats.ORDER_STATUS_ISO,
-                            Locale.getDefault()
-                        )
+                        val parser = SimpleDateFormat(DateFormats.ORDER_STATUS_ISO, Locale.getDefault())
                         val createdDate = parser.parse(createdIso)
-                        val displayFormatter = SimpleDateFormat(
-                            DateFormats.ORDER_STATUS_DISPLAY,
-                            Locale.getDefault()
-                        )
+                        val displayFormatter = SimpleDateFormat(DateFormats.ORDER_STATUS_DISPLAY, Locale.getDefault())
                         displayFormatter.format(createdDate!!)
                     } else {
-                        val displayFormatter = SimpleDateFormat(
-                            DateFormats.ORDER_STATUS_DISPLAY,
-                            Locale.getDefault()
-                        )
+                        val displayFormatter = SimpleDateFormat(DateFormats.ORDER_STATUS_DISPLAY, Locale.getDefault())
                         displayFormatter.format(now)
                     }
                 } catch (e: Exception) {
-                    val displayFormatter = SimpleDateFormat(
-                        DateFormats.ORDER_STATUS_DISPLAY,
-                        Locale.getDefault()
-                    )
+                    val displayFormatter = SimpleDateFormat(DateFormats.ORDER_STATUS_DISPLAY, Locale.getDefault())
                     displayFormatter.format(now)
                 }
 
-                // 2) Müşteri adı yoksa fallback telefon
-                val customerDisplayName =
-                    if (customerNameSurname.isNotEmpty()) customerNameSurname else phone
+                val customerDisplayName = if (customerNameSurname.isNotEmpty()) customerNameSurname else phone
+                val safeProductName = if (productName.isNotEmpty()) {
+                    productName
+                } else {
+                    order.productName ?: getString(R.string.app_name)
+                }
+                val detailLink = "https://esnapp-qr.web.app/index.html?merchantId=$uid&orderId=$orderId"
 
-                // 3) ProductName yoksa order.productName veya app_name
-                val safeProductName =
-                    if (productName.isNotEmpty()) {
-                        productName
-                    } else {
-                        order.productName ?: getString(R.string.app_name)
-                    }
-
-                // 4) Detay linki
-                val detailLink =
-                    "https://esnapp-qr.web.app/index.html?merchantId=$uid&orderId=$orderId"
-
-                // 5) Locale'e göre TR/EN şablon
                 val formattedMessage = getString(
                     R.string.whatsapp_status_message,
-                    customerDisplayName,   // %1$s
-                    displayDate,           // %2$s
-                    orderId,               // %3$s
-                    safeProductName,       // %4$s
-                    messageText,           // %5$s
-                    detailLink             // %6$s
+                    customerDisplayName,
+                    displayDate,
+                    orderId,
+                    safeProductName,
+                    messageText,
+                    detailLink
                 )
 
                 hideLoading()
@@ -456,6 +463,7 @@ class OrderStatusUpdateActivity : BaseActivity() {
             ).show()
         }
     }
+
 
     // --- Status history adapter ---
 
