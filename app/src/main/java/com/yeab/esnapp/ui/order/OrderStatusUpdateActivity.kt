@@ -431,7 +431,16 @@ class OrderStatusUpdateActivity : BaseActivity() {
                 } else {
                     order.productName ?: getString(R.string.app_name)
                 }
-                val detailLink = "https://esnapp-qr.web.app/index.html?merchantId=$uid&orderId=$orderId"
+                // DateOrders için YYYYMMDD
+                val dateKey = try {
+                    val parser = SimpleDateFormat(DateFormats.ORDER_STATUS_ISO, Locale.getDefault())
+                    val created = parser.parse(order.createdDate!!)
+                    val ymd = SimpleDateFormat("yyyyMMdd", Locale.getDefault())
+                    ymd.format(created!!)
+                } catch (_: Exception) {
+                    SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(now)
+                }
+                val detailLink = "https://esnaf.online/index.html?merchantId=$uid&orderId=$orderId&orderDate=$dateKey"
 
                 val formattedMessage = getString(
                     R.string.whatsapp_status_message,

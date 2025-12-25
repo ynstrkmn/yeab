@@ -1,5 +1,8 @@
 package com.yeab.esnapp.ui.order
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
@@ -8,6 +11,7 @@ import androidx.annotation.ColorInt
 import androidx.core.content.ContextCompat
 import com.google.android.material.chip.Chip
 import com.google.firebase.database.*
+import com.google.firebase.storage.FirebaseStorage
 import com.yeab.esnapp.R
 import com.yeab.esnapp.databinding.ActivityMessageTemplateBinding
 import com.yeab.esnapp.model.MerchantMessageTemplate
@@ -20,14 +24,18 @@ import com.yeab.esnapp.util.FirebasePaths
 import com.yeab.esnapp.util.IntentKeys
 import com.yeab.esnapp.util.MerchantSession
 import com.yeab.esnapp.util.WhatsAppUtils
+import java.io.ByteArrayOutputStream
+import java.math.BigInteger
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.UUID
 
 class MessageTemplateActivity : BaseActivity() {
 
     private lateinit var binding: ActivityMessageTemplateBinding
     private val dbRef = FirebaseDatabase.getInstance().reference
+    private val storageRef = FirebaseStorage.getInstance().reference
 
     private var merchantUid: String? = null
     private lateinit var phone: String
@@ -38,6 +46,10 @@ class MessageTemplateActivity : BaseActivity() {
     private var productImageUrl: String? = null
     private var isPaymentDone: Boolean = false
     private var paymentDate: String = ""
+
+    // Yeni eklenenler: NewOrder'dan gelen ham veriler
+    private var localPhotoUriStr: String? = null
+    private var recognizedText: String = ""
 
     private var customerNameSurname: String = ""
     private val templateMap = mutableMapOf<Int, MerchantMessageTemplate>()
@@ -55,9 +67,19 @@ class MessageTemplateActivity : BaseActivity() {
         surname = intent.getStringExtra(IntentKeys.SURNAME) ?: ""
         email = intent.getStringExtra(IntentKeys.EMAIL) ?: ""
         productDesc = intent.getStringExtra(IntentKeys.PRODUCT_DESC) ?: ""
-        isPaymentDone = intent.getBooleanExtra(IntentKeys.IS_PAYMENT_DONE,false)
-        productImageUrl = intent.getStringExtra(IntentKeys.PRODUCT_IMAGE_URL)
+        isPaymentDone = intent.getBooleanExtra(IntentKeys.IS_PAYMENT_DONE, false)
+        
+        // Artık URL yerine yerel URI ve Text geliyor
+        productImageUrl = intent.getStringExtra(IntentKeys.PRODUCT_IMAGE_URL) // Varsa (edit modunda vs)
+        localPhotoUriStr = intent.getStringExtra("extra_local_photo_uri")
+        recognizedText = intent.getStringExtra("extra_recognized_text") ?: ""
+        
         orderIdOrigin = intent.getStringExtra(IntentKeys.ORDER_ID) ?: ""
+        
+        // Eğer ID yoksa (yeni sipariş) burada oluşturuyoruz
+        if (orderIdOrigin.isEmpty()) {
+            orderIdOrigin = System.currentTimeMillis().toString()
+        }
 
         customerNameSurname = listOf(name, surname)
             .filter { it.isNotEmpty() }
@@ -67,7 +89,6 @@ class MessageTemplateActivity : BaseActivity() {
         binding.btnSaveOrder.text = getString(R.string.message_template_button_save_order)
         binding.edtFreeText.hint = getString(R.string.message_template_hint_free_text)
 
-        // ChipGroup: tek seçim
         binding.radioGroupTemplates.isSingleSelection = true
 
         loadTemplates()
@@ -76,19 +97,16 @@ class MessageTemplateActivity : BaseActivity() {
             onCompleteClicked()
         }
 
-        setupChipGroupListener();
-
+        setupChipGroupListener()
     }
 
 
     private fun loadTemplates() {
         val uid = merchantUid ?: return
-
         dbRef.child(FirebasePaths.MERCHANT_MESSAGE_TEMPLATES)
             .child(uid)
             .get()
             .addOnSuccessListener { snapshot ->
-                // Listener'ı geçici olarak kaldır, çipler eklenirken tetiklenmesin
                 binding.radioGroupTemplates.setOnCheckedStateChangeListener(null)
                 binding.radioGroupTemplates.removeAllViews()
                 templateMap.clear()
@@ -96,30 +114,21 @@ class MessageTemplateActivity : BaseActivity() {
                 for (child in snapshot.children) {
                     val template = child.getValue(MerchantMessageTemplate::class.java) ?: continue
                     val text = template.Text ?: continue
-
                     val chip = Chip(this).apply {
                         id = View.generateViewId()
                         this.text = text
                         isCheckable = true
                         isClickable = true
                         isCheckedIconVisible = false
-                        // Başlangıç stilini de burada ayarlayabiliriz.
-                        // (Bu kısım setupChipGroupListener içinde de yönetilecek)
                     }
-
                     binding.radioGroupTemplates.addView(chip)
                     templateMap[chip.id] = template
                 }
-
-                // Çipler eklendikten sonra listener'ı tekrar kur.
                 setupChipGroupListener()
-                // Başlangıçta tüm stilleri sıfırla.
                 resetAllChipStyles()
             }
     }
 
-
-    // YARDIMCI FONKSİYON: Tüm çipleri varsayılan stiline döndürür.
     private fun resetAllChipStyles() {
         val defaultBackgroundColor = com.google.android.material.R.attr.colorSurface
         val colorStateList = android.content.res.ColorStateList.valueOf(getThemeColor(defaultBackgroundColor))
@@ -133,45 +142,30 @@ class MessageTemplateActivity : BaseActivity() {
         }
     }
 
-    // ANA LISTENER FONKSİYONU
     private fun setupChipGroupListener() {
         val selectedColor = ContextCompat.getColor(this, R.color.chip_selected_background)
         val selectedStrokeColor = ContextCompat.getColor(this, R.color.chip_selected_stroke)
 
         binding.radioGroupTemplates.setOnCheckedStateChangeListener { group, checkedIds ->
-            // Önce tüm çiplerin stilini sıfırla
             resetAllChipStyles()
-
             if (checkedIds.isNotEmpty()) {
-                // 1. BİR ÇİP SEÇİLDİ
                 val selectedChipId = checkedIds.first()
                 val selectedChip = group.findViewById<Chip>(selectedChipId)
-
                 if (selectedChip != null) {
-                    // a) Seçilen çipin stilini YEŞİL yap
                     selectedChip.chipBackgroundColor = android.content.res.ColorStateList.valueOf(selectedColor)
-                    selectedChip.chipStrokeWidth = 4f // Çerçeveyi belirgin yap
+                    selectedChip.chipStrokeWidth = 4f
                     selectedChip.chipStrokeColor = android.content.res.ColorStateList.valueOf(selectedStrokeColor)
-
                 }
-
-            } else {
-                // 2. SEÇİM KALDIRILDI
-                // EditText'i tekrar aktif hale getir
             }
         }
     }
 
-    // Bu yardımcı fonksiyonu da sınıfınıza ekleyin (eğer yoksa)
     @ColorInt
     private fun getThemeColor(@AttrRes attrRes: Int): Int {
         val typedValue = android.util.TypedValue()
         theme.resolveAttribute(attrRes, typedValue, true)
         return typedValue.data
     }
-
-
-
 
     private fun onCompleteClicked() {
         val uid = merchantUid ?: return
@@ -191,26 +185,160 @@ class MessageTemplateActivity : BaseActivity() {
             !selectedTemplateText.isNullOrEmpty() -> selectedTemplateText
             freeText.isNotEmpty() -> freeText
             else -> {
-                Toast.makeText(
-                    this,
-                    getString(R.string.error_no_message_selected),
-                    Toast.LENGTH_SHORT
-                ).show()
+                Toast.makeText(this, getString(R.string.error_no_message_selected), Toast.LENGTH_SHORT).show()
                 return
             }
         }
 
-        // Önce MerchantsUsers altında müşteri kaydı yoksa ekleyelim
+        // --- YENİ AKIŞ ---
+        // 1. Önce resmi yükle (varsa)
+        // 2. Sonra Müşteriyi kaydet (varsa)
+        // 3. Sonra Siparişi kaydet
+
+        if (localPhotoUriStr != null) {
+            uploadImageAndProcess(uid, Uri.parse(localPhotoUriStr), messageText)
+        } else {
+            // Resim yoksa (nadiren olur) direkt devam et
+            processOrderSave(uid, messageText)
+        }
+    }
+    
+    // --- UPLOAD VE HASH MANTIĞI (NewOrder'dan taşındı) ---
+    
+    private fun uploadImageAndProcess(uid: String, uri: Uri, messageText: String) {
+        showLoading()
+        
+        // Bitmap'i oluştur
+        val bitmap = try {
+            val inputStream = contentResolver.openInputStream(uri)
+            BitmapFactory.decodeStream(inputStream)
+        } catch (e: Exception) {
+            null
+        }
+
+        if (bitmap == null) {
+            hideLoading()
+            Toast.makeText(this, "Resim işlenemedi", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val imageId = UUID.randomUUID().toString()
+        val fileName = "orders/$uid/$imageId.jpg"
+        val imgRef = storageRef.child(fileName)
+        val refOrderId = orderIdOrigin
+
+        // EXIF düzeltme
+        val correctedBitmap = try {
+            fixBitmapOrientation(bitmap, uri)
+        } catch (e: Exception) {
+            bitmap
+        }
+
+        val baos = ByteArrayOutputStream()
+        correctedBitmap.compress(Bitmap.CompressFormat.JPEG, 90, baos)
+        val data = baos.toByteArray()
+
+        val sha256 = try { sha256Hex(data) } catch (e: Exception) { "" }
+        val phash = try { averageHash(correctedBitmap) } catch (e: Exception) { "" }
+
+        imgRef.putBytes(data)
+            .continueWithTask { task ->
+                if (!task.isSuccessful) throw task.exception ?: Exception("Upload failed")
+                imgRef.downloadUrl
+            }
+            .addOnSuccessListener { downloadUrl ->
+                // URL'i güncelle
+                productImageUrl = downloadUrl.toString()
+
+                val meta = HashMap<String, Any?>()
+                meta["imageUrl"] = productImageUrl
+                meta["hash"] = sha256
+                meta["phash"] = phash
+                meta["fileName"] = fileName
+                meta["timestamp"] = ServerValue.TIMESTAMP
+                meta["recognizedText"] = recognizedText
+
+                // Hash bilgisini kaydet
+                dbRef.child("image_hashes")
+                    .child(uid)
+                    .child(refOrderId)
+                    .setValue(meta)
+                    .addOnCompleteListener {
+                        // Yükleme bitti, sipariş kaydına devam et
+                        processOrderSave(uid, messageText)
+                    }
+            }
+            .addOnFailureListener {
+                hideLoading()
+                Toast.makeText(this, getString(R.string.error_image_upload) + ": " + it.message, Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun processOrderSave(uid: String, messageText: String) {
         saveCustomerIfNeeded(uid) {
-            // 🔴 BURASI ÖNEMLİ: OrderId artık sadece System.currentTimeMillis()
-            val orderId = orderIdOrigin
-            saveOrderAndSendWhatsApp(uid, orderId, messageText)
+            saveOrderAndSendWhatsApp(uid, orderIdOrigin, messageText)
         }
     }
 
-    /**
-     * MerchantsUsers/{uid}/{phone} altında müşteri kaydı yoksa ekler.
-     */
+    // --- HELPER FUNCTIONS ---
+
+    private fun fixBitmapOrientation(src: Bitmap, uri: android.net.Uri): Bitmap {
+        return try {
+            contentResolver.openInputStream(uri)?.use { stream ->
+                val exif = androidx.exifinterface.media.ExifInterface(stream)
+                val orientation = exif.getAttributeInt(
+                    androidx.exifinterface.media.ExifInterface.TAG_ORIENTATION,
+                    androidx.exifinterface.media.ExifInterface.ORIENTATION_NORMAL
+                )
+                val matrix = android.graphics.Matrix()
+                when (orientation) {
+                    androidx.exifinterface.media.ExifInterface.ORIENTATION_ROTATE_90 -> matrix.postRotate(90f)
+                    androidx.exifinterface.media.ExifInterface.ORIENTATION_ROTATE_180 -> matrix.postRotate(180f)
+                    androidx.exifinterface.media.ExifInterface.ORIENTATION_ROTATE_270 -> matrix.postRotate(270f)
+                    androidx.exifinterface.media.ExifInterface.ORIENTATION_FLIP_HORIZONTAL -> matrix.preScale(-1f, 1f)
+                    androidx.exifinterface.media.ExifInterface.ORIENTATION_FLIP_VERTICAL -> matrix.preScale(1f, -1f)
+                    androidx.exifinterface.media.ExifInterface.ORIENTATION_TRANSPOSE -> {
+                        matrix.postRotate(90f); matrix.preScale(-1f, 1f)
+                    }
+                    androidx.exifinterface.media.ExifInterface.ORIENTATION_TRANSVERSE -> {
+                        matrix.postRotate(270f); matrix.preScale(-1f, 1f)
+                    }
+                }
+                android.graphics.Bitmap.createBitmap(src, 0, 0, src.width, src.height, matrix, true)
+            } ?: src
+        } catch (e: Exception) {
+            src
+        }
+    }
+
+    private fun sha256Hex(bytes: ByteArray): String {
+        val md = java.security.MessageDigest.getInstance("SHA-256")
+        val digest = md.digest(bytes)
+        return digest.joinToString("") { "%02x".format(it) }
+    }
+
+    private fun averageHash(src: Bitmap): String {
+        val size = 8
+        val scaled = Bitmap.createScaledBitmap(src, size, size, true)
+        val pixels = IntArray(size * size)
+        scaled.getPixels(pixels, 0, size, 0, 0, size, size)
+        val luminances = IntArray(pixels.size)
+        var sum = 0
+        for (i in pixels.indices) {
+            val c = pixels[i]
+            val lum = (0.299 * ((c shr 16) and 0xFF) + 0.587 * ((c shr 8) and 0xFF) + 0.114 * (c and 0xFF)).toInt()
+            luminances[i] = lum
+            sum += lum
+        }
+        val avg = sum / luminances.size
+        val bits = StringBuilder()
+        for (lum in luminances) bits.append(if (lum >= avg) '1' else '0')
+        return String.format("%016x", BigInteger(bits.toString(), 2))
+    }
+    
+    // --- END HELPER FUNCTIONS ---
+
+
     private fun saveCustomerIfNeeded(uid: String, onDone: () -> Unit) {
         val userRef = dbRef.child(FirebasePaths.MERCHANTS_USERS)
             .child(uid)
@@ -228,15 +356,10 @@ class MessageTemplateActivity : BaseActivity() {
                     userRef.setValue(user).addOnCompleteListener { onDone() }
                 } else onDone()
             }
-
             override fun onCancelled(error: DatabaseError) = onDone()
         })
     }
 
-    /**
-     * Yeni Order kaydını hem MerchantOrders hem UserOrders altına yazar
-     * ve zengin WhatsApp mesajını gönderir.
-     */
     private fun saveOrderAndSendWhatsApp(
         uid: String,
         orderId: String,
@@ -248,8 +371,6 @@ class MessageTemplateActivity : BaseActivity() {
 
         val statusList = mutableListOf(ProductStatus(messageText, nowIso))
 
-        // Eğer ödeme yapıldısa ödeme olarak şuan tarih atılmalıdır.
-
         if (isPaymentDone){
             paymentDate = nowIso
         }else{
@@ -257,11 +378,11 @@ class MessageTemplateActivity : BaseActivity() {
         }
 
         val order = Order(
-            false,              // isFinished
-            productImageUrl,    // productImageUrl
-            productDesc,        // productName
-            statusList,         // productStatus
-            nowIso,              // createdDate
+            false,
+            productImageUrl,
+            productDesc,
+            statusList,
+            nowIso,
             isPaymentDone,
             paymentDate,
             phone
@@ -284,22 +405,14 @@ class MessageTemplateActivity : BaseActivity() {
         )
 
         dbRef.updateChildren(updates).addOnSuccessListener {
+            hideLoading() // Loading'i kapat
 
-            // Tarihi display formatına çevir
-            val displayFormatter =
-                SimpleDateFormat(DateFormats.ORDER_STATUS_DISPLAY, Locale.getDefault())
+            val displayFormatter = SimpleDateFormat(DateFormats.ORDER_STATUS_DISPLAY, Locale.getDefault())
             val displayDate = displayFormatter.format(now)
 
-            // Müşteri adı yoksa telefon göster
-            val customerDisplayName =
-                if (customerNameSurname.isNotEmpty()) customerNameSurname else phone
-
-            val safeProductName =
-                if (productDesc.isNotEmpty()) productDesc else getString(R.string.app_name)
-
-            val detailLink =
-                "https://esnapp-qr.web.app/index.html?merchantId=$uid&orderId=$orderId"
-
+            val customerDisplayName = if (customerNameSurname.isNotEmpty()) customerNameSurname else phone
+            val safeProductName = if (productDesc.isNotEmpty()) productDesc else getString(R.string.app_name)
+            val detailLink = "https://esnapp-qr.web.app/index.html?merchantId=$uid&orderId=$orderId"
 
             val formattedMessage = getString(
                 R.string.whatsapp_status_message,
@@ -315,11 +428,8 @@ class MessageTemplateActivity : BaseActivity() {
             finish()
 
         }.addOnFailureListener {
-            Toast.makeText(
-                this,
-                it.message ?: getString(R.string.error_generic),
-                Toast.LENGTH_SHORT
-            ).show()
+            hideLoading()
+            Toast.makeText(this, it.message ?: getString(R.string.error_generic), Toast.LENGTH_SHORT).show()
         }
     }
 }

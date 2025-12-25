@@ -12,7 +12,6 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.google.firebase.database.*
-import com.google.firebase.storage.FirebaseStorage
 import com.yeab.esnapp.R
 import com.yeab.esnapp.databinding.ActivityNewOrderBinding
 import com.yeab.esnapp.model.MerchantUser
@@ -23,34 +22,28 @@ import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import java.io.File
-import java.math.BigInteger
-import java.util.UUID
 import kotlin.toString
 
 class NewOrderActivity : BaseActivity() {
 
     private lateinit var binding: ActivityNewOrderBinding
     private val dbRef = FirebaseDatabase.getInstance().reference
-    private val storageRef = FirebaseStorage.getInstance().reference
     private var merchantUid: String? = null
-    private var productImageUrl: String? = null
 
     // State preservation için anahtar
     private val KEY_IS_PAYMENT_DONE = "key_is_payment_done"
 
     // FULL RES fotoğraf URI'si
     private var photoUri: android.net.Uri? = null
-    // Order Id burada oluşturup bir sonraki sayfaya geçiyoruz, ilişkiyi sağlamak için
-    private var orderId: String? = null
+    
+    // Geçici olarak tutulan OCR metni
+    private var tempRecognizedText: String = ""
 
     // -- CONTACT PICKER START --
-    // Rehberden seçim sonucunu yakalayacak Launcher
     private val contactLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == RESULT_OK) {
             result.data?.data?.let { uri ->
-                // Bileşenimize URI'yi veriyoruz, o gerisini hallediyor
                 binding.phoneInputComponent.setPhoneNumberFromUri(uri)
-                // Numarayı set ettikten sonra otomatik olarak müşteriyi ara
                 searchCustomer()
             }
         }
@@ -63,29 +56,21 @@ class NewOrderActivity : BaseActivity() {
             if (result.resultCode == RESULT_OK) {
                 val uri = photoUri
                 if (uri == null) {
-                    Toast.makeText(this, getString(R.string.error_generic), Toast.LENGTH_SHORT)
-                        .show()
+                    Toast.makeText(this, getString(R.string.error_generic), Toast.LENGTH_SHORT).show()
                     return@registerForActivityResult
                 }
                 try {
+                    // Sadece OCR kontrolü için Bitmap oluşturuyoruz
                     contentResolver.openInputStream(uri)?.use { inputStream ->
                         val bitmap = android.graphics.BitmapFactory.decodeStream(inputStream)
                         if (bitmap != null) {
-                            uploadImage(bitmap)
+                            processImageForOcr(bitmap)
                         } else {
-                            Toast.makeText(
-                                this,
-                                getString(R.string.error_generic),
-                                Toast.LENGTH_SHORT
-                            ).show()
+                            Toast.makeText(this, getString(R.string.error_generic), Toast.LENGTH_SHORT).show()
                         }
                     }
                 } catch (e: Exception) {
-                    Toast.makeText(
-                        this,
-                        getString(R.string.error_generic) + ": " + e.message,
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    Toast.makeText(this, getString(R.string.error_generic) + ": " + e.message, Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -96,11 +81,7 @@ class NewOrderActivity : BaseActivity() {
             if (granted) {
                 openCameraForProduct()
             } else {
-                Toast.makeText(
-                    this,
-                    getString(R.string.error_camera_permission_denied),
-                    Toast.LENGTH_SHORT
-                ).show()
+                Toast.makeText(this, getString(R.string.error_camera_permission_denied), Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -111,20 +92,15 @@ class NewOrderActivity : BaseActivity() {
 
         merchantUid = intent.getStringExtra(IntentKeys.MERCHANT_UID)
 
-        // Aktivite yeniden oluşturulduğunda CheckBox durumunu geri yükle
         savedInstanceState?.let {
             val isPaymentDone = it.getBoolean(KEY_IS_PAYMENT_DONE, false)
             binding.chkPaymentDone.isChecked = isPaymentDone
         }
 
-        // -- CONTACT PICKER LISTENER SETUP --
-        // Bileşenin butonuna tıklandığında ne olacağını söylüyoruz
         binding.phoneInputComponent.onPickContactClick = {
-            // Sadece telefon numarası olan kişileri filtreleyip açan Intent
             val intent = Intent(Intent.ACTION_PICK, android.provider.ContactsContract.CommonDataKinds.Phone.CONTENT_URI)
             contactLauncher.launch(intent)
         }
-        // -- END --
 
         binding.btnSearchPhone.setOnClickListener {
             searchCustomer()
@@ -137,25 +113,22 @@ class NewOrderActivity : BaseActivity() {
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        // Aktivite yok edilmeden önce CheckBox'ın durumunu kaydet
         outState.putBoolean(KEY_IS_PAYMENT_DONE, binding.chkPaymentDone.isChecked)
     }
-
+    
     private fun clearInformationsArea(){
-        binding.edtName.setText("");
-        binding.edtSurname.setText("");
+        binding.edtName.setText("")
+        binding.edtSurname.setText("")
         binding.edtEmail.setText("")
     }
 
     private fun searchCustomer() {
         clearInformationsArea()
-        // ARTIK NUMARAYI YENİ BİLEŞENDEN ALIYORUZ
         val phone = binding.phoneInputComponent.getPhoneNumber()
         val uid = merchantUid ?: return
 
         if (phone.length != 10) {
-            Toast.makeText(this, getString(R.string.error_phone_10_digits), Toast.LENGTH_SHORT)
-                .show()
+            Toast.makeText(this, getString(R.string.error_phone_10_digits), Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -175,27 +148,18 @@ class NewOrderActivity : BaseActivity() {
                             binding.edtEmail.setText(it.Email)
                         }
                     } else {
-                        Toast.makeText(
-                            this@NewOrderActivity,
-                            getString(R.string.error_customer_not_found),
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        Toast.makeText(this@NewOrderActivity, getString(R.string.error_customer_not_found), Toast.LENGTH_SHORT).show()
                     }
                 }
 
                 override fun onCancelled(error: DatabaseError) {
                     hideLoading()
-                    Toast.makeText(
-                        this@NewOrderActivity,
-                        error.message,
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    Toast.makeText(this@NewOrderActivity, error.message, Toast.LENGTH_SHORT).show()
                 }
             })
     }
 
     private fun startAddProductFlow() {
-        // ARTIK NUMARAYI YENİ BİLEŞENDEN ALIYORUZ
         val phone = binding.phoneInputComponent.getPhoneNumber()
         val name = binding.edtName.text.toString().trim()
         val surname = binding.edtSurname.text.toString().trim()
@@ -203,8 +167,7 @@ class NewOrderActivity : BaseActivity() {
         val desc = binding.edtProductDesc.text.toString().trim()
 
         if (phone.length != 10 || name.isEmpty() || surname.isEmpty() || email.isEmpty() || desc.isEmpty()) {
-            Toast.makeText(this, getString(R.string.error_fill_all_fields), Toast.LENGTH_SHORT)
-                .show()
+            Toast.makeText(this, getString(R.string.error_fill_all_fields), Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -247,13 +210,10 @@ class NewOrderActivity : BaseActivity() {
 
     /**
      * Resim çekildikten sonra:
-     * 1) ML Kit ile üzerindeki metni tanı
-     * 2) Tanınan metni ve resmi Firebase Storage + Realtime DB'ye yaz
-     * 3) Mesaj şablonu ekranına geç
+     * 1) ML Kit ile üzerindeki metni tanı (Kalite kontrolü amaçlı)
+     * 2) Tanınan metin varsa diğer sayfaya geç
      */
-    private fun uploadImage(bitmap: Bitmap) {
-        val uid = merchantUid ?: return
-
+    private fun processImageForOcr(bitmap: Bitmap) {
         showLoading()
 
         val image = InputImage.fromBitmap(bitmap, 0)
@@ -261,13 +221,14 @@ class NewOrderActivity : BaseActivity() {
 
         recognizer.process(image)
             .addOnSuccessListener { visionText ->
+                hideLoading()
                 val recognizedText = visionText.text
                 if (recognizedText.isNullOrBlank()) {
-                    hideLoading()
                     Toast.makeText(this, "Çektiğiniz fotoğraf düzgün alınmadı, lütfen ürünü daha net bir şekilde tekrar çekin.", Toast.LENGTH_LONG).show()
                     openCameraForProduct()
                 } else {
-                    uploadImageInternal(uid, bitmap, recognizedText)
+                    tempRecognizedText = recognizedText
+                    goToMessageTemplateScreen()
                 }
             }
             .addOnFailureListener {
@@ -278,164 +239,24 @@ class NewOrderActivity : BaseActivity() {
             }
     }
 
-    /**
-     * Gerçek upload + meta kaydı burada
-     */
-    private fun uploadImageInternal(
-        uid: String,
-        bitmap: Bitmap,
-        recognizedText: String
-    ) {
-        val imageId = UUID.randomUUID().toString()
-        val fileName = "orders/$uid/$imageId.jpg"
-        val imgRef = storageRef.child(fileName)
-        val refOrderId = System.currentTimeMillis().toString()
-        orderId = refOrderId
-
-        // EXIF'e göre resmi düzelt
-        val correctedBitmap = try {
-            photoUri?.let { fixBitmapOrientation(bitmap, it) } ?: bitmap
-        } catch (e: Exception) {
-            bitmap
-        }
-
-        val baos = java.io.ByteArrayOutputStream()
-        correctedBitmap.compress(Bitmap.CompressFormat.JPEG, 90, baos)
-        val data = baos.toByteArray()
-
-        val sha256 = try {
-            sha256Hex(data)
-        } catch (e: Exception) {
-            ""
-        }
-
-        val phash = try {
-            averageHash(correctedBitmap)
-        } catch (e: Exception) {
-            ""
-        }
-
-        imgRef.putBytes(data)
-            .continueWithTask { task ->
-                if (!task.isSuccessful) {
-                    throw task.exception ?: Exception("Upload failed")
-                }
-                imgRef.downloadUrl
-            }
-            .addOnSuccessListener { uri ->
-                productImageUrl = uri.toString()
-
-                val meta = HashMap<String, Any?>()
-                meta["imageUrl"] = productImageUrl
-                meta["hash"] = sha256
-                meta["phash"] = phash
-                meta["fileName"] = fileName
-                meta["timestamp"] = ServerValue.TIMESTAMP
-                meta["recognizedText"] = recognizedText
-
-                dbRef.child("image_hashes")
-                    .child(uid)
-                    .child(refOrderId)
-                    .setValue(meta)
-                    .addOnCompleteListener {
-                        hideLoading()
-                        goToMessageTemplateScreen()
-                    }
-
-            }
-            .addOnFailureListener {
-                hideLoading()
-                Toast.makeText(
-                    this,
-                    getString(R.string.error_image_upload) + ": " + (it.message ?: ""),
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-    }
-
-    private fun fixBitmapOrientation(src: Bitmap, uri: android.net.Uri): Bitmap {
-        return try {
-            contentResolver.openInputStream(uri)?.use { stream ->
-                val exif = androidx.exifinterface.media.ExifInterface(stream)
-                val orientation = exif.getAttributeInt(
-                    androidx.exifinterface.media.ExifInterface.TAG_ORIENTATION,
-                    androidx.exifinterface.media.ExifInterface.ORIENTATION_NORMAL
-                )
-                val matrix = android.graphics.Matrix()
-                when (orientation) {
-                    androidx.exifinterface.media.ExifInterface.ORIENTATION_ROTATE_90 ->
-                        matrix.postRotate(90f)
-                    androidx.exifinterface.media.ExifInterface.ORIENTATION_ROTATE_180 ->
-                        matrix.postRotate(180f)
-                    androidx.exifinterface.media.ExifInterface.ORIENTATION_ROTATE_270 ->
-                        matrix.postRotate(270f)
-                    androidx.exifinterface.media.ExifInterface.ORIENTATION_FLIP_HORIZONTAL ->
-                        matrix.preScale(-1f, 1f)
-                    androidx.exifinterface.media.ExifInterface.ORIENTATION_FLIP_VERTICAL ->
-                        matrix.preScale(1f, -1f)
-                    androidx.exifinterface.media.ExifInterface.ORIENTATION_TRANSPOSE -> {
-                        matrix.postRotate(90f)
-                        matrix.preScale(-1f, 1f)
-                    }
-                    androidx.exifinterface.media.ExifInterface.ORIENTATION_TRANSVERSE -> {
-                        matrix.postRotate(270f)
-                        matrix.preScale(-1f, 1f)
-                    }
-                    else -> { /* normal */ }
-                }
-                android.graphics.Bitmap.createBitmap(src, 0, 0, src.width, src.height, matrix, true)
-            } ?: src
-        } catch (e: Exception) {
-            src
-        }
-    }
-
-    private fun sha256Hex(bytes: ByteArray): String {
-        val md = java.security.MessageDigest.getInstance("SHA-256")
-        val digest = md.digest(bytes)
-        return digest.joinToString("") { "%02x".format(it) }
-    }
-
-    private fun averageHash(src: Bitmap): String {
-        val size = 8
-        val scaled = Bitmap.createScaledBitmap(src, size, size, true)
-        val pixels = IntArray(size * size)
-        scaled.getPixels(pixels, 0, size, 0, 0, size, size)
-
-        val luminances = IntArray(pixels.size)
-        var sum = 0
-        for (i in pixels.indices) {
-            val c = pixels[i]
-            val r = (c shr 16) and 0xFF
-            val g = (c shr 8) and 0xFF
-            val b = c and 0xFF
-            val lum = (0.299 * r + 0.587 * g + 0.114 * b).toInt()
-            luminances[i] = lum
-            sum += lum
-        }
-        val avg = sum / luminances.size
-
-        val bits = StringBuilder()
-        for (lum in luminances) {
-            bits.append(if (lum >= avg) '1' else '0')
-        }
-
-        val bigInt = BigInteger(bits.toString(), 2)
-        return String.format("%016x", bigInt)
-    }
-
     private fun goToMessageTemplateScreen() {
         val intent = Intent(this, MessageTemplateActivity::class.java)
         intent.putExtra(IntentKeys.MERCHANT_UID, merchantUid)
-        // ARTIK NUMARAYI YENİ BİLEŞENDEN ALIYORUZ
         intent.putExtra(IntentKeys.PHONE, binding.phoneInputComponent.getPhoneNumber())
         intent.putExtra(IntentKeys.NAME, binding.edtName.text.toString().trim())
         intent.putExtra(IntentKeys.SURNAME, binding.edtSurname.text.toString().trim())
         intent.putExtra(IntentKeys.EMAIL, binding.edtEmail.text.toString().trim())
         intent.putExtra(IntentKeys.PRODUCT_DESC, binding.edtProductDesc.text.toString().trim())
-        intent.putExtra(IntentKeys.PRODUCT_IMAGE_URL, productImageUrl)
         intent.putExtra(IntentKeys.IS_PAYMENT_DONE, binding.chkPaymentDone.isChecked)
-        intent.putExtra(IntentKeys.ORDER_ID, orderId)
+        
+        // ÖNEMLİ: Upload edilmemiş yerel dosya yolunu gönderiyoruz
+        if (photoUri != null) {
+            intent.putExtra("extra_local_photo_uri", photoUri.toString())
+        }
+        intent.putExtra("extra_recognized_text", tempRecognizedText)
+        
+        // Order ID'yi burada oluşturmuyoruz, diğer tarafta oluşturulacak veya null gidecek
+        
         startActivity(intent)
         finish()
     }
