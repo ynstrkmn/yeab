@@ -18,6 +18,7 @@ import com.yeab.esnapp.ui.base.BaseActivity
 import com.yeab.esnapp.util.DateFormats
 import com.yeab.esnapp.util.FirebasePaths
 import com.yeab.esnapp.util.IntentKeys
+import com.yeab.esnapp.util.MerchantSession
 import com.yeab.esnapp.util.WhatsAppUtils
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -299,6 +300,7 @@ class MessageTemplateActivity : BaseActivity() {
             val detailLink =
                 "https://esnapp-qr.web.app/index.html?merchantId=$uid&orderId=$orderId"
 
+
             val formattedMessage = getString(
                 R.string.whatsapp_status_message,
                 customerDisplayName,
@@ -306,8 +308,8 @@ class MessageTemplateActivity : BaseActivity() {
                 orderId,
                 safeProductName,
                 messageText,
-                detailLink
-            )
+                detailLink,
+                MerchantSession.merchant?.MerchantName)
 
             WhatsAppUtils.sendMessage(this, phone, formattedMessage)
             finish()

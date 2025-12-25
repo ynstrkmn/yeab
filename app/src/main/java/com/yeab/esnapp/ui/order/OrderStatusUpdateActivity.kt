@@ -440,7 +440,8 @@ class OrderStatusUpdateActivity : BaseActivity() {
                     orderId,
                     safeProductName,
                     messageText,
-                    detailLink
+                    detailLink,
+                    "asdadasdasdsad"
                 )
 
                 hideLoading()

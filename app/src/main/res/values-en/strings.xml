@@ -81,7 +81,13 @@
     \nHave a nice day.
     \nYou can see detailed information from the link below:
     \n%6$s
+        \n%7$s
     </string>
+
+    <string name="welcome_message">
+    Welcome, %1$s %2$s
+    </string>
+
 
     <string name="button_logout">Logout</string>
     <string name="logout_confirm_title">Logout</string>

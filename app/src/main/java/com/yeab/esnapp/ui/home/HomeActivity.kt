@@ -2,18 +2,22 @@ package com.yeab.esnapp.ui.home
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
 import com.yeab.esnapp.R
 import com.yeab.esnapp.databinding.ActivityHomeBinding
-import com.yeab.esnapp.ui.auth.MerchantLoginActivity   // <-- login ekranının gerçek paketini burada düzelt
+import com.yeab.esnapp.model.Merchant
+import com.yeab.esnapp.ui.auth.MerchantLoginActivity
 import com.yeab.esnapp.ui.base.BaseActivity
 import com.yeab.esnapp.ui.messages.MerchantMessageTemplatesActivity
 import com.yeab.esnapp.ui.order.NewOrderActivity
-import com.yeab.esnapp.ui.order.SearchOrderActivity
-import com.yeab.esnapp.util.IntentKeys
 import com.yeab.esnapp.ui.order.OrdersActivity
+import com.yeab.esnapp.ui.order.SearchOrderActivity
+import com.yeab.esnapp.util.FirebasePaths
+import com.yeab.esnapp.util.IntentKeys
+import com.yeab.esnapp.util.MerchantSession
 
 class HomeActivity : BaseActivity() {
 
@@ -25,11 +29,30 @@ class HomeActivity : BaseActivity() {
         binding = ActivityHomeBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // sesion güvenliği için null yapıldı
+        MerchantSession.clear();
+
         // Login sonrası buraya MERCHANT_UID gönderiyorduk
         merchantUid = intent.getStringExtra(IntentKeys.MERCHANT_UID)
 
-        val currentUser = FirebaseAuth.getInstance().currentUser
-        binding.txtWelcomeMessage.text = "${binding.txtWelcomeMessage.text} ${currentUser?.displayName}"
+        // Eğer Intent ile gelmediyse, Session'dan almaya çalışalım
+        if (merchantUid == null) {
+            merchantUid = MerchantSession.merchantUid
+        }
+
+        // Eğer hala null ise ve currentUser varsa, currentUser.uid kullanalım
+        if (merchantUid == null) {
+            val currentUser = FirebaseAuth.getInstance().currentUser
+            if (currentUser != null) {
+                merchantUid = currentUser.uid
+            }
+        }
+        
+        // Session'a UID'yi kaydedelim
+        MerchantSession.merchantUid = merchantUid
+
+        // Veritabanından Merchant bilgisini çek ve Session'a kaydet
+        fetchMerchantData()
 
         // Yeni Ürün Ekle
         binding.btnNewOrder.setOnClickListener {
@@ -51,16 +74,38 @@ class HomeActivity : BaseActivity() {
             startActivity(i)
         }
 
-        // binding zaten setup edildiğini varsayıyorum. onCreate içinde uygun yere ekleyin:
         binding.btnMyOrders.setOnClickListener {
             startActivity(Intent(this, OrdersActivity::class.java))
         }
-
 
         // Çıkış Yap
         binding.btnLogout.setOnClickListener {
             showLogoutConfirmDialog()
         }
+    }
+
+    private fun fetchMerchantData() {
+        val uid = merchantUid
+        if (uid.isNullOrEmpty()) return
+
+        val dbRef = FirebaseDatabase.getInstance().reference
+        dbRef.child(FirebasePaths.MERCHANTS).child(uid).get()
+            .addOnSuccessListener { snapshot ->
+                if (snapshot.exists()) {
+                    val merchant = snapshot.getValue(Merchant::class.java)
+                    if (merchant != null) {
+                        // Global Session'a kaydet
+                        MerchantSession.merchant = merchant
+                        
+                        // UI güncelle
+                        val welcomeText = getString(R.string.welcome_message, "${merchant.Name}", "${merchant.Surname}")
+                        binding.txtWelcomeMessage.text = welcomeText
+                    }
+                }
+            }
+            .addOnFailureListener {
+                Toast.makeText(this, "Merchant verisi alınamadı: ${it.message}", Toast.LENGTH_SHORT).show()
+            }
     }
 
     private fun showLogoutConfirmDialog() {
@@ -78,12 +123,8 @@ class HomeActivity : BaseActivity() {
         // Firebase Auth oturumunu kapat
         FirebaseAuth.getInstance().signOut()
 
-        // Eğer SessionManager kullanıyorsan, merchant bilgilerini de temizle
-        try {
-            //SessionManager.clear(this)
-        } catch (_: Exception) {
-            // SessionManager yoksa bu kısmı tamamen silebilirsin
-        }
+        // Session temizle
+        MerchantSession.clear()
 
         // Login ekranına yönlendir
         val intent = Intent(this, MerchantLoginActivity::class.java)

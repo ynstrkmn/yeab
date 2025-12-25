@@ -76,12 +76,23 @@
     <string name="order_status_customer_placeholder">Müşteri: -</string>
     <!-- WhatsApp mesajı (TR) -->
     <string name="whatsapp_status_message">
-    Merhaba %1$s,
-    \n%2$s tarihli %3$s numaralı %4$s isimli ürününüzün son durumu: %5$s
-    \nİyi günler dileriz.
-    \nÜrün ile ilgili detaylı bilgilere linkten ulaşabilirsiniz.
-    \n%6$s
+    Sayın *%1$s*,
+
+    📦 *Sipariş Durum Güncellemesi*
+
+    *%2$s* tarihli, *%3$s* numaralı ve *%4$s* isimli ürününüzün son durumu:
+    👉 *%5$s* olarak güncellenmiştir.
+
+    Detaylı bilgi ve takip için aşağıdaki bağlantıya tıklayabilirsiniz:
+    🔗 %6$s
+
+    %7$s, İyi günler dileriz.
+</string>
+
+    <string name="welcome_message">
+ Merhaba, %1$s %2$s
     </string>
+
 
     <string name="button_logout">Çıkış Yap</string>
     <string name="logout_confirm_title">Çıkış</string>
