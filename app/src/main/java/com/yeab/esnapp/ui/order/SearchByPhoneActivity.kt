@@ -2,8 +2,9 @@ package com.yeab.esnapp.ui.order
 
 import android.content.Intent
 import android.os.Bundle
+import android.provider.ContactsContract
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.result.contract.ActivityResultContracts
 import com.google.firebase.database.*
 import com.yeab.esnapp.R
 import com.yeab.esnapp.databinding.ActivitySearchByPhoneBinding
@@ -24,13 +25,29 @@ class SearchByPhoneActivity : BaseActivity() {
 
         merchantUid = intent.getStringExtra(IntentKeys.MERCHANT_UID)
 
+        // Rehber seçici launcher
+        val contactLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK) {
+                result.data?.data?.let { uri ->
+                    binding.phoneInputComponent.setPhoneNumberFromUri(uri)
+                }
+            }
+        }
+
+        // Rehber butonuna tıklama olayı
+        binding.phoneInputComponent.onPickContactClick = {
+            val intent = Intent(Intent.ACTION_PICK, ContactsContract.CommonDataKinds.Phone.CONTENT_URI)
+            contactLauncher.launch(intent)
+        }
+
         binding.btnSearch.setOnClickListener {
             searchOrders()
         }
     }
 
     private fun searchOrders() {
-        val phone = binding.edtPhone.text.toString().trim()
+        // Yeni component üzerinden numarayı alıyoruz
+        val phone = binding.phoneInputComponent.getPhoneNumber()
         val uid = merchantUid ?: return
 
         if (phone.length != 10) {

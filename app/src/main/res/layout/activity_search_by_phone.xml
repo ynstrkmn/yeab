@@ -25,23 +25,12 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <!-- Telefon Input -->
-            <com.google.android.material.textfield.TextInputLayout
+            <!-- Telefon Input Component -->
+            <com.yeab.esnapp.ui.components.PhoneContactInput
+                android:id="@+id/phoneInputComponent"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:hint="@string/search_by_phone_phone_hint"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/edtPhone"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:maxLength="10"
-                    android:inputType="phone"
-                    android:textColor="#FFFFFF"
-                    android:textColorHint="#BBBBBB" />
-            </com.google.android.material.textfield.TextInputLayout>
+                android:layout_marginTop="16dp" />
 
             <!-- Ara Butonu -->
             <com.google.android.material.button.MaterialButton

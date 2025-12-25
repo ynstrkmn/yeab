@@ -78,19 +78,12 @@
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
 
-                        <com.google.android.material.textfield.TextInputLayout
-                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        <!-- Yeni Bileşen Entegrasyonu -->
+                        <com.yeab.esnapp.ui.components.PhoneContactInput
+                            android:id="@+id/phoneInputComponent"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:hint="@string/error_phone_10_digits">
-
-                            <com.google.android.material.textfield.TextInputEditText
-                                android:id="@+id/edtPhone"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:inputType="phone" />
-                        </com.google.android.material.textfield.TextInputLayout>
+                            android:layout_weight="1" />
 
                         <ImageButton
                             android:id="@+id/btnSearchPhone"

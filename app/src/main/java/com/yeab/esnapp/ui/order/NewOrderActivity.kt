@@ -43,6 +43,20 @@ class NewOrderActivity : BaseActivity() {
     // Order Id burada oluşturup bir sonraki sayfaya geçiyoruz, ilişkiyi sağlamak için
     private var orderId: String? = null
 
+    // -- CONTACT PICKER START --
+    // Rehberden seçim sonucunu yakalayacak Launcher
+    private val contactLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == RESULT_OK) {
+            result.data?.data?.let { uri ->
+                // Bileşenimize URI'yi veriyoruz, o gerisini hallediyor
+                binding.phoneInputComponent.setPhoneNumberFromUri(uri)
+                // Numarayı set ettikten sonra otomatik olarak müşteriyi ara
+                searchCustomer()
+            }
+        }
+    }
+    // -- CONTACT PICKER END --
+
     // Kamera sonucu
     private val cameraLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -103,6 +117,15 @@ class NewOrderActivity : BaseActivity() {
             binding.chkPaymentDone.isChecked = isPaymentDone
         }
 
+        // -- CONTACT PICKER LISTENER SETUP --
+        // Bileşenin butonuna tıklandığında ne olacağını söylüyoruz
+        binding.phoneInputComponent.onPickContactClick = {
+            // Sadece telefon numarası olan kişileri filtreleyip açan Intent
+            val intent = Intent(Intent.ACTION_PICK, android.provider.ContactsContract.CommonDataKinds.Phone.CONTENT_URI)
+            contactLauncher.launch(intent)
+        }
+        // -- END --
+
         binding.btnSearchPhone.setOnClickListener {
             searchCustomer()
         }
@@ -118,8 +141,16 @@ class NewOrderActivity : BaseActivity() {
         outState.putBoolean(KEY_IS_PAYMENT_DONE, binding.chkPaymentDone.isChecked)
     }
 
+    private fun clearInformationsArea(){
+        binding.edtName.setText("");
+        binding.edtSurname.setText("");
+        binding.edtEmail.setText("")
+    }
+
     private fun searchCustomer() {
-        val phone = binding.edtPhone.text.toString().trim()
+        clearInformationsArea()
+        // ARTIK NUMARAYI YENİ BİLEŞENDEN ALIYORUZ
+        val phone = binding.phoneInputComponent.getPhoneNumber()
         val uid = merchantUid ?: return
 
         if (phone.length != 10) {
@@ -164,7 +195,8 @@ class NewOrderActivity : BaseActivity() {
     }
 
     private fun startAddProductFlow() {
-        val phone = binding.edtPhone.text.toString().trim()
+        // ARTIK NUMARAYI YENİ BİLEŞENDEN ALIYORUZ
+        val phone = binding.phoneInputComponent.getPhoneNumber()
         val name = binding.edtName.text.toString().trim()
         val surname = binding.edtSurname.text.toString().trim()
         val email = binding.edtEmail.text.toString().trim()
@@ -395,7 +427,8 @@ class NewOrderActivity : BaseActivity() {
     private fun goToMessageTemplateScreen() {
         val intent = Intent(this, MessageTemplateActivity::class.java)
         intent.putExtra(IntentKeys.MERCHANT_UID, merchantUid)
-        intent.putExtra(IntentKeys.PHONE, binding.edtPhone.text.toString().trim())
+        // ARTIK NUMARAYI YENİ BİLEŞENDEN ALIYORUZ
+        intent.putExtra(IntentKeys.PHONE, binding.phoneInputComponent.getPhoneNumber())
         intent.putExtra(IntentKeys.NAME, binding.edtName.text.toString().trim())
         intent.putExtra(IntentKeys.SURNAME, binding.edtSurname.text.toString().trim())
         intent.putExtra(IntentKeys.EMAIL, binding.edtEmail.text.toString().trim())
