@@ -6,6 +6,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.yeab.esnapp.R
+import com.yeab.esnapp.util.NetworkUtils
 
 open class BaseActivity : AppCompatActivity() {
 
@@ -34,6 +35,29 @@ open class BaseActivity : AppCompatActivity() {
 
         loadingDialog = builder.create()
         loadingDialog?.show()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (!NetworkUtils.isInternetAvailable(this)) {
+            showNoInternetDialog()
+        }
+    }
+
+    public fun showNoInternetDialog() {
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("İnternet Bağlantısı Yok")
+            .setMessage("Lütfen internet bağlantınızı kontrol edin ve tekrar deneyin.")
+            .setCancelable(false) // Kullanıcı kapatamasın
+            .setPositiveButton("Tekrar Dene") { _, _ ->
+                if (!NetworkUtils.isInternetAvailable(this)) {
+                    showNoInternetDialog() // Hala yoksa tekrar göster
+                }
+            }
+            .setNegativeButton("Kapat") { _, _ ->
+                finishAffinity() // Uygulamayı tamamen kapat
+            }
+            .show()
     }
 
     protected fun hideLoading() {
