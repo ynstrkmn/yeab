@@ -1,3 +1,4 @@
+// kotlin
 package com.yeab.esnapp.ui.order
 
 import android.Manifest
@@ -5,11 +6,14 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.os.Bundle
+import android.provider.ContactsContract
 import android.provider.MediaStore
 import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.core.view.WindowCompat
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.google.firebase.database.*
 import com.yeab.esnapp.R
@@ -35,19 +39,13 @@ class NewOrderActivity : BaseActivity() {
 
     // FULL RES fotoğraf URI'si
     private var photoUri: android.net.Uri? = null
-    
+
     // Geçici olarak tutulan OCR metni
     private var tempRecognizedText: String = ""
 
     // -- CONTACT PICKER START --
-    private val contactLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == RESULT_OK) {
-            result.data?.data?.let { uri ->
-                binding.phoneInputComponent.setPhoneNumberFromUri(uri)
-                searchCustomer()
-            }
-        }
-    }
+    private lateinit var contactLauncher: ActivityResultLauncher<Intent>
+    private lateinit var requestContactPermissionLauncher: ActivityResultLauncher<String>
     // -- CONTACT PICKER END --
 
     // Kamera sonucu
@@ -87,6 +85,8 @@ class NewOrderActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
         binding = ActivityNewOrderBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -97,9 +97,31 @@ class NewOrderActivity : BaseActivity() {
             binding.chkPaymentDone.isChecked = isPaymentDone
         }
 
+        // Rehber seçici launcher
+        contactLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK) {
+                result.data?.data?.let { uri ->
+                    binding.phoneInputComponent.setPhoneNumberFromUri(uri)
+                    searchCustomer()
+                }
+            }
+        }
+
+        // İzin isteği launcher
+        requestContactPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted) {
+                pickContact()
+            } else {
+                Toast.makeText(this, getString(R.string.error_permission_required), Toast.LENGTH_SHORT).show()
+            }
+        }
+
         binding.phoneInputComponent.onPickContactClick = {
-            val intent = Intent(Intent.ACTION_PICK, android.provider.ContactsContract.CommonDataKinds.Phone.CONTENT_URI)
-            contactLauncher.launch(intent)
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
+                pickContact()
+            } else {
+                requestContactPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
+            }
         }
 
         binding.btnSearchPhone.setOnClickListener {
@@ -115,7 +137,7 @@ class NewOrderActivity : BaseActivity() {
         super.onSaveInstanceState(outState)
         outState.putBoolean(KEY_IS_PAYMENT_DONE, binding.chkPaymentDone.isChecked)
     }
-    
+
     private fun clearInformationsArea(){
         binding.edtName.setText("")
         binding.edtSurname.setText("")
@@ -208,6 +230,11 @@ class NewOrderActivity : BaseActivity() {
         cameraLauncher.launch(cameraIntent)
     }
 
+    private fun pickContact() {
+        val intent = Intent(Intent.ACTION_PICK, ContactsContract.CommonDataKinds.Phone.CONTENT_URI)
+        contactLauncher.launch(intent)
+    }
+
     /**
      * Resim çekildikten sonra:
      * 1) ML Kit ile üzerindeki metni tanı (Kalite kontrolü amaçlı)
@@ -248,15 +275,15 @@ class NewOrderActivity : BaseActivity() {
         intent.putExtra(IntentKeys.EMAIL, binding.edtEmail.text.toString().trim())
         intent.putExtra(IntentKeys.PRODUCT_DESC, binding.edtProductDesc.text.toString().trim())
         intent.putExtra(IntentKeys.IS_PAYMENT_DONE, binding.chkPaymentDone.isChecked)
-        
+
         // ÖNEMLİ: Upload edilmemiş yerel dosya yolunu gönderiyoruz
         if (photoUri != null) {
             intent.putExtra("extra_local_photo_uri", photoUri.toString())
         }
         intent.putExtra("extra_recognized_text", tempRecognizedText)
-        
+
         // Order ID'yi burada oluşturmuyoruz, diğer tarafta oluşturulacak veya null gidecek
-        
+
         startActivity(intent)
         finish()
     }

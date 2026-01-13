@@ -16,6 +16,7 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.core.view.WindowCompat
 import com.bumptech.glide.Glide
 import com.google.firebase.database.*
 import com.yeab.esnapp.R
@@ -85,6 +86,7 @@ class SearchOrderActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         binding = ActivitySearchOrderBinding.inflate(layoutInflater)
         setContentView(binding.root)
 

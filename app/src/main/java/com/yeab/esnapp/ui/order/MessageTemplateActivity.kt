@@ -13,6 +13,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.AttrRes
 import androidx.annotation.ColorInt
 import androidx.core.content.ContextCompat
+import androidx.core.view.WindowCompat
 import com.google.android.material.chip.Chip
 import com.google.firebase.database.*
 import com.google.firebase.storage.FirebaseStorage
@@ -64,6 +65,7 @@ class MessageTemplateActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         binding = ActivityMessageTemplateBinding.inflate(layoutInflater)
         setContentView(binding.root)
 

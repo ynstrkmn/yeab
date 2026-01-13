@@ -8,7 +8,8 @@
     android:layout_height="match_parent"
     android:background="#000000"
     android:padding="16dp"
-    tools:context=".ui.order.OrderStatusUpdateActivity">
+    tools:context=".ui.order.OrderStatusUpdateActivity"
+    android:fitsSystemWindows="true">
 
     <!-- Üst başlık kartı -->
     <com.google.android.material.card.MaterialCardView

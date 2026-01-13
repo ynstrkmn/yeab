@@ -1,10 +1,16 @@
+// app/src/main/java/com/yeab/esnapp/ui/order/SearchByPhoneActivity.kt
 package com.yeab.esnapp.ui.order
 
+import android.Manifest
 import android.content.Intent
 import android.os.Bundle
 import android.provider.ContactsContract
 import android.widget.Toast
+import android.content.pm.PackageManager
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import androidx.core.view.WindowCompat
 import com.google.firebase.database.*
 import com.yeab.esnapp.R
 import com.yeab.esnapp.databinding.ActivitySearchByPhoneBinding
@@ -18,15 +24,19 @@ class SearchByPhoneActivity : BaseActivity() {
     private val dbRef = FirebaseDatabase.getInstance().reference
     private var merchantUid: String? = null
 
+    private lateinit var contactLauncher: ActivityResultLauncher<Intent>
+    private lateinit var requestContactPermissionLauncher: ActivityResultLauncher<String>
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         binding = ActivitySearchByPhoneBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         merchantUid = intent.getStringExtra(IntentKeys.MERCHANT_UID)
 
         // Rehber seçici launcher
-        val contactLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        contactLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == RESULT_OK) {
                 result.data?.data?.let { uri ->
                     binding.phoneInputComponent.setPhoneNumberFromUri(uri)
@@ -34,15 +44,32 @@ class SearchByPhoneActivity : BaseActivity() {
             }
         }
 
-        // Rehber butonuna tıklama olayı
+        // İzin isteği launcher
+        requestContactPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+            if (isGranted) {
+                pickContact()
+            } else {
+                Toast.makeText(this, getString(R.string.error_permission_required), Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        // Rehber butonuna tıklama olayı (izin kontrolü ile)
         binding.phoneInputComponent.onPickContactClick = {
-            val intent = Intent(Intent.ACTION_PICK, ContactsContract.CommonDataKinds.Phone.CONTENT_URI)
-            contactLauncher.launch(intent)
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
+                pickContact()
+            } else {
+                requestContactPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
+            }
         }
 
         binding.btnSearch.setOnClickListener {
             searchOrders()
         }
+    }
+
+    private fun pickContact() {
+        val intent = Intent(Intent.ACTION_PICK, ContactsContract.CommonDataKinds.Phone.CONTENT_URI)
+        contactLauncher.launch(intent)
     }
 
     private fun searchOrders() {

@@ -133,5 +133,6 @@
     <string name="info_select_location_first">Country, city and district will be filled automatically when you select your business location.</string>
     <string name="location_selection_go_take_loc_button">To change the country, province, and district information, you must select a location by clicking the Get Location button.</string>
     <string name="btn_camera_text">Add product image</string>
+    <string name="error_permission_required">Acces denied for contacts</string>
 
 </resources>

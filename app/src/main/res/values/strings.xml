@@ -142,6 +142,7 @@
     <string name="info_select_location_first">Ülke, il ve ilçe bilgileri konumu seçtiğinizde otomatik olarak alınacaktır.</string>
     <string name="location_selection_go_take_loc_button">Ülke, il ve ilçe bilgisi değişikliği için Konumu Al butonuna tıklayarak lokasyon seçmelisiniz.</string>
     <string name="btn_camera_text">Ürün ile alakalı resim çek</string>
+    <string name="error_permission_required">Rehber erişim izni hatası</string>
 
 
 </resources>

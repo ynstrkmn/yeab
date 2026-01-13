@@ -4,6 +4,7 @@ package com.yeab.esnapp.ui.order
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.auth.FirebaseAuth
@@ -30,6 +31,7 @@ class SearchResultsActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         binding = ActivityMerchantOrdersBinding.inflate(layoutInflater)
         setContentView(binding.root)
 

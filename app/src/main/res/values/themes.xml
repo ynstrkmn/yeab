@@ -1,5 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.EsnApp" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.EsnApp" parent="Theme.Material3.DayNight.NoActionBar">    <!-- Diğer tema ayarları... -->
+
+        <!-- Uygulamanın sistem çubuklarının arkasına çizim yapmasını sağlar -->
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:windowTranslucentStatus">false</item>
+        <item name="android:windowTranslucentNavigation">false</item>
+
+        <!-- Status bar'ı şeffaf yapar -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+
+        <!-- Navigation bar'ı şeffaf yapar -->
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
+
+
+
 </resources>
