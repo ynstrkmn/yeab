@@ -1,9 +1,12 @@
 package com.yeab.esnapp.ui.order
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.View
+import android.widget.Button
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.Toast
@@ -83,10 +86,18 @@ class OrderStatusUpdateActivity : BaseActivity() {
         loadOrderDetails()
         loadCustomerInfo()
 
-        val btnCamera = findViewById<ImageButton>(R.id.btnCameraStatus)
+        val btnCamera = findViewById<Button>(R.id.btnCameraStatus)
         imgOrderPhoto = findViewById(R.id.imgOrderPhotoStatus)
         btnCamera.setOnClickListener {
-            takePicturePreview.launch(null)
+            val hasPermission = ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.CAMERA
+            ) == PackageManager.PERMISSION_GRANTED
+            if (hasPermission) {
+                takePicturePreview.launch(null)
+            } else {
+                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+            }
         }
 
         binding.btnUpdate.setOnClickListener {
@@ -96,6 +107,16 @@ class OrderStatusUpdateActivity : BaseActivity() {
         setupChipGroupListener();
 
     }
+
+    // Kamera izni sonucu
+    private val cameraPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted) {
+                takePicturePreview.launch(null)
+            } else {
+                Toast.makeText(this, getString(R.string.error_camera_permission_denied), Toast.LENGTH_SHORT).show()
+            }
+        }
 
     private fun loadTemplates() {
         val uid = merchantUid ?: return

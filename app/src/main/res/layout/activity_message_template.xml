@@ -34,16 +34,18 @@
         android:hint="@string/message_template_hint_free_text"
         android:maxLength="100" />
 
-    <ImageButton
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btnCamera"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:layout_marginStart="8dp"
-        android:background="@color/black"
-        android:contentDescription="Kamera"
-        android:padding="8dp"
-        android:src="@android:drawable/ic_menu_camera"
-        app:tint="#FFFFFF" />
+        style="@style/Widget.MaterialComponents.Button.Icon"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/btn_camera_text"
+        android:gravity="center"
+        app:icon="@android:drawable/ic_menu_camera"
+        app:iconGravity="textStart"
+        android:backgroundTint="?attr/colorPrimary"
+        app:iconTint="@color/black" />
 
     <!-- Çekilen küçük resmin gösterileceği ImageView -->
     <ImageView

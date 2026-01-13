@@ -74,6 +74,7 @@ class MerchantOrdersActivity : BaseActivity() {
                     putExtra(IntentKeys.PRODUCT_NAME, item.productName)
                 }
                 startActivity(intent)
+                finish()
             }
         })
 
@@ -134,7 +135,6 @@ class MerchantOrdersActivity : BaseActivity() {
                         val temp = mutableListOf<OrderItem>()
                         for (orderSnap in snapshot.children) {
                             val productNodes = orderSnap.children
-                                .filter { it.hasChild("productName") || it.hasChild("name") }
                                 .toList()
                             for (productNode in productNodes) {
                                 val items = mapProductNode(
@@ -206,17 +206,12 @@ class MerchantOrdersActivity : BaseActivity() {
         }
 
         val imageUrl = productNode.child("productImageUrl").getValue(String::class.java)
-            ?: productNode.child("imageUrl").getValue(String::class.java)
-            ?: ""
         val productName = productNode.child("productName").getValue(String::class.java)
-            ?: productNode.child("name")?.getValue(String::class.java)
-            ?: ""
 
         val lastStatus = productNode.child("productStatus").children.lastOrNull()
             ?.child("status")?.getValue(String::class.java).orEmpty()
 
         val createdDate = productNode.child("createdDate").getValue(String::class.java)
-            ?: orderSnap.child("createdDate").getValue(String::class.java)
 
         // id: "$orderId-$productKey" formatı kullanıldığı için parçalayıp productKey’i intent’e geçiyoruz
         return listOf(
