@@ -1,5 +1,7 @@
+// kotlin
 package com.yeab.esnapp.ui.order
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.AdapterView
@@ -10,18 +12,14 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
+import com.google.firebase.database.*
 import com.yeab.esnapp.databinding.ActivityMerchantOrdersBinding
 import com.yeab.esnapp.ui.base.BaseActivity
 import com.yeab.esnapp.ui.model.OrderItem
+import com.yeab.esnapp.util.IntentKeys
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.util.*
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
@@ -65,6 +63,19 @@ class MerchantOrdersActivity : BaseActivity() {
         databaseUser = FirebaseDatabase.getInstance()
             .getReference("MerchantsUsers")
             .child(merchantUid)
+
+        // \[Yeni\] Tıklama dinleyicisi: OrderStatusUpdateActivity’e git
+        adapter.setOnItemClickListener(object : MerchantOrderAdapter.OnItemClickListener {
+            override fun onItemClick(item: OrderItem) {
+                val intent = Intent(this@MerchantOrdersActivity, OrderStatusUpdateActivity::class.java).apply {
+                    putExtra(IntentKeys.MERCHANT_UID, merchantUid)
+                    putExtra(IntentKeys.PHONE, item.ownerPhone)
+                    putExtra(IntentKeys.ORDER_ID, item.id)
+                    putExtra(IntentKeys.PRODUCT_NAME, item.productName)
+                }
+                startActivity(intent)
+            }
+        })
 
         fetchAllProductsOnce()
     }
@@ -127,7 +138,7 @@ class MerchantOrdersActivity : BaseActivity() {
                                 .toList()
                             for (productNode in productNodes) {
                                 val items = mapProductNode(
-                                    orderId = orderSnap.key.orEmpty(),
+                                    orderId = productNode.key.orEmpty(),
                                     orderSnap = orderSnap,
                                     productNode = productNode
                                 )
@@ -204,13 +215,13 @@ class MerchantOrdersActivity : BaseActivity() {
         val lastStatus = productNode.child("productStatus").children.lastOrNull()
             ?.child("status")?.getValue(String::class.java).orEmpty()
 
-        // createdDate \- ürün düğümünden, yoksa siparişten
         val createdDate = productNode.child("createdDate").getValue(String::class.java)
             ?: orderSnap.child("createdDate").getValue(String::class.java)
 
+        // id: "$orderId-$productKey" formatı kullanıldığı için parçalayıp productKey’i intent’e geçiyoruz
         return listOf(
             OrderItem(
-                id = "$orderId-${productNode.key.orEmpty()}",
+                id = orderId,
                 imageUrl = imageUrl,
                 ownerName = ownerName,
                 ownerSurname = ownerSurname,
@@ -228,6 +239,15 @@ class MerchantOrdersActivity : BaseActivity() {
             try { iso.parse(s) } catch (_: Exception) {
                 try { ymd.parse(s) } catch (_: Exception) { null }
             }
+        }
+    }
+
+    private fun splitId(id: String): Pair<String, String> {
+        val idx = id.indexOf('-')
+        return if (idx > 0) {
+            id.substring(0, idx) to id.substring(idx + 1)
+        } else {
+            id to ""
         }
     }
 
