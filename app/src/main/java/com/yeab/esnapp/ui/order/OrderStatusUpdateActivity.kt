@@ -1,9 +1,13 @@
 package com.yeab.esnapp.ui.order
 
+import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.View
+import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.DataSource
@@ -15,6 +19,7 @@ import com.google.firebase.database.*
 import androidx.annotation.AttrRes
 import androidx.annotation.ColorInt
 import androidx.core.content.ContextCompat
+import com.google.firebase.storage.FirebaseStorage
 import com.yeab.esnapp.R
 import com.yeab.esnapp.databinding.ActivityOrderStatusUpdateBinding
 import com.yeab.esnapp.databinding.ItemProductStatusBinding
@@ -27,6 +32,7 @@ import com.yeab.esnapp.util.DateFormats
 import com.yeab.esnapp.util.FirebasePaths
 import com.yeab.esnapp.util.IntentKeys
 import com.yeab.esnapp.util.WhatsAppUtils
+import java.io.ByteArrayOutputStream
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -48,6 +54,9 @@ class OrderStatusUpdateActivity : BaseActivity() {
     private var customerNameSurname: String = ""
     private var productName: String = ""
     private val templateMap = mutableMapOf<Int, MerchantMessageTemplate>()
+
+    private lateinit var imgOrderPhoto: ImageView
+    private var capturedBitmap: Bitmap? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -73,6 +82,12 @@ class OrderStatusUpdateActivity : BaseActivity() {
         loadTemplates()
         loadOrderDetails()
         loadCustomerInfo()
+
+        val btnCamera = findViewById<ImageButton>(R.id.btnCameraStatus)
+        imgOrderPhoto = findViewById(R.id.imgOrderPhotoStatus)
+        btnCamera.setOnClickListener {
+            takePicturePreview.launch(null)
+        }
 
         binding.btnUpdate.setOnClickListener {
             updateOrderStatus()
@@ -408,6 +423,9 @@ class OrderStatusUpdateActivity : BaseActivity() {
             }
 
             dbRef.updateChildren(baseUpdates).addOnSuccessListener {
+
+                uploadCapturedPhotoIfAny(uid, orderId)
+
                 // WhatsApp mesajı hazırlığı
                 val displayDate = try {
                     val createdIso = order.createdDate
@@ -508,5 +526,34 @@ class OrderStatusUpdateActivity : BaseActivity() {
             holder.binding.txtStatus.text = item.status
             holder.binding.txtDate.text = item.date
         }
+    }
+
+    // Kamera için preview contract
+    private val takePicturePreview = registerForActivityResult(
+        ActivityResultContracts.TakePicturePreview()
+    ) { bitmap ->
+        if (bitmap != null) {
+            capturedBitmap = bitmap
+            imgOrderPhoto.apply {
+                setImageBitmap(bitmap)
+                visibility = ImageView.VISIBLE
+            }
+        }
+    }
+
+    private fun uploadCapturedPhotoIfAny(
+        merchantUid: String,
+        orderId: String
+    ) {
+        val bmp = capturedBitmap ?: return;
+        val baos = ByteArrayOutputStream()
+        bmp.compress(Bitmap.CompressFormat.JPEG, 60, baos)
+        val data = baos.toByteArray()
+        val ts = System.currentTimeMillis()
+        val path = "ordersPhoto/$merchantUid/$orderId/${orderId}_${ts}.jpg"
+        FirebaseStorage.getInstance().reference.child(path)
+            .putBytes(data)
+            .addOnSuccessListener { }
+            .addOnFailureListener { }
     }
 }

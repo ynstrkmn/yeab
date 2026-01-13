@@ -34,6 +34,29 @@
         android:hint="@string/message_template_hint_free_text"
         android:maxLength="100" />
 
+    <ImageButton
+        android:id="@+id/btnCamera"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="8dp"
+        android:background="@color/black"
+        android:contentDescription="Kamera"
+        android:padding="8dp"
+        android:src="@android:drawable/ic_menu_camera"
+        app:tint="#FFFFFF" />
+
+    <!-- Çekilen küçük resmin gösterileceği ImageView -->
+    <ImageView
+        android:id="@+id/imgOrderPhoto"
+        android:layout_width="96dp"
+        android:layout_height="96dp"
+        android:scaleType="centerCrop"
+        android:layout_marginTop="12dp"
+        android:contentDescription="Kamera Resmi"
+        app:layout_constraintTop_toBottomOf="@id/scrollNewOrder"
+        app:layout_constraintStart_toStartOf="parent"
+        android:visibility="gone" />
+
     <Button
         android:id="@+id/btnSaveOrder"
         android:layout_marginTop="16dp"

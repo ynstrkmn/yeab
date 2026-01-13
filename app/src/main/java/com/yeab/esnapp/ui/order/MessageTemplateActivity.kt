@@ -5,7 +5,10 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
+import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.AttrRes
 import androidx.annotation.ColorInt
 import androidx.core.content.ContextCompat
@@ -54,6 +57,8 @@ class MessageTemplateActivity : BaseActivity() {
     private var customerNameSurname: String = ""
     private val templateMap = mutableMapOf<Int, MerchantMessageTemplate>()
     private var orderIdOrigin: String = ""
+    private lateinit var imgOrderPhoto: ImageView
+    private var capturedBitmap: Bitmap? = null
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -84,6 +89,12 @@ class MessageTemplateActivity : BaseActivity() {
         customerNameSurname = listOf(name, surname)
             .filter { it.isNotEmpty() }
             .joinToString(" ")
+
+        val btnCamera = findViewById<ImageButton>(R.id.btnCamera)
+        imgOrderPhoto = findViewById(R.id.imgOrderPhoto)
+        btnCamera.setOnClickListener {
+            takePicturePreview.launch(null)
+        }
 
         binding.txtTitle.text = getString(R.string.message_template_title)
         binding.btnSaveOrder.text = getString(R.string.message_template_button_save_order)
@@ -407,6 +418,7 @@ class MessageTemplateActivity : BaseActivity() {
         dbRef.updateChildren(updates).addOnSuccessListener {
             hideLoading() // Loading'i kapat
 
+            uploadCapturedPhotoIfAny(uid, orderId);
             val displayFormatter = SimpleDateFormat(DateFormats.ORDER_STATUS_DISPLAY, Locale.getDefault())
             val displayDate = displayFormatter.format(now)
 
@@ -431,5 +443,34 @@ class MessageTemplateActivity : BaseActivity() {
             hideLoading()
             Toast.makeText(this, it.message ?: getString(R.string.error_generic), Toast.LENGTH_SHORT).show()
         }
+    }
+
+    // Kamera için preview contract
+    private val takePicturePreview = registerForActivityResult(
+        ActivityResultContracts.TakePicturePreview()
+    ) { bitmap ->
+        if (bitmap != null) {
+            capturedBitmap = bitmap
+            imgOrderPhoto.apply {
+                setImageBitmap(bitmap)
+                visibility = ImageView.VISIBLE
+            }
+        }
+    }
+
+    private fun uploadCapturedPhotoIfAny(
+        merchantUid: String,
+        orderId: String
+    ) {
+        val bmp = capturedBitmap ?: return;
+        val baos = ByteArrayOutputStream()
+        bmp.compress(Bitmap.CompressFormat.JPEG, 60, baos)
+        val data = baos.toByteArray()
+        val ts = System.currentTimeMillis()
+        val path = "ordersPhoto/$merchantUid/$orderId/${orderId}_${ts}.jpg"
+        FirebaseStorage.getInstance().reference.child(path)
+            .putBytes(data)
+            .addOnSuccessListener { }
+            .addOnFailureListener { }
     }
 }
