@@ -1,4 +1,3 @@
-// Kotlin
 package com.yeab.esnapp.ui.model
 
 data class OrderItem(
@@ -8,5 +7,6 @@ data class OrderItem(
     val ownerSurname: String,
     val ownerPhone: String,
     val productName: String,
-    val lastStatus: String
+    val lastStatus: String,
+    val createdDate: String? // yeni alan
 )

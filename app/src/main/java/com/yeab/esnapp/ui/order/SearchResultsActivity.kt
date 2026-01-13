@@ -1,5 +1,4 @@
 // kotlin
-// Dosya: `app/src/main/java/com/yeab/esnapp/ui/order/SearchResultsActivity.kt`
 package com.yeab.esnapp.ui.order
 
 import android.os.Bundle
@@ -34,7 +33,6 @@ class SearchResultsActivity : BaseActivity() {
         binding = ActivityMerchantOrdersBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Sayfalama kontrollerini gizle (tam liste)
         binding.spinnerPageSize.visibility = View.GONE
         binding.btnNextPage.visibility = View.GONE
         binding.btnPrevPage.visibility = View.GONE
@@ -81,7 +79,6 @@ class SearchResultsActivity : BaseActivity() {
         }
     }
 
-    // Telefon ile arama
     private fun loadByPhone(phone: String) {
         binding.progress.visibility = View.VISIBLE
         dbPhone.child(phone).addListenerForSingleValueEvent(object : ValueEventListener {
@@ -97,7 +94,6 @@ class SearchResultsActivity : BaseActivity() {
                     binding.progress.visibility = View.GONE
                 }
             }
-
             override fun onCancelled(error: DatabaseError) {
                 binding.progress.visibility = View.GONE
                 Toast.makeText(this@SearchResultsActivity, "Veri alınamadı: ${error.message}", Toast.LENGTH_SHORT).show()
@@ -105,7 +101,6 @@ class SearchResultsActivity : BaseActivity() {
         })
     }
 
-    // Tarih aralığı ile arama
     private fun loadByDateRange(startDate: String, endDate: String) {
         val dates = buildDateList(startDate, endDate)
         if (dates.isEmpty()) {
@@ -134,7 +129,7 @@ class SearchResultsActivity : BaseActivity() {
         }
     }
 
-    // Ortak map fonksiyonu
+    // createdDate’i doldurur
     private suspend fun mapProductToOrderItem(
         orderId: String,
         orderSnap: DataSnapshot,
@@ -161,6 +156,11 @@ class SearchResultsActivity : BaseActivity() {
         val lastStatus = orderSnap.child("productStatus").children.lastOrNull()
             ?.child("status")?.getValue(String::class.java).orEmpty()
 
+        // createdDate: öncelik ürün düğümü, yoksa sipariş düğümü
+        val createdDate =
+            orderSnap.child("createdDate").getValue(String::class.java)
+                ?: orderSnap.child("date").getValue(String::class.java)
+
         return OrderItem(
             id = "$orderId-${orderSnap.key.orEmpty()}",
             imageUrl = imageUrl,
@@ -168,7 +168,8 @@ class SearchResultsActivity : BaseActivity() {
             ownerSurname = ownerSurname,
             ownerPhone = phone,
             productName = productName,
-            lastStatus = lastStatus
+            lastStatus = lastStatus,
+            createdDate = createdDate
         )
     }
 
@@ -190,7 +191,6 @@ class SearchResultsActivity : BaseActivity() {
                 })
         }
 
-    // DB'den tek seferlik okuma \- suspend
     private suspend fun readOnce(ref: DatabaseReference): DataSnapshot =
         suspendCoroutine { cont ->
             ref.addListenerForSingleValueEvent(object : ValueEventListener {
@@ -199,7 +199,6 @@ class SearchResultsActivity : BaseActivity() {
             })
         }
 
-    // yyyyMMdd aralığını [start..end] \- artan gün listesi
     private fun buildDateList(startDate: String, endDate: String): List<String> {
         val start = parse(startDate) ?: return emptyList()
         val end = parse(endDate) ?: return emptyList()
