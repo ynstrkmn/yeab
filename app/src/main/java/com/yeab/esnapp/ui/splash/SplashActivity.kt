@@ -28,6 +28,7 @@ import com.yeab.esnapp.ui.base.BaseActivity
 import com.yeab.esnapp.ui.home.HomeActivity
 import com.yeab.esnapp.util.FirebasePaths
 import com.yeab.esnapp.util.IntentKeys
+import com.yeab.esnapp.util.NetworkUtils
 
 class SplashActivity : BaseActivity() {
 
@@ -36,6 +37,12 @@ class SplashActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        if (!NetworkUtils.isInternetAvailable(this)) {
+            // İnternet yoksa hemen uyar ve ilerlemesine izin verme
+            showNoInternetDialog()
+            return
+        }
         binding = ActivitySplashBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
