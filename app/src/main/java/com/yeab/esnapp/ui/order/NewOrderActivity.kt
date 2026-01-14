@@ -27,6 +27,9 @@ import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import java.io.File
 import kotlin.toString
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.ActivityResultCallback
+
 
 class NewOrderActivity : BaseActivity() {
 
@@ -47,6 +50,33 @@ class NewOrderActivity : BaseActivity() {
     private lateinit var contactLauncher: ActivityResultLauncher<Intent>
     private lateinit var requestContactPermissionLauncher: ActivityResultLauncher<String>
     // -- CONTACT PICKER END --
+
+    private var lastOrderNumber: String? = null
+    private val orderPreparationLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK) {
+                lastOrderNumber = result.data?.getStringExtra(IntentKeys.ORDER_NUMBER)
+                checkCameraPermissionAndOpen()
+            }
+        }
+
+    private fun startAddProductFlow() {
+        val phone = binding.phoneInputComponent.getPhoneNumber()
+        val name = binding.edtName.text.toString().trim()
+        val surname = binding.edtSurname.text.toString().trim()
+        val email = binding.edtEmail.text.toString().trim()
+        val desc = binding.edtProductDesc.text.toString().trim()
+
+        if (phone.length != 10 || name.isEmpty() || surname.isEmpty() || email.isEmpty() || desc.isEmpty()) {
+            Toast.makeText(this, getString(R.string.error_fill_all_fields), Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val intent = Intent(this, OrderPreparationActivity::class.java).apply {
+            putExtra(IntentKeys.MERCHANT_UID, merchantUid)
+        }
+        orderPreparationLauncher.launch(intent)
+    }
 
     // Kamera sonucu
     private val cameraLauncher =
@@ -181,20 +211,6 @@ class NewOrderActivity : BaseActivity() {
             })
     }
 
-    private fun startAddProductFlow() {
-        val phone = binding.phoneInputComponent.getPhoneNumber()
-        val name = binding.edtName.text.toString().trim()
-        val surname = binding.edtSurname.text.toString().trim()
-        val email = binding.edtEmail.text.toString().trim()
-        val desc = binding.edtProductDesc.text.toString().trim()
-
-        if (phone.length != 10 || name.isEmpty() || surname.isEmpty() || email.isEmpty() || desc.isEmpty()) {
-            Toast.makeText(this, getString(R.string.error_fill_all_fields), Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        checkCameraPermissionAndOpen()
-    }
 
     private fun checkCameraPermissionAndOpen() {
         val hasPermission = ContextCompat.checkSelfPermission(
@@ -275,7 +291,7 @@ class NewOrderActivity : BaseActivity() {
         intent.putExtra(IntentKeys.EMAIL, binding.edtEmail.text.toString().trim())
         intent.putExtra(IntentKeys.PRODUCT_DESC, binding.edtProductDesc.text.toString().trim())
         intent.putExtra(IntentKeys.IS_PAYMENT_DONE, binding.chkPaymentDone.isChecked)
-
+        intent.putExtra(IntentKeys.ORDER_NUMBER, lastOrderNumber ?: "-")
         // ÖNEMLİ: Upload edilmemiş yerel dosya yolunu gönderiyoruz
         if (photoUri != null) {
             intent.putExtra("extra_local_photo_uri", photoUri.toString())

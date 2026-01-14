@@ -15,4 +15,5 @@ object IntentKeys {
     const val PRODUCT_NAME = "productName"
 
     const val IS_PAYMENT_DONE = "isPaymentDone"
+    const val ORDER_NUMBER = "order_number"
 }

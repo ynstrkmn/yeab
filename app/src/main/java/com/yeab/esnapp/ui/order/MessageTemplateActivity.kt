@@ -61,6 +61,7 @@ class MessageTemplateActivity : BaseActivity() {
     private var orderIdOrigin: String = ""
     private lateinit var imgOrderPhoto: ImageView
     private var capturedBitmap: Bitmap? = null
+    private var orderNumber: String = ""
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -76,14 +77,14 @@ class MessageTemplateActivity : BaseActivity() {
         email = intent.getStringExtra(IntentKeys.EMAIL) ?: ""
         productDesc = intent.getStringExtra(IntentKeys.PRODUCT_DESC) ?: ""
         isPaymentDone = intent.getBooleanExtra(IntentKeys.IS_PAYMENT_DONE, false)
-        
+
         // Artık URL yerine yerel URI ve Text geliyor
         productImageUrl = intent.getStringExtra(IntentKeys.PRODUCT_IMAGE_URL) // Varsa (edit modunda vs)
         localPhotoUriStr = intent.getStringExtra("extra_local_photo_uri")
         recognizedText = intent.getStringExtra("extra_recognized_text") ?: ""
-        
+
         orderIdOrigin = intent.getStringExtra(IntentKeys.ORDER_ID) ?: ""
-        
+        orderNumber = intent.getStringExtra(IntentKeys.ORDER_NUMBER) ?: ""
         // Eğer ID yoksa (yeni sipariş) burada oluşturuyoruz
         if (orderIdOrigin.isEmpty()) {
             orderIdOrigin = System.currentTimeMillis().toString()
@@ -204,24 +205,55 @@ class MessageTemplateActivity : BaseActivity() {
             }
         }
 
-        // --- YENİ AKIŞ ---
-        // 1. Önce resmi yükle (varsa)
-        // 2. Sonra Müşteriyi kaydet (varsa)
-        // 3. Sonra Siparişi kaydet
-
-        if (localPhotoUriStr != null) {
-            uploadImageAndProcess(uid, Uri.parse(localPhotoUriStr), messageText)
-        } else {
-            // Resim yoksa (nadiren olur) direkt devam et
-            processOrderSave(uid, messageText)
-        }
+        // EKLEME: Sipariş kaydından önce OrderNumber doğrulaması
+        verifyOrderNumberThenProcess(uid, messageText)
     }
-    
+
+    // EKLEME: OrderNumber doğrulama
+    private fun verifyOrderNumberThenProcess(uid: String, messageText: String) {
+        showLoading()
+        dbRef.child(FirebasePaths.MERCHANTS)
+            .child(uid)
+            .child("OrderNumber")
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val value = snapshot.value
+                    val currentDbOrderNumber = when (value) {
+                        is String -> value
+                        is Number -> value.toLong().toString()
+                        else -> ""
+                    }
+
+                    if (currentDbOrderNumber.isEmpty()) {
+                        hideLoading()
+                        Toast.makeText(this@MessageTemplateActivity, "OrderNumber bulunamadı", Toast.LENGTH_SHORT).show()
+                        return
+                    }
+
+                    if (currentDbOrderNumber == orderNumber) {
+                        // Eşleşti, mevcut akışa devam
+                        if (localPhotoUriStr != null) {
+                            uploadImageAndProcess(uid, Uri.parse(localPhotoUriStr!!), messageText)
+                        } else {
+                            processOrderSave(uid, messageText)
+                        }
+                    } else {
+                        hideLoading()
+                        Toast.makeText(this@MessageTemplateActivity, "Sipariş numarası güncel değil. Lütfen yeniden deneyin.", Toast.LENGTH_SHORT).show()
+                    }
+                }
+                override fun onCancelled(error: DatabaseError) {
+                    hideLoading()
+                    Toast.makeText(this@MessageTemplateActivity, error.message, Toast.LENGTH_SHORT).show()
+                }
+            })
+    }
+
     // --- UPLOAD VE HASH MANTIĞI (NewOrder'dan taşındı) ---
-    
+
     private fun uploadImageAndProcess(uid: String, uri: Uri, messageText: String) {
         showLoading()
-        
+
         // Bitmap'i oluştur
         val bitmap = try {
             val inputStream = contentResolver.openInputStream(uri)
@@ -349,7 +381,7 @@ class MessageTemplateActivity : BaseActivity() {
         for (lum in luminances) bits.append(if (lum >= avg) '1' else '0')
         return String.format("%016x", BigInteger(bits.toString(), 2))
     }
-    
+
     // --- END HELPER FUNCTIONS ---
 
 
@@ -374,6 +406,7 @@ class MessageTemplateActivity : BaseActivity() {
         })
     }
 
+    // KÜÇÜK DÜZENLEME: Firebase internal \`path\` kullanımını kaldırıp string ile update yapıldı.
     private fun saveOrderAndSendWhatsApp(
         uid: String,
         orderId: String,
@@ -384,12 +417,7 @@ class MessageTemplateActivity : BaseActivity() {
         val nowIso = isoFormatter.format(now)
 
         val statusList = mutableListOf(ProductStatus(messageText, nowIso))
-
-        if (isPaymentDone){
-            paymentDate = nowIso
-        }else{
-            paymentDate = ""
-        }
+        paymentDate = if (isPaymentDone) nowIso else ""
 
         val order = Order(
             false,
@@ -402,52 +430,67 @@ class MessageTemplateActivity : BaseActivity() {
             phone
         )
 
-        val merchantOrderRef = dbRef.child(FirebasePaths.ORDERS_ROOT)
-            .child(FirebasePaths.ORDERS_MERCHANT_ORDERS)
-            .child(uid)
-            .child(phone)
-            .child(orderId)
-
-        val userOrderRef = dbRef.child(FirebasePaths.USER_ORDERS_ROOT)
-            .child(phone)
-            .child(uid)
-            .child(orderId)
+        // \`path.toString()\` yerine açık string yollar
+        val merchantOrderPath = "${FirebasePaths.ORDERS_ROOT}/${FirebasePaths.ORDERS_MERCHANT_ORDERS}/$uid/$phone/$orderId"
+        val userOrderPath = "${FirebasePaths.USER_ORDERS_ROOT}/$phone/$uid/$orderId"
 
         val updates = hashMapOf<String, Any>(
-            merchantOrderRef.path.toString().substring(1) to order,
-            userOrderRef.path.toString().substring(1) to order
+            merchantOrderPath to order,
+            userOrderPath to order
         )
 
         dbRef.updateChildren(updates).addOnSuccessListener {
-            hideLoading() // Loading'i kapat
+            // EKLEME: Kaydetme sonrası OrderNumber'ı +1 olarak güncelle
+            incrementMerchantOrderNumber(uid) {
+                hideLoading()
+                uploadCapturedPhotoIfAny(uid, orderId)
 
-            uploadCapturedPhotoIfAny(uid, orderId);
-            val displayFormatter = SimpleDateFormat(DateFormats.ORDER_STATUS_DISPLAY, Locale.getDefault())
-            val displayDate = displayFormatter.format(now)
+                val displayFormatter = SimpleDateFormat(DateFormats.ORDER_STATUS_DISPLAY, Locale.getDefault())
+                val displayDate = displayFormatter.format(now)
 
-            val customerDisplayName = if (customerNameSurname.isNotEmpty()) customerNameSurname else phone
-            val safeProductName = if (productDesc.isNotEmpty()) productDesc else getString(R.string.app_name)
-            val detailLink = "https://esnapp-qr.web.app/index.html?merchantId=$uid&orderId=$orderId"
+                val customerDisplayName = if (customerNameSurname.isNotEmpty()) customerNameSurname else phone
+                val safeProductName = if (productDesc.isNotEmpty()) productDesc else getString(R.string.app_name)
+                val detailLink = "https://esnapp-qr.web.app/index.html?merchantId=$uid&orderId=$orderId"
 
-            val formattedMessage = getString(
-                R.string.whatsapp_status_message,
-                customerDisplayName,
-                displayDate,
-                orderId,
-                safeProductName,
-                messageText,
-                detailLink,
-                MerchantSession.merchant?.MerchantName)
+                val formattedMessage = getString(
+                    R.string.whatsapp_status_message,
+                    customerDisplayName,
+                    displayDate,
+                    orderId,
+                    safeProductName,
+                    messageText,
+                    detailLink,
+                    MerchantSession.merchant?.MerchantName
+                )
 
-            WhatsAppUtils.sendMessage(this, phone, formattedMessage)
-            finish()
-
+                WhatsAppUtils.sendMessage(this, phone, formattedMessage)
+                finish()
+            }
         }.addOnFailureListener {
             hideLoading()
             Toast.makeText(this, it.message ?: getString(R.string.error_generic), Toast.LENGTH_SHORT).show()
         }
     }
 
+    // EKLEME: OrderNumber'ı atomik olarak 1 arttır
+    private fun incrementMerchantOrderNumber(uid: String, onDone: () -> Unit) {
+        val ref = dbRef.child(FirebasePaths.MERCHANTS).child(uid).child("OrderNumber")
+        ref.runTransaction(object : Transaction.Handler {
+            override fun doTransaction(currentData: MutableData): Transaction.Result {
+                val v = currentData.value
+                val current = when (v) {
+                    is String -> v.toLongOrNull()
+                    is Number -> v.toLong()
+                    else -> null
+                }
+                currentData.value = (current ?: 0L) + 1L
+                return Transaction.success(currentData)
+            }
+            override fun onComplete(error: DatabaseError?, committed: Boolean, currentData: DataSnapshot?) {
+                onDone()
+            }
+        })
+    }
     // Kamera için preview contract
     private val takePicturePreview = registerForActivityResult(
         ActivityResultContracts.TakePicturePreview()

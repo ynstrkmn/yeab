@@ -68,6 +68,8 @@
             android:screenOrientation="portrait" />
         <activity android:name=".ui.order.SearchResultsActivity"
             android:screenOrientation="portrait" />
+        <activity android:name=".ui.order.OrderPreparationActivity"
+            android:screenOrientation="portrait" />
         <activity
             android:name=".ui.splash.SplashActivity"
             android:screenOrientation="portrait"
