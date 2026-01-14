@@ -96,6 +96,12 @@ class SearchOrderActivity : BaseActivity() {
             checkCameraPermissionAndOpen()
         }
 
+        binding.btnSearchByOrderId.setOnClickListener {
+            val i = Intent(this, SearchByOrderIdActivity::class.java)
+            i.putExtra(IntentKeys.MERCHANT_UID, merchantUid)
+            startActivity(i)
+        }
+
         binding.btnSearchByPhone.setOnClickListener {
             val i = Intent(this, SearchByPhoneActivity::class.java)
             i.putExtra(IntentKeys.MERCHANT_UID, merchantUid)
@@ -137,6 +143,19 @@ class SearchOrderActivity : BaseActivity() {
         cameraLauncher.launch(intent)
     }
 
+    private fun showNoMatchDialog(uid: String) {
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle(getString(R.string.dialog_no_match_title))
+            .setMessage(getString(R.string.dialog_no_match_message))
+            .setPositiveButton(getString(R.string.ok)) { _, _ ->
+                val intent = Intent(this, SearchByOrderIdActivity::class.java)
+                intent.putExtra(IntentKeys.MERCHANT_UID, uid)
+                startActivity(intent)
+            }
+            .setCancelable(false)
+            .show()
+    }
+
     private fun searchByImage(capturedBitmap: Bitmap) {
         val uid = merchantUid ?: return
 
@@ -163,6 +182,9 @@ class SearchOrderActivity : BaseActivity() {
                                         getString(R.string.error_no_image_match).plus(".."),
                                         Toast.LENGTH_SHORT
                                     ).show()
+
+                                    showNoMatchDialog(uid)
+
                                 }
                                 return@calculateSimilarity
                             }

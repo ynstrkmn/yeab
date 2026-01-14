@@ -39,10 +39,15 @@
     <!-- Search Order -->
     <string name="search_order_button_by_image">Resim ile arama</string>
     <string name="search_order_button_by_phone">Cep telefonu ile arama</string>
+    <string name="search_order_button_by_id">OrderNumber ile arama</string>
 
     <!-- Search By Phone -->
     <string name="search_by_phone_phone_hint">Telefon (10 hane)</string>
     <string name="search_by_phone_button_search">Ara</string>
+
+    <!-- Search By Order ID -->
+    <string name="search_by_order_id_hint">OrderNumber</string>
+    <string name="search_by_order_id_button_search">Ara</string>
 
     <!-- Message Template -->
     <string name="message_template_title">Şablon Mesaj Seçin</string>
@@ -155,8 +160,12 @@
     <string name="phone_number_component">Telefon Numarası</string>
     <string name="payment_done">Ödeme Yapıldı</string>
     <string name="order_process_completed">İşlem Tamamlandı</string>
-    <string name="order_number_note">Lütfen sipariş numarasını ürünün üzerine not edin ve devam edin.</string>
+    <string name="order_number_note">Lütfen OrderNumber bilgisini ürünün üzerine not edin ve devam edin.</string>
     <string name="order_number_continue">Devam.</string>
+    <string name="back">Geri</string>
 
+    <string name="dialog_no_match_title">Eşleşme Bulunamadı</string>
+    <string name="dialog_no_match_message">Görsel ile eşleşen bir sipariş bulunamadı. OrderNumber ile arama ekranına yönlendiriliyorsunuz.</string>
+    <string name="ok">Tamam</string>
 
 </resources>

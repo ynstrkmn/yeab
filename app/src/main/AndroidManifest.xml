@@ -36,6 +36,8 @@
             </intent-filter>
         </service>
 
+        <activity android:name=".ui.order.SearchByOrderIdActivity"
+            android:screenOrientation="portrait" />
         <activity android:name=".ui.order.OrderStatusUpdateActivity"
             android:screenOrientation="portrait"/>
         <activity android:name=".ui.order.OrderListActivity"

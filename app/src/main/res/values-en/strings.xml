@@ -39,10 +39,15 @@
     <!-- Search Order -->
     <string name="search_order_button_by_image">Search by Image</string>
     <string name="search_order_button_by_phone">Search by Phone</string>
+    <string name="search_order_button_by_id">Search by OrderNumber</string>
 
     <!-- Search By Phone -->
     <string name="search_by_phone_phone_hint">Phone (10 digits)</string>
     <string name="search_by_phone_button_search">Search</string>
+
+    <!-- Search By Order ID -->
+    <string name="search_by_order_id_hint">OrderNumber</string>
+    <string name="search_by_order_id_button_search">Search</string>
 
     <!-- Message Template -->
     <string name="message_template_title">Select Template Message</string>
@@ -80,7 +85,7 @@
     <!-- WhatsApp message (EN) -->
     <string name="whatsapp_status_message">
     Hello %1$s,
-    \nThe latest status of your product "%4$s" (order %3$s, dated %2$s) is: %5$s
+    \nThe latest status of your product "%4$s" (OrderNumber %3$s, dated %2$s) is: %5$s
     \nHave a nice day.
     \nYou can see detailed information from the link below:
     \n%6$s
@@ -146,7 +151,12 @@
     <string name="phone_number_component">Phone Number</string>
     <string name="payment_done">Payment Done</string>
     <string name="order_process_completed">Process Completed</string>
-    <string name="order_number_note">Please note the order number for product and continue.</string>
+    <string name="order_number_note">Please note the OrderNumber for product and continue.</string>
     <string name="order_number_continue">Continue.</string>
+    <string name="back">Back</string>
+
+    <string name="dialog_no_match_title">No Match Found</string>
+    <string name="dialog_no_match_message">No order matching the image was found. You are being redirected to the search by OrderNumber screen.</string>
+    <string name="ok">OK</string>
 
 </resources>
