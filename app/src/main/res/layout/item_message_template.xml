@@ -10,7 +10,7 @@
         android:id="@+id/etMessage"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Mesaj (Max 100 karakter)"
+        android:hint="@string/template_hint_text"
         android:maxLength="100"/>
 
     <LinearLayout
@@ -22,7 +22,7 @@
             android:id="@+id/cbFinish"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Hizmet süreci tamamlanma mesajı mı?"/>
+            android:text="@string/template_checkbox_text"/>
     </LinearLayout>
 
 </LinearLayout>

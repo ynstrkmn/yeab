@@ -11,7 +11,7 @@
         android:id="@+id/txtHeader"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Aktif Siparişler"
+        android:text="@string/home_button_orders"
         android:textStyle="bold"
         android:textSize="18sp"
         app:layout_constraintTop_toTopOf="parent"
@@ -32,21 +32,21 @@
             android:id="@+id/btnPrevPage"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Önceki"/>
+            android:text="@string/previous_button"/>
 
         <TextView
             android:id="@+id/txtPageInfo"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Sayfa 1"
+            android:text="@string/page_text"
             android:gravity="center"/>
 
         <Button
             android:id="@+id/btnNextPage"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Sonraki"/>
+            android:text="@string/next_button"/>
 
         <Spinner
             android:id="@+id/spinnerPageSize"

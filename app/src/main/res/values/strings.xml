@@ -21,7 +21,10 @@
     <string name="home_button_new_order">Yeni Ürün Ekle</string>
     <string name="home_button_list_orders">Ürün Listele</string>
     <string name="home_button_message_templates">Kayıtlı Mesajlarım</string>
+    <string name="home_button_orders">Siparişlerim</string>
     <string name="home_button_only_add">Ekle</string>
+    <string name="home_button_active_orders">Aktif Siparişlerim</string>
+    <string name="home_button_completed_orders">Geçmiş Siparişlerim</string>
 
     <!-- New Order -->
     <string name="new_order_phone_hint">Telefon (10 hane)</string>
@@ -143,6 +146,15 @@
     <string name="location_selection_go_take_loc_button">Ülke, il ve ilçe bilgisi değişikliği için Konumu Al butonuna tıklayarak lokasyon seçmelisiniz.</string>
     <string name="btn_camera_text">Ürün ile alakalı resim çek</string>
     <string name="error_permission_required">Rehber erişim izni hatası</string>
+    <string name="saved_message_templates">Kayıtlı Mesaj Şablonları</string>
+    <string name="previous_button">Önceki</string>
+    <string name="next_button">Sonraki</string>
+    <string name="page_text">Sayfa</string>
+    <string name="template_hint_text">Mesaj (Max 100 karakter)</string>
+    <string name="template_checkbox_text">Hizmet süreci tamamlanma mesajı mı?</string>
+    <string name="phone_number_component">Telefon Numarası</string>
+    <string name="payment_done">Ödeme Yapıldı</string>
+    <string name="order_process_completed">İşlem Tamamlandı</string>
 
 
 </resources>

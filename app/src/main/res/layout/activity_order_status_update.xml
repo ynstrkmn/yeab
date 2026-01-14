@@ -152,7 +152,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:text="Ödeme Yapıldı"
+                android:text="@string/payment_done"
                 android:textColor="#DDDDDD"
                 app:buttonTint="#DDDDDD" />
             <!-- xml -->
@@ -161,7 +161,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:text="İşlem Tamamlandı"
+                android:text="@string/order_process_completed"
                 android:textColor="#DDDDDD"
                 app:buttonTint="#DDDDDD" />
 
