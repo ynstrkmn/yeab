@@ -8,16 +8,6 @@
     android:padding="24dp"
     android:fitsSystemWindows="true">
 
-    <!-- Geri -->
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnBack"
-        style="@style/Widget.Material3.Button.TextButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Geri"
-        android:textAllCaps="false"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
 
     <!-- Sipariş Numarası -->
     <com.google.android.material.textview.MaterialTextView
@@ -29,7 +19,6 @@
         android:text="000000"
         android:textStyle="bold"
         android:textAppearance="@style/TextAppearance.Material3.DisplayMedium"
-        app:layout_constraintTop_toBottomOf="@id/btnBack"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
@@ -41,7 +30,7 @@
         android:gravity="center"
         android:paddingTop="8dp"
         android:paddingBottom="24dp"
-        android:text="Lütfen sipariş numarasını kontrol edin ve devam edin."
+        android:text="@string/order_number_note"
         android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
         app:layout_constraintTop_toBottomOf="@id/tvOrderNumber"
         app:layout_constraintStart_toStartOf="parent"
@@ -53,7 +42,7 @@
         android:id="@+id/btnContinue"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Devam"
+        android:text="@string/order_number_continue"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent" />

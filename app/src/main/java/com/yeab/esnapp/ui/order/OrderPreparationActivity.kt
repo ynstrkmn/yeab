@@ -25,7 +25,6 @@ class OrderPreparationActivity : BaseActivity() {
 
         merchantUid = intent.getStringExtra(IntentKeys.MERCHANT_UID)
 
-        binding.tvDescription.text = "Lütfen sipariş numarasını kontrol edin ve devam edin."
         loadOrderNumber()
 
         binding.btnContinue.setOnClickListener {
@@ -33,10 +32,6 @@ class OrderPreparationActivity : BaseActivity() {
                 putExtra(IntentKeys.ORDER_NUMBER, currentOrderNumber)
             }
             setResult(RESULT_OK, data)
-            finish()
-        }
-        binding.btnBack.setOnClickListener {
-            setResult(RESULT_CANCELED)
             finish()
         }
     }

@@ -146,5 +146,7 @@
     <string name="phone_number_component">Phone Number</string>
     <string name="payment_done">Payment Done</string>
     <string name="order_process_completed">Process Completed</string>
+    <string name="order_number_note">Please note the order number for product and continue.</string>
+    <string name="order_number_continue">Continue.</string>
 
 </resources>
