@@ -35,14 +35,40 @@ class PhoneContactInput @JvmOverloads constructor(
         }
     }
 
+    /**
+     * Numarayı temizleyip formatlayan yardımcı fonksiyon.
+     * 05314444444 veya +905314444444 gibi numaraları 5314444444 formatına getirir.
+     */
+    private fun cleanNumber(raw: String): String {
+        // Sadece rakamları al, diğer her şeyi temizle (+, -, boşluk, parantez)
+        var cleaned = raw.replace(Regex("[^0-9]"), "")
+
+        // Başındaki 90'ı veya 0'ı temizle (Türkiye formatı için: 10 hane kalsın)
+        // Eğer 905xx... (12 hane) ise baştaki 90'ı at
+        if (cleaned.startsWith("90") && cleaned.length >= 12) {
+            cleaned = cleaned.substring(2)
+        }
+        // Eğer 05xx... (11 hane) ise baştaki 0'ı at
+        else if (cleaned.startsWith("0") && cleaned.length >= 11) {
+            cleaned = cleaned.substring(1)
+        }
+
+        // Eğer hala 10 haneden uzunsa (örn uluslararası başka kod), son 10 haneyi al
+        if (cleaned.length > 10) {
+            cleaned = cleaned.takeLast(10)
+        }
+        
+        return cleaned
+    }
+
     // Numarayı dışarıdan almak için
     fun getPhoneNumber(): String {
-        return edtPhone.text.toString().trim()
+        return cleanNumber(edtPhone.text.toString())
     }
 
     // Numarayı kod ile set etmek için
     fun setPhoneNumber(number: String) {
-        edtPhone.setText(number)
+        edtPhone.setText(cleanNumber(number))
     }
 
     /**
@@ -58,17 +84,7 @@ class PhoneContactInput @JvmOverloads constructor(
                 if (it.moveToFirst()) {
                     val numberIndex = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
                     if (numberIndex != -1) {
-                        var number = it.getString(numberIndex)
-                        // Normalize number: Remove non-digit chars first, but be careful with +
-                        // Simple cleanup: remove spaces and dashes
-                        number = number.replace(" ", "").replace("-", "")
-                        
-                        // Remove leading 0 if present (but keep country code if logic requires, request was specifically remove leading 0)
-                        // Assuming local numbers like 0532... -> 532...
-                        if (number.startsWith("0")) {
-                            number = number.substring(1)
-                        }
-                        
+                        val number = it.getString(numberIndex)
                         setPhoneNumber(number)
                     }
                 }
