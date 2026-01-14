@@ -303,6 +303,7 @@ class MessageTemplateActivity : BaseActivity() {
                 meta["fileName"] = fileName
                 meta["timestamp"] = ServerValue.TIMESTAMP
                 meta["recognizedText"] = recognizedText
+                meta["orderNumber"] = orderNumber
 
                 // Hash bilgisini kaydet
                 dbRef.child("image_hashes")
@@ -427,7 +428,8 @@ class MessageTemplateActivity : BaseActivity() {
             nowIso,
             isPaymentDone,
             paymentDate,
-            phone
+            phone,
+            orderNumber
         )
 
         // \`path.toString()\` yerine açık string yollar
