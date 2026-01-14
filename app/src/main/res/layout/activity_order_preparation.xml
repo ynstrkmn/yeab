@@ -8,7 +8,6 @@
     android:padding="24dp"
     android:fitsSystemWindows="true">
 
-
     <!-- Sipariş Numarası -->
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/tvOrderNumber"
@@ -18,9 +17,12 @@
         android:padding="16dp"
         android:text="000000"
         android:textStyle="bold"
-        android:textAppearance="@style/TextAppearance.Material3.DisplayMedium"
+        android:textAppearance="@style/TextAppearance.Material3.DisplayLarge"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/tvDescription"
+        app:layout_constraintVertical_chainStyle="packed" />
 
     <!-- Açıklama -->
     <com.google.android.material.textview.MaterialTextView
@@ -35,6 +37,7 @@
         app:layout_constraintTop_toBottomOf="@id/tvOrderNumber"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/btnContinue"
         app:layout_goneMarginBottom="16dp" />
 
     <!-- Devam -->
