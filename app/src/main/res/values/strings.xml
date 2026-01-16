@@ -39,7 +39,7 @@
     <!-- Search Order -->
     <string name="search_order_button_by_image">Resim ile arama</string>
     <string name="search_order_button_by_phone">Cep telefonu ile arama</string>
-    <string name="search_order_button_by_id">OrderNumber ile arama</string>
+    <string name="search_order_button_by_id">Sipariş Numarası ile arama</string>
 
     <!-- Search By Phone -->
     <string name="search_by_phone_phone_hint">Telefon (10 hane)</string>

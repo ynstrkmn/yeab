@@ -441,6 +441,17 @@ class MessageTemplateActivity : BaseActivity() {
             userOrderPath to order
         )
 
+        // DateOrders için YYYYMMDD
+        val dateKey = try {
+            val parser =
+                SimpleDateFormat(DateFormats.ORDER_STATUS_ISO, Locale.getDefault())
+            val created = parser.parse(order.createdDate!!)
+            val ymd = SimpleDateFormat("yyyyMMdd", Locale.getDefault())
+            ymd.format(created!!)
+        } catch (_: Exception) {
+            SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(now)
+        }
+
         dbRef.updateChildren(updates).addOnSuccessListener {
             // EKLEME: Kaydetme sonrası OrderNumber'ı +1 olarak güncelle
             incrementMerchantOrderNumber(uid) {
@@ -452,7 +463,7 @@ class MessageTemplateActivity : BaseActivity() {
 
                 val customerDisplayName = if (customerNameSurname.isNotEmpty()) customerNameSurname else phone
                 val safeProductName = if (productDesc.isNotEmpty()) productDesc else getString(R.string.app_name)
-                val detailLink = "https://esnaf.online/index.html?merchantId=$uid&orderId=$orderId"
+                val detailLink = "https://esnaf.online/index.html?merchantId=$uid&orderId=$orderId&orderDate=$dateKey"
 
                 val formattedMessage = getString(
                     R.string.whatsapp_status_message,
