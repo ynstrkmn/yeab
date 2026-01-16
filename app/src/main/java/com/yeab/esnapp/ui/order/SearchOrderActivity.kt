@@ -182,7 +182,7 @@ class SearchOrderActivity : BaseActivity() {
                                         getString(R.string.error_no_image_match).plus(".."),
                                         Toast.LENGTH_SHORT
                                     ).show()
-
+                                    showNoMatchDialog(uid)
                                 }
                                 return@calculateSimilarity
                             }
