@@ -17,6 +17,7 @@ import com.google.firebase.database.*
 import com.yeab.esnapp.databinding.ActivityMerchantOrdersBinding
 import com.yeab.esnapp.ui.base.BaseActivity
 import com.yeab.esnapp.ui.model.OrderItem
+import com.yeab.esnapp.ui.order.dialog.UserInfoDialogFragment
 import com.yeab.esnapp.util.IntentKeys
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -77,6 +78,15 @@ class MerchantOrdersActivity : BaseActivity() {
                 }
                 startActivity(intent)
                 finish()
+            }
+        })
+
+        // \[Yeni\] Kafa ikonuna tıklama: UserInfoDialogFragment aç
+        adapter.setOnUserIconClickListener(object : MerchantOrderAdapter.OnUserIconClickListener {
+            override fun onUserIconClick(item: com.yeab.esnapp.ui.model.OrderItem) {
+                val phoneKey = item.ownerPhone ?: return
+                val dialog = UserInfoDialogFragment.newInstance(merchantUid, phoneKey)
+                dialog.show(supportFragmentManager, "userInfoDialog")
             }
         })
 
@@ -201,11 +211,12 @@ class MerchantOrdersActivity : BaseActivity() {
     ): List<OrderItem> {
         val phone = orderSnap.key.orEmpty()
 
-        val (ownerName, ownerSurname) = if (phone.isNotBlank()) {
-            fetchMerchantUserByPhone(phone)
-        } else {
-            Pair("", "")
-        }
+//        val (ownerName, ownerSurname) = if (phone.isNotBlank()) {
+//            fetchMerchantUserByPhone(phone)
+//        } else {
+//            Pair("", "")
+//        }
+        val (ownerName, ownerSurname) = Pair("", "")
 
         val imageUrl = productNode.child("productImageUrl").getValue(String::class.java)
         val productName = productNode.child("productName").getValue(String::class.java)

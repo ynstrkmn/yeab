@@ -15,8 +15,13 @@ class MerchantOrderAdapter : RecyclerView.Adapter<MerchantOrderAdapter.VH>() {
         fun onItemClick(item: OrderItem)
     }
 
+    interface OnUserIconClickListener {
+        fun onUserIconClick(item: OrderItem)
+    }
+
     private val items = mutableListOf<OrderItem>()
     private var clickListener: OnItemClickListener? = null
+    private var userIconClickListener: OnUserIconClickListener? = null
 
     fun setData(list: List<OrderItem>) {
         items.clear()
@@ -33,6 +38,10 @@ class MerchantOrderAdapter : RecyclerView.Adapter<MerchantOrderAdapter.VH>() {
         clickListener = listener
     }
 
+    fun setOnUserIconClickListener(l: OnUserIconClickListener) {
+        userIconClickListener = l
+    }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
         val binding = ItemMerchantOrderBinding.inflate(
             LayoutInflater.from(parent.context), parent, false
@@ -42,7 +51,7 @@ class MerchantOrderAdapter : RecyclerView.Adapter<MerchantOrderAdapter.VH>() {
 
     override fun onBindViewHolder(holder: VH, position: Int) {
         val item = items[position]
-        holder.bind(item)
+        holder.bind(item,userIconClickListener)
         holder.itemView.setOnClickListener {
             clickListener?.onItemClick(item)
         }
@@ -51,12 +60,20 @@ class MerchantOrderAdapter : RecyclerView.Adapter<MerchantOrderAdapter.VH>() {
     override fun getItemCount(): Int = items.size
 
     class VH(private val binding: ItemMerchantOrderBinding) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(item: OrderItem) {
+        fun bind(item: OrderItem,userIconClickListener: OnUserIconClickListener?) {
             binding.txtProduct.text = item.productName
-            binding.txtOwner.text = "${item.ownerName} ${item.ownerSurname} • ${item.ownerPhone}"
+            //binding.txtOwner.text = "${item.ownerName} ${item.ownerSurname} • ${item.ownerPhone}"
+            binding.txtOwner.text = "${item.ownerPhone}"
             binding.txtStatus.text = item.lastStatus
             // \[Opsiyonel\] Görsel yükleme: Glide/Picasso vb.
              Glide.with(binding.imgProduct).load(item.imageUrl).into(binding.imgProduct)
+
+            // kafa ikonunun id'si `btnUserInfo` olan ImageButton
+            binding.btnUserInfo.setOnClickListener {
+                userIconClickListener?.onUserIconClick(item)
+            }
         }
+
+
     }
 }

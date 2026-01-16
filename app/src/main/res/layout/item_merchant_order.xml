@@ -49,5 +49,21 @@
                 android:layout_height="wrap_content"
                 android:text="Son statu"/>
         </LinearLayout>
+
+
+
+        <!-- Sağ tarafta kafa ikonu -->
+        <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/btnUserInfo"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            app:srcCompat="@drawable/ic_user_small"
+            app:tint="@android:color/holo_green_dark"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/user_info"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_marginStart="8dp"
+            android:visibility="visible"/>
     </LinearLayout>
 </androidx.cardview.widget.CardView>

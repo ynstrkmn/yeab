@@ -158,5 +158,6 @@
     <string name="dialog_no_match_title">No Match Found</string>
     <string name="dialog_no_match_message">No order matching the image was found. You are being redirected to the search by OrderNumber screen.</string>
     <string name="ok">OK</string>
+    <string name="user_info">User Info</string>
 
 </resources>

@@ -12,6 +12,7 @@ import com.google.firebase.database.*
 import com.yeab.esnapp.databinding.ActivityMerchantOrdersBinding
 import com.yeab.esnapp.ui.base.BaseActivity
 import com.yeab.esnapp.ui.model.OrderItem
+import com.yeab.esnapp.ui.order.dialog.UserInfoDialogFragment
 import kotlinx.coroutines.launch
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -79,6 +80,15 @@ class SearchResultsActivity : BaseActivity() {
                 finish()
             }
         }
+
+        // \[Yeni\] Kafa ikonuna tıklama: UserInfoDialogFragment aç
+        adapter.setOnUserIconClickListener(object : MerchantOrderAdapter.OnUserIconClickListener {
+            override fun onUserIconClick(item: com.yeab.esnapp.ui.model.OrderItem) {
+                val phoneKey = item.ownerPhone ?: return
+                val dialog = UserInfoDialogFragment.newInstance(merchantUid, phoneKey)
+                dialog.show(supportFragmentManager, "userInfoDialog")
+            }
+        })
     }
 
     private fun loadByPhone(phone: String) {
@@ -138,15 +148,16 @@ class SearchResultsActivity : BaseActivity() {
         knownPhone: String? = null
     ): OrderItem? {
         val phone = knownPhone
-            ?: orderSnap.child("ownerPhone").getValue(String::class.java)
+            ?: orderSnap.child("phoneNumber").getValue(String::class.java)
             ?: orderSnap.child("phone").getValue(String::class.java)
             ?: ""
 
-        val (ownerName, ownerSurname) = if (phone.isNotBlank()) {
-            fetchMerchantUserByPhone(phone)
-        } else {
-            Pair("", "")
-        }
+//        val (ownerName, ownerSurname) = if (phone.isNotBlank()) {
+//            fetchMerchantUserByPhone(phone)
+//        } else {
+//            Pair("", "")
+//        }
+        val (ownerName, ownerSurname) = Pair("", "")
 
         val imageUrl = orderSnap.child("productImageUrl").getValue(String::class.java)
             ?: orderSnap.child("imageUrl").getValue(String::class.java)

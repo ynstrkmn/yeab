@@ -167,5 +167,6 @@
     <string name="dialog_no_match_title">Eşleşme Bulunamadı</string>
     <string name="dialog_no_match_message">Görsel ile eşleşen bir sipariş bulunamadı. OrderNumber ile arama ekranına yönlendiriliyorsunuz.</string>
     <string name="ok">Tamam</string>
+    <string name="user_info">Kullanıcı Bilgisi</string>
 
 </resources>

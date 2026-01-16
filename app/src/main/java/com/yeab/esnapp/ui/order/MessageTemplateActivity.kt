@@ -452,7 +452,7 @@ class MessageTemplateActivity : BaseActivity() {
 
                 val customerDisplayName = if (customerNameSurname.isNotEmpty()) customerNameSurname else phone
                 val safeProductName = if (productDesc.isNotEmpty()) productDesc else getString(R.string.app_name)
-                val detailLink = "https://esnapp-qr.web.app/index.html?merchantId=$uid&orderId=$orderId"
+                val detailLink = "https://esnaf.online/index.html?merchantId=$uid&orderId=$orderId"
 
                 val formattedMessage = getString(
                     R.string.whatsapp_status_message,
