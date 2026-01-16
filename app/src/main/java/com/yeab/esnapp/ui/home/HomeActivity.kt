@@ -5,7 +5,10 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import com.yeab.esnapp.R
 import com.yeab.esnapp.databinding.ActivityHomeBinding
 import com.yeab.esnapp.model.Merchant
@@ -95,23 +98,30 @@ class HomeActivity : BaseActivity() {
         if (uid.isNullOrEmpty()) return
 
         val dbRef = FirebaseDatabase.getInstance().reference
-        dbRef.child(FirebasePaths.MERCHANTS).child(uid).get()
-            .addOnSuccessListener { snapshot ->
+        dbRef.child(FirebasePaths.MERCHANTS).child(uid).addValueEventListener(object :
+            ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
                 if (snapshot.exists()) {
                     val merchant = snapshot.getValue(Merchant::class.java)
                     if (merchant != null) {
                         // Global Session'a kaydet
                         MerchantSession.merchant = merchant
-                        
+
                         // UI güncelle
-                        val welcomeText = getString(R.string.welcome_message, "${merchant.Name}", "${merchant.Surname}")
+                        val welcomeText = getString(
+                            R.string.welcome_message,
+                            "${merchant.Name}",
+                            "${merchant.Surname}"
+                        )
                         binding.txtWelcomeMessage.text = welcomeText
                     }
                 }
             }
-            .addOnFailureListener {
-                Toast.makeText(this, "Merchant verisi alınamadı: ${it.message}", Toast.LENGTH_SHORT).show()
+
+            override fun onCancelled(error: DatabaseError) {
+                Toast.makeText(this@HomeActivity, "Merchant verisi alınamadı: ${error.message}", Toast.LENGTH_SHORT).show()
             }
+        })
     }
 
     private fun showLogoutConfirmDialog() {

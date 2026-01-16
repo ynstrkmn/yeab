@@ -98,9 +98,7 @@
     %7$s, İyi günler dileriz.
 </string>
 
-    <string name="welcome_message">
- Merhaba, %1$s %2$s
-    </string>
+    <string name="welcome_message">%1$s %2$s</string>
 
 
     <string name="button_logout">Çıkış Yap</string>

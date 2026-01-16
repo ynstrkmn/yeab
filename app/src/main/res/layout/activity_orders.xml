@@ -5,8 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="16dp"
-    android:background="@android:color/white"
-    android:fitsSystemWindows="true">
+    android:background="@android:color/white">
 
     <TextView
         android:id="@+id/txtOrdersTitle"
@@ -15,6 +14,8 @@
         android:text="@string/home_button_orders"
         android:textSize="20sp"
         android:textStyle="bold"
+        android:gravity="center"
+        android:layout_marginTop="32dp"
         android:textColor="#333333"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -23,9 +24,10 @@
     <LinearLayout
         android:id="@+id/layoutOrdersButtons"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:orientation="vertical"
         android:layout_marginTop="24dp"
+        android:gravity="center"
         app:layout_constraintTop_toBottomOf="@id/txtOrdersTitle"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
