@@ -78,6 +78,12 @@ class HomeActivity : BaseActivity() {
             startActivity(Intent(this, OrdersActivity::class.java))
         }
 
+        binding.btnProfile.setOnClickListener {
+            val i = Intent(this, com.yeab.esnapp.ui.profile.MerchantProfileActivity::class.java)
+            i.putExtra(com.yeab.esnapp.util.IntentKeys.MERCHANT_UID, merchantUid)
+            startActivity(i)
+        }
+
         // Çıkış Yap
         binding.btnLogout.setOnClickListener {
             showLogoutConfirmDialog()

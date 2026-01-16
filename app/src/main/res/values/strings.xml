@@ -168,5 +168,6 @@
     <string name="dialog_no_match_message">Görsel ile eşleşen bir sipariş bulunamadı. OrderNumber ile arama ekranına yönlendiriliyorsunuz.</string>
     <string name="ok">Tamam</string>
     <string name="user_info">Kullanıcı Bilgisi</string>
+    <string name="profile_info">Profil Bilgilerim</string>
 
 </resources>

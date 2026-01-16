@@ -8,7 +8,7 @@
     android:layout_height="match_parent"
     android:background="@android:color/white"
     android:padding="16dp"
-    android:fitsSystemWindows="true">>
+    android:fitsSystemWindows="true">
 
     <!-- App Logo -->
     <ImageView
@@ -47,7 +47,7 @@
         android:layout_height="wrap_content"
         android:gravity="center_horizontal"
         android:orientation="vertical"
-        app:layout_constraintBottom_toTopOf="@id/btnLogout"
+        app:layout_constraintBottom_toTopOf="@id/layoutBottomButtons"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
@@ -199,19 +199,46 @@
 
     </LinearLayout>
 
-    <!-- Çıkış Yap -->
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnLogout"
-        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+    <!-- Alt: İkonlu Çıkış ve Profil Butonları (yan yana) -->
+    <LinearLayout
+        android:id="@+id/layoutBottomButtons"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
-        android:text="@string/button_logout"
-        android:textColor="#000000"
-        app:cornerRadius="24dp"
+        android:orientation="horizontal"
+        android:gravity="center"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:strokeColor="#000000" />
+        app:layout_constraintStart_toStartOf="parent">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnLogout"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:contentDescription="@string/button_logout"
+            android:text=""
+            app:cornerRadius="28dp"
+            app:icon="@android:drawable/ic_menu_close_clear_cancel"
+            app:iconTint="#D32F2F"
+            app:strokeColor="#000000" />
+
+        <View
+            android:layout_width="16dp"
+            android:layout_height="0dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnProfile"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:contentDescription="Profil Bilgilerim"
+            android:text="@string/profile_info"
+            app:cornerRadius="28dp"
+            app:icon="@android:drawable/ic_menu_myplaces"
+            app:iconTint="#000000"
+            app:strokeColor="#E0E0E0" />
+
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

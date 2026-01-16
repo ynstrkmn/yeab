@@ -72,6 +72,8 @@
             android:screenOrientation="portrait" />
         <activity android:name=".ui.order.OrderPreparationActivity"
             android:screenOrientation="portrait" />
+        <activity android:name=".ui.profile.MerchantProfileActivity"
+            android:screenOrientation="portrait" />
         <activity
             android:name=".ui.splash.SplashActivity"
             android:screenOrientation="portrait"

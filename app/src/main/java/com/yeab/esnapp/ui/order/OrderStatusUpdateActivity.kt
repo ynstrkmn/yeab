@@ -443,67 +443,161 @@ class OrderStatusUpdateActivity : BaseActivity() {
                 baseUpdates["CompletedOrders/UserOrders/$phone/$uid/$orderId"] = order
                 baseUpdates["${FirebasePaths.ORDERS_ROOT}/${FirebasePaths.ORDERS_MERCHANT_ORDERS}/$uid/$phone/$orderId"] = null
                 baseUpdates["${FirebasePaths.USER_ORDERS_ROOT}/$phone/$uid/$orderId"] = null
+
+                // Image_hashes -> CompletedImageHashes taşıması: önce oku sonra updateChildren içinde işle
+                val imageHashRef = dbRef.child("image_hashes").child(uid).child(orderId)
+                imageHashRef.get().addOnSuccessListener { imgSnap ->
+                    if (imgSnap.exists()) {
+                        // Mevcut veriyi CompletedImageHashes altına ekle ve eskiyi null yap
+                        baseUpdates["CompletedImageHashes/$uid/$orderId"] = imgSnap.value
+                        baseUpdates["image_hashes/$uid/$orderId"] = null
+                        dbRef.updateChildren(baseUpdates).addOnSuccessListener {
+
+                            uploadCapturedPhotoIfAny(uid, orderId)
+
+                            // WhatsApp mesajı hazırlığı
+                            val displayDate = try {
+                                val createdIso = order.createdDate
+                                if (!createdIso.isNullOrEmpty()) {
+                                    val parser =
+                                        SimpleDateFormat(DateFormats.ORDER_STATUS_ISO, Locale.getDefault())
+                                    val createdDate = parser.parse(createdIso)
+                                    val displayFormatter = SimpleDateFormat(
+                                        DateFormats.ORDER_STATUS_DISPLAY,
+                                        Locale.getDefault()
+                                    )
+                                    displayFormatter.format(createdDate!!)
+                                } else {
+                                    val displayFormatter = SimpleDateFormat(
+                                        DateFormats.ORDER_STATUS_DISPLAY,
+                                        Locale.getDefault()
+                                    )
+                                    displayFormatter.format(now)
+                                }
+                            } catch (e: Exception) {
+                                val displayFormatter =
+                                    SimpleDateFormat(DateFormats.ORDER_STATUS_DISPLAY, Locale.getDefault())
+                                displayFormatter.format(now)
+                            }
+
+                            val customerDisplayName =
+                                if (customerNameSurname.isNotEmpty()) customerNameSurname else phone
+                            val safeProductName = if (productName.isNotEmpty()) {
+                                productName
+                            } else {
+                                order.productName ?: getString(R.string.app_name)
+                            }
+                            // DateOrders için YYYYMMDD
+                            val dateKey = try {
+                                val parser =
+                                    SimpleDateFormat(DateFormats.ORDER_STATUS_ISO, Locale.getDefault())
+                                val created = parser.parse(order.createdDate!!)
+                                val ymd = SimpleDateFormat("yyyyMMdd", Locale.getDefault())
+                                ymd.format(created!!)
+                            } catch (_: Exception) {
+                                SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(now)
+                            }
+                            val detailLink =
+                                "https://esnaf.online/index.html?merchantId=$uid&orderId=$orderId&orderDate=$dateKey"
+
+                            val formattedMessage = getString(
+                                R.string.whatsapp_status_message,
+                                customerDisplayName,
+                                displayDate,
+                                orderId,
+                                safeProductName,
+                                messageText,
+                                detailLink,
+                                "asdadasdasdsad"
+                            )
+
+                            hideLoading()
+                            WhatsAppUtils.sendMessage(this, phone, formattedMessage)
+                            finish()
+                        }.addOnFailureListener {
+                            hideLoading()
+                            Toast.makeText(
+                                this,
+                                it.message ?: getString(R.string.error_generic),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                }
             }
+            else {
 
-            dbRef.updateChildren(baseUpdates).addOnSuccessListener {
+                dbRef.updateChildren(baseUpdates).addOnSuccessListener {
 
-                uploadCapturedPhotoIfAny(uid, orderId)
+                    uploadCapturedPhotoIfAny(uid, orderId)
 
-                // WhatsApp mesajı hazırlığı
-                val displayDate = try {
-                    val createdIso = order.createdDate
-                    if (!createdIso.isNullOrEmpty()) {
-                        val parser = SimpleDateFormat(DateFormats.ORDER_STATUS_ISO, Locale.getDefault())
-                        val createdDate = parser.parse(createdIso)
-                        val displayFormatter = SimpleDateFormat(DateFormats.ORDER_STATUS_DISPLAY, Locale.getDefault())
-                        displayFormatter.format(createdDate!!)
-                    } else {
-                        val displayFormatter = SimpleDateFormat(DateFormats.ORDER_STATUS_DISPLAY, Locale.getDefault())
+                    // WhatsApp mesajı hazırlığı
+                    val displayDate = try {
+                        val createdIso = order.createdDate
+                        if (!createdIso.isNullOrEmpty()) {
+                            val parser =
+                                SimpleDateFormat(DateFormats.ORDER_STATUS_ISO, Locale.getDefault())
+                            val createdDate = parser.parse(createdIso)
+                            val displayFormatter = SimpleDateFormat(
+                                DateFormats.ORDER_STATUS_DISPLAY,
+                                Locale.getDefault()
+                            )
+                            displayFormatter.format(createdDate!!)
+                        } else {
+                            val displayFormatter = SimpleDateFormat(
+                                DateFormats.ORDER_STATUS_DISPLAY,
+                                Locale.getDefault()
+                            )
+                            displayFormatter.format(now)
+                        }
+                    } catch (e: Exception) {
+                        val displayFormatter =
+                            SimpleDateFormat(DateFormats.ORDER_STATUS_DISPLAY, Locale.getDefault())
                         displayFormatter.format(now)
                     }
-                } catch (e: Exception) {
-                    val displayFormatter = SimpleDateFormat(DateFormats.ORDER_STATUS_DISPLAY, Locale.getDefault())
-                    displayFormatter.format(now)
-                }
 
-                val customerDisplayName = if (customerNameSurname.isNotEmpty()) customerNameSurname else phone
-                val safeProductName = if (productName.isNotEmpty()) {
-                    productName
-                } else {
-                    order.productName ?: getString(R.string.app_name)
-                }
-                // DateOrders için YYYYMMDD
-                val dateKey = try {
-                    val parser = SimpleDateFormat(DateFormats.ORDER_STATUS_ISO, Locale.getDefault())
-                    val created = parser.parse(order.createdDate!!)
-                    val ymd = SimpleDateFormat("yyyyMMdd", Locale.getDefault())
-                    ymd.format(created!!)
-                } catch (_: Exception) {
-                    SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(now)
-                }
-                val detailLink = "https://esnaf.online/index.html?merchantId=$uid&orderId=$orderId&orderDate=$dateKey"
+                    val customerDisplayName =
+                        if (customerNameSurname.isNotEmpty()) customerNameSurname else phone
+                    val safeProductName = if (productName.isNotEmpty()) {
+                        productName
+                    } else {
+                        order.productName ?: getString(R.string.app_name)
+                    }
+                    // DateOrders için YYYYMMDD
+                    val dateKey = try {
+                        val parser =
+                            SimpleDateFormat(DateFormats.ORDER_STATUS_ISO, Locale.getDefault())
+                        val created = parser.parse(order.createdDate!!)
+                        val ymd = SimpleDateFormat("yyyyMMdd", Locale.getDefault())
+                        ymd.format(created!!)
+                    } catch (_: Exception) {
+                        SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(now)
+                    }
+                    val detailLink =
+                        "https://esnaf.online/index.html?merchantId=$uid&orderId=$orderId&orderDate=$dateKey"
 
-                val formattedMessage = getString(
-                    R.string.whatsapp_status_message,
-                    customerDisplayName,
-                    displayDate,
-                    orderId,
-                    safeProductName,
-                    messageText,
-                    detailLink,
-                    "asdadasdasdsad"
-                )
+                    val formattedMessage = getString(
+                        R.string.whatsapp_status_message,
+                        customerDisplayName,
+                        displayDate,
+                        orderId,
+                        safeProductName,
+                        messageText,
+                        detailLink,
+                        "asdadasdasdsad"
+                    )
 
-                hideLoading()
-                WhatsAppUtils.sendMessage(this, phone, formattedMessage)
-                finish()
-            }.addOnFailureListener {
-                hideLoading()
-                Toast.makeText(
-                    this,
-                    it.message ?: getString(R.string.error_generic),
-                    Toast.LENGTH_SHORT
-                ).show()
+                    hideLoading()
+                    WhatsAppUtils.sendMessage(this, phone, formattedMessage)
+                    finish()
+                }.addOnFailureListener {
+                    hideLoading()
+                    Toast.makeText(
+                        this,
+                        it.message ?: getString(R.string.error_generic),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
             }
         }.addOnFailureListener {
             hideLoading()
