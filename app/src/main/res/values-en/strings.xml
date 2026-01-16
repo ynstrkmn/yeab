@@ -51,6 +51,7 @@
 
     <!-- Message Template -->
     <string name="message_template_title">Select Template Message</string>
+    <string name="message_template_add">Add Template Message</string>
     <string name="message_template_free_text_hint">Free format (max 100 characters)</string>
     <string name="message_template_button_save_order">Save Order and Send Message</string>
     <string name="message_template_button_update_order">Send Message and Update Status</string>
@@ -133,7 +134,7 @@
 
     <string name="info_merchant_saved">Business information saved successfully.</string>
 
-    <string name="mappicker_instructions">Tap on the map to select a location, then press "Confirm".</string>
+    <string name="mappicker_instructions">Please mark your business location on the map, then click the "Confirm" button.</string>
     <string name="mappicker_confirm">Confirm</string>
     <string name="mappicker_marker_title">Selected location</string>
     <string name="mappicker_no_selection">Please select a location on the map</string>

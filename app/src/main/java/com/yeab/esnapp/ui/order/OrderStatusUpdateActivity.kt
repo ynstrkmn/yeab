@@ -159,12 +159,15 @@ class OrderStatusUpdateActivity : BaseActivity() {
     private fun resetAllChipStyles() {
         val defaultBackgroundColor = com.google.android.material.R.attr.colorSurface
         val colorStateList = android.content.res.ColorStateList.valueOf(getThemeColor(defaultBackgroundColor))
+        val unSelectedColor = ContextCompat.getColor(this, R.color.chip_unselected_background)
+        val selectedStrokeColor = ContextCompat.getColor(this, R.color.chip_selected_stroke)
 
         for (i in 0 until binding.radioGroupTemplates.childCount) {
             val view = binding.radioGroupTemplates.getChildAt(i)
             if (view is Chip) {
-                view.chipBackgroundColor = colorStateList
-                view.chipStrokeWidth = 0f
+                view.chipBackgroundColor = android.content.res.ColorStateList.valueOf(unSelectedColor)
+                view.chipStrokeWidth = 4f
+                view.chipStrokeColor = android.content.res.ColorStateList.valueOf(selectedStrokeColor)
             }
         }
     }

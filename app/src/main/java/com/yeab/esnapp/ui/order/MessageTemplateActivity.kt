@@ -1,5 +1,6 @@
 package com.yeab.esnapp.ui.order
 
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
@@ -8,6 +9,7 @@ import android.view.View
 import android.widget.Button
 import android.widget.ImageButton
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.AttrRes
@@ -24,6 +26,7 @@ import com.yeab.esnapp.model.MerchantUser
 import com.yeab.esnapp.model.Order
 import com.yeab.esnapp.model.ProductStatus
 import com.yeab.esnapp.ui.base.BaseActivity
+import com.yeab.esnapp.ui.messages.MerchantMessageTemplatesActivity
 import com.yeab.esnapp.util.DateFormats
 import com.yeab.esnapp.util.FirebasePaths
 import com.yeab.esnapp.util.IntentKeys
@@ -104,6 +107,12 @@ class MessageTemplateActivity : BaseActivity() {
         binding.btnSaveOrder.text = getString(R.string.message_template_button_save_order)
         binding.edtFreeText.hint = getString(R.string.message_template_hint_free_text)
 
+        binding.btnMessageTemplates.setOnClickListener {
+            val i = Intent(this, MerchantMessageTemplatesActivity::class.java)
+            i.putExtra(IntentKeys.MERCHANT_UID, merchantUid)
+            startActivity(i)
+        }
+
         binding.radioGroupTemplates.isSingleSelection = true
 
         loadTemplates()
@@ -118,18 +127,23 @@ class MessageTemplateActivity : BaseActivity() {
 
     private fun loadTemplates() {
         val uid = merchantUid ?: return
+        showLoading()
         dbRef.child(FirebasePaths.MERCHANT_MESSAGE_TEMPLATES)
             .child(uid)
-            .get()
-            .addOnSuccessListener { snapshot ->
+            .addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                hideLoading()
                 binding.radioGroupTemplates.setOnCheckedStateChangeListener(null)
                 binding.radioGroupTemplates.removeAllViews()
                 templateMap.clear()
 
+                if(snapshot.exists()) binding.btnMessageTemplates.visibility = LinearLayout.GONE
+                else binding.btnMessageTemplates.visibility = LinearLayout.VISIBLE
+
                 for (child in snapshot.children) {
                     val template = child.getValue(MerchantMessageTemplate::class.java) ?: continue
                     val text = template.Text ?: continue
-                    val chip = Chip(this).apply {
+                    val chip = Chip(this@MessageTemplateActivity).apply {
                         id = View.generateViewId()
                         this.text = text
                         isCheckable = true
@@ -142,17 +156,25 @@ class MessageTemplateActivity : BaseActivity() {
                 setupChipGroupListener()
                 resetAllChipStyles()
             }
+
+            override fun onCancelled(error: DatabaseError) {
+                hideLoading()
+            }
+        })
     }
 
     private fun resetAllChipStyles() {
         val defaultBackgroundColor = com.google.android.material.R.attr.colorSurface
         val colorStateList = android.content.res.ColorStateList.valueOf(getThemeColor(defaultBackgroundColor))
+        val unSelectedColor = ContextCompat.getColor(this, R.color.chip_unselected_background)
+        val selectedStrokeColor = ContextCompat.getColor(this, R.color.chip_selected_stroke)
 
         for (i in 0 until binding.radioGroupTemplates.childCount) {
             val view = binding.radioGroupTemplates.getChildAt(i)
             if (view is Chip) {
-                view.chipBackgroundColor = colorStateList
-                view.chipStrokeWidth = 0f
+                view.chipBackgroundColor = android.content.res.ColorStateList.valueOf(unSelectedColor)
+                view.chipStrokeWidth = 4f
+                view.chipStrokeColor = android.content.res.ColorStateList.valueOf(selectedStrokeColor)
             }
         }
     }

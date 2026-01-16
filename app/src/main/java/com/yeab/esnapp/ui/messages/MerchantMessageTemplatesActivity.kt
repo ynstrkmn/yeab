@@ -41,8 +41,10 @@ class MerchantMessageTemplatesActivity : BaseActivity() {
 
     private fun loadTemplatesOnce() {
         // Tek seferlik oku ve UI'ı doldur
+        showLoading()
         database.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
+                hideLoading()
                 if (!snapshot.exists()) return
 
                 val container = binding.root.findViewById<LinearLayout>(R.id.rootLayout)
@@ -77,6 +79,7 @@ class MerchantMessageTemplatesActivity : BaseActivity() {
             }
 
             override fun onCancelled(error: DatabaseError) {
+                hideLoading()
                 Toast.makeText(this@MerchantMessageTemplatesActivity, "Veri okunamadı: ${error.message}", Toast.LENGTH_SHORT).show()
             }
         })

@@ -33,6 +33,7 @@
 
     <!-- ... diğer renkleriniz ... -->
     <color name="chip_selected_background">#4CAF50</color> <!-- Seçim için canlı yeşil -->
+    <color name="chip_unselected_background">#777777</color> <!-- Seçim için canlı yeşil -->
     <color name="chip_selected_stroke">#FFFFFF</color>     <!-- Seçim için beyaz çerçeve -->
 
 </resources>

@@ -51,6 +51,7 @@
 
     <!-- Message Template -->
     <string name="message_template_title">Şablon Mesaj Seçin</string>
+    <string name="message_template_add">Şablon Mesaj Ekle</string>
     <string name="message_template_free_text_hint">Free format (max 100 karakter)</string>
     <string name="message_template_button_save_order">Ürünü Kaydet ve Mesaj Gönder</string>
     <string name="message_template_button_update_order">Mesaj Gönder ve Durumu Güncelle</string>
@@ -142,7 +143,7 @@
 
     <string name="info_merchant_saved">İş yeri bilgileri kaydedildi.</string>
 
-    <string name="mappicker_instructions">Haritaya dokunarak ürünü işaretleyin, ardından "Onayla"ya basın.</string>
+    <string name="mappicker_instructions">Lütfen haritada iş yeri konumunuzu işaretleyin, ardından "Onayla" butonuna basın.</string>
     <string name="mappicker_confirm">Onayla</string>
     <string name="mappicker_marker_title">Seçilen konum</string>
     <string name="mappicker_no_selection">Lütfen haritada bir konum seçin</string>

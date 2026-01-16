@@ -7,11 +7,12 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 import com.yeab.esnapp.databinding.ActivityMerchantProfileBinding
 import com.yeab.esnapp.model.Merchant
+import com.yeab.esnapp.ui.base.BaseActivity
 import com.yeab.esnapp.util.FirebasePaths
 import com.yeab.esnapp.util.IntentKeys
 import com.yeab.esnapp.util.MerchantSession
 
-class MerchantProfileActivity : AppCompatActivity() {
+class MerchantProfileActivity : BaseActivity() {
 
     private lateinit var binding: ActivityMerchantProfileBinding
     private var merchantUid: String? = null
@@ -49,6 +50,7 @@ class MerchantProfileActivity : AppCompatActivity() {
 
     private fun loadProfile(uid: String) {
         val dbRef = FirebaseDatabase.getInstance().reference
+        showLoading()
         dbRef.child(FirebasePaths.MERCHANTS).child(uid).get()
             .addOnSuccessListener { snap ->
                 val merchant = snap.getValue(Merchant::class.java)
@@ -62,8 +64,10 @@ class MerchantProfileActivity : AppCompatActivity() {
                 binding.edtSurname.setText(origSurname)
                 binding.edtMerchantName.setText(origMerchantName)
                 binding.edtMerchantType.setText(origMerchantType)
+                hideLoading()
             }
             .addOnFailureListener {
+                hideLoading()
                 Toast.makeText(this, "Veri alınamadı: ${it.message}", Toast.LENGTH_SHORT).show()
             }
     }
