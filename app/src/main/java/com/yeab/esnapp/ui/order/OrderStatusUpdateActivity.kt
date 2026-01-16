@@ -179,6 +179,7 @@ class OrderStatusUpdateActivity : BaseActivity() {
             resetAllChipStyles()
 
             if (checkedIds.isNotEmpty()) {
+                binding.edtFreeText.isEnabled = false
                 // 1. BİR ÇİP SEÇİLDİ
                 val selectedChipId = checkedIds.first()
                 val selectedChip = group.findViewById<Chip>(selectedChipId)
@@ -192,8 +193,8 @@ class OrderStatusUpdateActivity : BaseActivity() {
                 }
 
             } else {
-                // 2. SEÇİM KALDIRILDI
                 // EditText'i tekrar aktif hale getir
+                binding.edtFreeText.isEnabled=true
             }
         }
     }

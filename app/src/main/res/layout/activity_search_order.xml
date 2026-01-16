@@ -76,6 +76,7 @@
             app:cardCornerRadius="16dp"
             app:cardElevation="2dp"
             app:strokeColor="#E0E0E0"
+            android:visibility="gone"
             app:strokeWidth="1dp">
 
             <LinearLayout

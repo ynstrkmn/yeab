@@ -183,8 +183,6 @@ class SearchOrderActivity : BaseActivity() {
                                         Toast.LENGTH_SHORT
                                     ).show()
 
-                                    showNoMatchDialog(uid)
-
                                 }
                                 return@calculateSimilarity
                             }
