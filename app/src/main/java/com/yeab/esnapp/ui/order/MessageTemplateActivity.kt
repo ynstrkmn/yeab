@@ -164,6 +164,9 @@ class MessageTemplateActivity : BaseActivity() {
         binding.radioGroupTemplates.setOnCheckedStateChangeListener { group, checkedIds ->
             resetAllChipStyles()
             if (checkedIds.isNotEmpty()) {
+                // free text alanı disable edildi.
+                binding.edtFreeText.isEnabled = false
+
                 val selectedChipId = checkedIds.first()
                 val selectedChip = group.findViewById<Chip>(selectedChipId)
                 if (selectedChip != null) {
@@ -171,6 +174,9 @@ class MessageTemplateActivity : BaseActivity() {
                     selectedChip.chipStrokeWidth = 4f
                     selectedChip.chipStrokeColor = android.content.res.ColorStateList.valueOf(selectedStrokeColor)
                 }
+            }else {
+                binding.edtFreeText.isEnabled = true
+
             }
         }
     }
