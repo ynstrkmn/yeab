@@ -164,6 +164,9 @@ class MessageTemplateActivity : BaseActivity() {
         binding.radioGroupTemplates.setOnCheckedStateChangeListener { group, checkedIds ->
             resetAllChipStyles()
             if (checkedIds.isNotEmpty()) {
+                // free text alanı disable edildi.
+                binding.edtFreeText.isEnabled = false
+
                 val selectedChipId = checkedIds.first()
                 val selectedChip = group.findViewById<Chip>(selectedChipId)
                 if (selectedChip != null) {
@@ -171,6 +174,9 @@ class MessageTemplateActivity : BaseActivity() {
                     selectedChip.chipStrokeWidth = 4f
                     selectedChip.chipStrokeColor = android.content.res.ColorStateList.valueOf(selectedStrokeColor)
                 }
+            }else {
+                binding.edtFreeText.isEnabled = true
+
             }
         }
     }
@@ -205,8 +211,12 @@ class MessageTemplateActivity : BaseActivity() {
             }
         }
 
-        // EKLEME: Sipariş kaydından önce OrderNumber doğrulaması
-        verifyOrderNumberThenProcess(uid, messageText)
+        if (localPhotoUriStr != null) {
+            uploadImageAndProcess(uid, Uri.parse(localPhotoUriStr!!), messageText)
+        } else {
+            processOrderSave(uid, messageText)
+        }
+
     }
 
     // EKLEME: OrderNumber doğrulama
@@ -442,8 +452,6 @@ class MessageTemplateActivity : BaseActivity() {
         )
 
         dbRef.updateChildren(updates).addOnSuccessListener {
-            // EKLEME: Kaydetme sonrası OrderNumber'ı +1 olarak güncelle
-            incrementMerchantOrderNumber(uid) {
                 hideLoading()
                 uploadCapturedPhotoIfAny(uid, orderId)
 
@@ -467,7 +475,7 @@ class MessageTemplateActivity : BaseActivity() {
 
                 WhatsAppUtils.sendMessage(this, phone, formattedMessage)
                 finish()
-            }
+
         }.addOnFailureListener {
             hideLoading()
             Toast.makeText(this, it.message ?: getString(R.string.error_generic), Toast.LENGTH_SHORT).show()

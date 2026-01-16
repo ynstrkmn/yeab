@@ -75,7 +75,8 @@ class NewOrderActivity : BaseActivity() {
         val intent = Intent(this, OrderPreparationActivity::class.java).apply {
             putExtra(IntentKeys.MERCHANT_UID, merchantUid)
         }
-        orderPreparationLauncher.launch(intent)
+        //orderPreparationLauncher.launch(intent)
+        checkCameraPermissionAndOpen()
     }
 
     // Kamera sonucu
