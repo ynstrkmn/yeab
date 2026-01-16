@@ -230,8 +230,12 @@ class MessageTemplateActivity : BaseActivity() {
             }
         }
 
-        // EKLEME: Sipariş kaydından önce OrderNumber doğrulaması
-        verifyOrderNumberThenProcess(uid, messageText)
+        if (localPhotoUriStr != null) {
+            uploadImageAndProcess(uid, Uri.parse(localPhotoUriStr!!), messageText)
+        } else {
+            processOrderSave(uid, messageText)
+        }
+
     }
 
     // EKLEME: OrderNumber doğrulama
@@ -478,8 +482,6 @@ class MessageTemplateActivity : BaseActivity() {
         }
 
         dbRef.updateChildren(updates).addOnSuccessListener {
-            // EKLEME: Kaydetme sonrası OrderNumber'ı +1 olarak güncelle
-            incrementMerchantOrderNumber(uid) {
                 hideLoading()
                 uploadCapturedPhotoIfAny(uid, orderId)
 
@@ -503,7 +505,7 @@ class MessageTemplateActivity : BaseActivity() {
 
                 WhatsAppUtils.sendMessage(this, phone, formattedMessage)
                 finish()
-            }
+
         }.addOnFailureListener {
             hideLoading()
             Toast.makeText(this, it.message ?: getString(R.string.error_generic), Toast.LENGTH_SHORT).show()
