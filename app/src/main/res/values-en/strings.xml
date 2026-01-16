@@ -16,7 +16,7 @@
     <string name="merchant_info_city_hint">City</string>
     <string name="merchant_info_district_hint">District</string>
     <string name="merchant_info_coordinates_hint">Coordinates (lat, lon)</string>
-    <string name="home_info_user_welcome_messsage">Hello, </string>
+    <string name="home_info_user_welcome_messsage">Hello,</string>
 
     <!-- Home -->
     <string name="home_button_new_order">Add New Product</string>
@@ -93,9 +93,7 @@
         \n%7$s
     </string>
 
-    <string name="welcome_message">
-    Welcome, %1$s %2$s
-    </string>
+    <string name="welcome_message">%1$s %2$s</string>
 
 
     <string name="button_logout">Logout</string>
