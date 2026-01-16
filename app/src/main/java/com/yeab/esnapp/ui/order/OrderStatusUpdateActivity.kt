@@ -90,6 +90,10 @@ class OrderStatusUpdateActivity : BaseActivity() {
 
         val btnCamera = findViewById<Button>(R.id.btnCameraStatus)
         imgOrderPhoto = findViewById(R.id.imgOrderPhotoStatus)
+        val uid = merchantUid
+        if (!uid.isNullOrEmpty() && orderId.isNotEmpty()) {
+            loadExistingOrderPhoto(uid, orderId)
+        }
         btnCamera.setOnClickListener {
             val hasPermission = ContextCompat.checkSelfPermission(
                 this,
@@ -108,6 +112,32 @@ class OrderStatusUpdateActivity : BaseActivity() {
 
         setupChipGroupListener();
 
+    }
+
+    private fun loadExistingOrderPhoto(merchantUid: String, orderId: String) {
+        val storageRef = FirebaseStorage.getInstance()
+            .reference.child("ordersPhoto/$merchantUid/$orderId")
+        storageRef.listAll()
+            .addOnSuccessListener { listResult ->
+                if (listResult.items.isNotEmpty()) {
+                    // İstersen son ekleneni almak için sıralayabilirsin; burada ilk öğe alınıyor.
+                    val photoRef = listResult.items.first()
+                    showLoading()
+                    photoRef.downloadUrl
+                        .addOnSuccessListener { uri ->
+                            imgOrderPhoto.apply {
+                                visibility = ImageView.VISIBLE
+                            }
+                            hideLoading()
+                            Glide.with(this)
+                                .load(uri)
+                                .centerCrop()
+                                .placeholder(android.R.drawable.ic_menu_report_image)
+                                .error(android.R.drawable.ic_menu_report_image)
+                                .into(imgOrderPhoto)
+                        }
+                }
+            }
     }
 
     // Kamera izni sonucu
@@ -662,19 +692,49 @@ class OrderStatusUpdateActivity : BaseActivity() {
         }
     }
 
+    // Kotlin
     private fun uploadCapturedPhotoIfAny(
         merchantUid: String,
         orderId: String
     ) {
-        val bmp = capturedBitmap ?: return;
-        val baos = ByteArrayOutputStream()
-        bmp.compress(Bitmap.CompressFormat.JPEG, 60, baos)
-        val data = baos.toByteArray()
-        val ts = System.currentTimeMillis()
-        val path = "ordersPhoto/$merchantUid/$orderId/${orderId}_${ts}.jpg"
-        FirebaseStorage.getInstance().reference.child(path)
-            .putBytes(data)
-            .addOnSuccessListener { }
-            .addOnFailureListener { }
+        val bmp = capturedBitmap ?: return
+        val storage = FirebaseStorage.getInstance()
+        val dirRef = storage.reference.child("ordersPhoto/$merchantUid/$orderId")
+
+        // Önce mevcut fotoğrafları sil
+        dirRef.listAll()
+            .addOnSuccessListener { listResult ->
+                val deletions = listResult.items.map { it.delete() }
+                // Tüm silmeler tamamlandığında yeni fotoğrafı yükle
+                com.google.android.gms.tasks.Tasks.whenAllComplete(deletions)
+                    .addOnSuccessListener {
+                        val baos = java.io.ByteArrayOutputStream()
+                        bmp.compress(Bitmap.CompressFormat.JPEG, 60, baos)
+                        val data = baos.toByteArray()
+
+                        // Sabit dosya adı ile yükle (üzerine yazma mantığı için tek dosya)
+                        val fileRef = dirRef.child("${orderId}_latest.jpg")
+                        fileRef.putBytes(data)
+                            .addOnSuccessListener { /* opsiyonel: success handling */ }
+                            .addOnFailureListener { /* opsiyonel: error handling */ }
+                    }
+                    .addOnFailureListener {
+                        // Silme başarısızsa yine de yeni fotoğrafı yüklemeyi deneyebilirsin
+                        val baos = java.io.ByteArrayOutputStream()
+                        bmp.compress(Bitmap.CompressFormat.JPEG, 60, baos)
+                        val data = baos.toByteArray()
+                        val fileRef = dirRef.child("${orderId}_latest.jpg")
+                        fileRef.putBytes(data)
+                    }
+            }
+            .addOnFailureListener {
+                // Listeme başarısızsa direkt yüklemeye geç
+                val baos = java.io.ByteArrayOutputStream()
+                bmp.compress(Bitmap.CompressFormat.JPEG, 60, baos)
+                val data = baos.toByteArray()
+                val fileRef = dirRef.child("${orderId}_latest.jpg")
+                fileRef.putBytes(data)
+            }
     }
+
 }
