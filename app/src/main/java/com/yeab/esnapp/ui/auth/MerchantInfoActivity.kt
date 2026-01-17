@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import androidx.core.view.WindowCompat
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.firebase.database.FirebaseDatabase
@@ -73,6 +74,7 @@ class MerchantInfoActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         binding = ActivityMerchantInfoBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -211,6 +213,7 @@ class MerchantInfoActivity : BaseActivity() {
         val country = binding.edtCountry.text.toString().trim()
         val city = binding.edtCity.text.toString().trim()
         val district = binding.edtDistrict.text.toString().trim()
+        val orderNumber = 100
 
         if (birthDate.isEmpty() || coords.isEmpty() || merchantName.isEmpty()
             || merchantType.isEmpty() || mobile.isEmpty() || name.isEmpty() || surname.isEmpty()
@@ -238,7 +241,8 @@ class MerchantInfoActivity : BaseActivity() {
                 "MobilePhoneNumber" to try { mobile.toLong() } catch (e: Exception) { 0L },
                 "Name" to name,
                 "Surname" to surname,
-                "PushToken" to token
+                "PushToken" to token,
+                "OrderNumber" to orderNumber
             )
 
             dbRef.child(FirebasePaths.MERCHANTS)

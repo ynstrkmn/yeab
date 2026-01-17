@@ -3,6 +3,7 @@ package com.yeab.esnapp.ui.profile
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.WindowCompat
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 import com.yeab.esnapp.databinding.ActivityMerchantProfileBinding
@@ -25,6 +26,7 @@ class MerchantProfileActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         binding = ActivityMerchantProfileBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
