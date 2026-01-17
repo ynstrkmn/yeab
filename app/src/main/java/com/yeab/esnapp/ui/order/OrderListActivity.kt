@@ -13,9 +13,12 @@ import androidx.core.view.WindowCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.Priority
 import com.bumptech.glide.load.DataSource
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
+import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.request.target.Target
 import com.google.firebase.database.*
 import com.yeab.esnapp.R
@@ -111,6 +114,9 @@ class OrderListActivity : BaseActivity() {
         Glide.with(this)
             .load(imageUrl)
             .fitCenter()
+            .apply( RequestOptions()
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                .priority(Priority.HIGH))
             .into(imageView)
         dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
         dialog.show()
@@ -162,6 +168,9 @@ class OrdersAdapter(
             Glide.with(ctx)
                 .load(imageUrl)
                 .centerCrop()
+                .apply( RequestOptions()
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .priority(Priority.HIGH))
                 .placeholder(android.R.drawable.ic_menu_report_image)
                 .error(android.R.drawable.ic_menu_report_image)
                 .listener(object : RequestListener<Drawable> {

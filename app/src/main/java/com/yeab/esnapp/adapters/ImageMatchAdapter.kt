@@ -1,6 +1,9 @@
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import com.bumptech.glide.Priority
+import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.request.RequestOptions
 import com.yeab.esnapp.R
 
 class ImageMatchAdapter(
@@ -48,6 +51,9 @@ class ImageMatchAdapter(
             com.bumptech.glide.Glide.with(ctx)
                 .load(url)
                 .centerCrop()
+                .apply( RequestOptions()
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .priority(Priority.HIGH))
                 .placeholder(android.R.drawable.ic_menu_report_image)
                 .error(android.R.drawable.ic_menu_report_image)
                 .listener(object : com.bumptech.glide.request.RequestListener<android.graphics.drawable.Drawable> {
