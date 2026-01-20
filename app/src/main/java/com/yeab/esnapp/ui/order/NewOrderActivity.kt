@@ -29,6 +29,16 @@ import java.io.File
 import kotlin.toString
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultCallback
+import android.net.Uri
+import android.view.View
+import androidx.lifecycle.lifecycleScope
+import com.yeab.esnapp.util.FileUtils
+import id.zelory.compressor.Compressor
+import id.zelory.compressor.constraint.format
+import id.zelory.compressor.constraint.quality
+import id.zelory.compressor.constraint.resolution
+import id.zelory.compressor.constraint.size
+import kotlinx.coroutines.launch
 
 
 class NewOrderActivity : BaseActivity() {
@@ -92,7 +102,7 @@ class NewOrderActivity : BaseActivity() {
                     contentResolver.openInputStream(uri)?.use { inputStream ->
                         val bitmap = android.graphics.BitmapFactory.decodeStream(inputStream)
                         if (bitmap != null) {
-                            processImageForOcr(bitmap)
+                            processImageForOcr(bitmap, uri)
                         } else {
                             Toast.makeText(this, getString(R.string.error_generic), Toast.LENGTH_SHORT).show()
                         }
@@ -256,7 +266,7 @@ class NewOrderActivity : BaseActivity() {
      * 1) ML Kit ile üzerindeki metni tanı (Kalite kontrolü amaçlı)
      * 2) Tanınan metin varsa diğer sayfaya geç
      */
-    private fun processImageForOcr(bitmap: Bitmap) {
+    private fun processImageForOcr(bitmap: Bitmap, uri: Uri) {
         showLoading()
 
         val image = InputImage.fromBitmap(bitmap, 0)
@@ -271,7 +281,8 @@ class NewOrderActivity : BaseActivity() {
                     openCameraForProduct()
                 } else {
                     tempRecognizedText = recognizedText
-                    goToMessageTemplateScreen()
+
+                    customCompressImageFromCamera(FileUtils.from(this, uri))
                 }
             }
             .addOnFailureListener {
@@ -280,6 +291,37 @@ class NewOrderActivity : BaseActivity() {
                 FirebaseCrashlytics.getInstance().recordException(Throwable("OCR failed: ${it.message}"))
                 openCameraForProduct()
             }
+    }
+
+    private var compressedImage: File? = null
+
+    private fun customCompressImageFromCamera(actualImage: File?) {
+        actualImage?.let { imageFile ->
+            lifecycleScope.launch {
+                // Default compression with custom destination file
+                /*compressedImage = Compressor.compress(this@MainActivity, imageFile) {
+                    default()
+                    getExternalFilesDir(Environment.DIRECTORY_PICTURES)?.also {
+                        val file = File("${it.absolutePath}${File.separator}my_image.${imageFile.extension}")
+                        destination(file)
+                    }
+                }*/
+
+                // Full custom
+                compressedImage = Compressor.compress(this@NewOrderActivity, imageFile) {
+                    resolution(980, 1280)
+                    quality(40)
+                    format(Bitmap.CompressFormat.JPEG)
+                    size(2_097_152) // 2 MB
+                }
+
+                goToMessageTemplateScreen()
+            }
+        } ?: showError("Please choose an image!")
+    }
+
+    private fun showError(errorMessage: String) {
+        Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show()
     }
 
     private fun goToMessageTemplateScreen() {
@@ -295,9 +337,9 @@ class NewOrderActivity : BaseActivity() {
         // ÖNEMLİ: Upload edilmemiş yerel dosya yolunu gönderiyoruz
         if (photoUri != null) {
             intent.putExtra("extra_local_photo_uri", photoUri.toString())
+            intent.putExtra("extra_local_photo_uri", Uri.fromFile(compressedImage).toString())
         }
         intent.putExtra("extra_recognized_text", tempRecognizedText)
-
         // Order ID'yi burada oluşturmuyoruz, diğer tarafta oluşturulacak veya null gidecek
 
         startActivity(intent)

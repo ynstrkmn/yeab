@@ -235,7 +235,7 @@
             app:strokeColor="#000000" />
 
         <View
-            android:layout_width="48dp"
+            android:layout_width="24dp"
             android:layout_height="0dp" />
 
         <com.google.android.material.button.MaterialButton
@@ -247,6 +247,25 @@
             app:cornerRadius="28dp"
             app:icon="@drawable/ic_user_small"
             app:iconTint="@android:color/black"
+            app:strokeWidth="2dp"
+            app:strokeColor="#000000" />
+
+        <View
+            android:layout_width="24dp"
+            android:layout_height="0dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnInfo"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="55dp"
+            android:layout_height="50dp"
+            android:contentDescription="@string/button_info"
+            app:cornerRadius="28dp"
+            android:text=""
+            app:icon="@android:drawable/ic_menu_info_details"
+            app:iconTint="@android:color/black"
+            app:iconPadding="0dp"
+            app:iconGravity="textStart"
             app:strokeWidth="2dp"
             app:strokeColor="#000000" />
 

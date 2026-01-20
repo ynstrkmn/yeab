@@ -8,7 +8,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.yeab.esnapp.databinding.ItemMerchantOrderBinding
 import com.yeab.esnapp.ui.model.OrderItem
-
+import com.bumptech.glide.Priority
+import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.request.RequestOptions
 class MerchantOrderAdapter : RecyclerView.Adapter<MerchantOrderAdapter.VH>() {
 
     interface OnItemClickListener {
@@ -66,8 +68,9 @@ class MerchantOrderAdapter : RecyclerView.Adapter<MerchantOrderAdapter.VH>() {
             binding.txtOwner.text = "${item.ownerPhone}"
             binding.txtStatus.text = item.lastStatus
             // \[Opsiyonel\] Görsel yükleme: Glide/Picasso vb.
-             Glide.with(binding.imgProduct).load(item.imageUrl).into(binding.imgProduct)
-
+              Glide.with(binding.imgProduct).load(item.imageUrl).apply( RequestOptions()
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                .priority(Priority.HIGH)).into(binding.imgProduct)
             // kafa ikonunun id'si `btnUserInfo` olan ImageButton
             binding.btnUserInfo.setOnClickListener {
                 userIconClickListener?.onUserIconClick(item)
