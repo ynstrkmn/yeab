@@ -164,7 +164,6 @@
     <string name="user_info">Kullanıcı Bilgisi</string>
     <string name="profile_info">Profil Bilgilerim</string>
 
-    <<<<<<< HEAD
     <string name="home_new_order_add_bottom_text">İşlerini yönetmeye hazır mısın</string>
     <string name="home_app_name">Esnaf Paneli</string>
     <string name="home_welcome_prefix">Merhaba,</string>
