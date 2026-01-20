@@ -7,23 +7,34 @@
     android:layout_height="match_parent"
     android:padding="24dp"
     android:fitsSystemWindows="true">
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/tvOrderNumberLabel"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="@string/search_by_order_id_hint"
+        android:textColor="@android:color/holo_red_dark"
+        android:textAppearance="@style/TextAppearance.Material3.HeadlineMedium"
+        android:layout_marginTop="8dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/tvOrderNumber" />
 
-    <!-- Sipariş Numarası -->
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/tvOrderNumber"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:padding="16dp"
+        android:padding="8dp"
         android:text="000000"
         android:textStyle="bold"
         android:textAppearance="@style/TextAppearance.Material3.DisplayLarge"
+        android:layout_marginTop="4dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/tvDescription"
-        app:layout_constraintVertical_chainStyle="packed" />
-
+        app:layout_constraintTop_toBottomOf="@id/tvOrderNumberLabel"
+        app:layout_constraintBottom_toTopOf="@id/tvDescription" />
     <!-- Açıklama -->
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/tvDescription"
@@ -32,8 +43,9 @@
         android:gravity="center"
         android:paddingTop="8dp"
         android:paddingBottom="24dp"
+        android:textColor="@android:color/holo_red_dark"
         android:text="@string/order_number_note"
-        android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+        android:textAppearance="@style/TextAppearance.Material3.HeadlineMedium"
         app:layout_constraintTop_toBottomOf="@id/tvOrderNumber"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

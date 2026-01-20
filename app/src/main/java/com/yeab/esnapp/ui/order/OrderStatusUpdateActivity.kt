@@ -1,15 +1,19 @@
 package com.yeab.esnapp.ui.order
 
 import android.Manifest
+import android.app.AlertDialog
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
+import android.view.LayoutInflater
 import android.view.View
+import android.view.WindowManager
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.Toast
@@ -102,6 +106,13 @@ class OrderStatusUpdateActivity : BaseActivity() {
 
         val btnCamera = findViewById<Button>(R.id.btnCameraStatus)
         imgOrderPhoto = findViewById(R.id.imgOrderPhotoStatus)
+        imgOrderPhoto.setOnClickListener {
+            val drawable = imgOrderPhoto.drawable
+            if (drawable != null) {
+                showImageDialog(drawable)
+            }
+        }
+
         val uid = merchantUid
         if (!uid.isNullOrEmpty() && orderId.isNotEmpty()) {
             loadExistingOrderPhoto(uid, orderId)
@@ -129,6 +140,26 @@ class OrderStatusUpdateActivity : BaseActivity() {
         }
         // sadasdasdsas
         setupChipGroupListener();
+
+    }
+
+    // SearchOrderActivity.showImageDialog benzeri merkezde dialog ile büyük önizleme
+    private fun showImageDialog(drawable: Drawable) {
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_image_preview, null)
+        val preview = dialogView.findViewById<ImageView>(R.id.imgPreview)
+
+        preview.setImageDrawable(drawable)
+
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .create()
+
+        dialog.window?.setBackgroundDrawable(ColorDrawable(android.graphics.Color.TRANSPARENT))
+        dialog.show()
+        dialog.window?.setLayout(
+            (resources.displayMetrics.widthPixels * 0.9f).toInt(),
+            WindowManager.LayoutParams.WRAP_CONTENT
+        )
 
     }
 
