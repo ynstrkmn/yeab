@@ -19,6 +19,7 @@ import com.yeab.esnapp.ui.messages.MerchantMessageTemplatesActivity
 import com.yeab.esnapp.ui.order.NewOrderActivity
 import com.yeab.esnapp.ui.order.OrdersActivity
 import com.yeab.esnapp.ui.order.SearchOrderActivity
+import com.yeab.esnapp.ui.order.UserManualActivity
 import com.yeab.esnapp.util.FirebasePaths
 import com.yeab.esnapp.util.IntentKeys
 import com.yeab.esnapp.util.MerchantSession
@@ -87,6 +88,10 @@ class HomeActivity : BaseActivity() {
 
         binding.btnMyOrders.setOnClickListener {
             startActivity(Intent(this, OrdersActivity::class.java))
+        }
+
+        binding.btnInfo.setOnClickListener {
+            startActivity(Intent(this, UserManualActivity::class.java))
         }
 
         binding.btnProfile.setOnClickListener {

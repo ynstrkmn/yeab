@@ -11,7 +11,8 @@
     tools:context=".ui.order.OrderStatusUpdateActivity"
     android:fitsSystemWindows="true">
 
-    <!-- Üst başlık kartı -->
+    <!-- XML -->
+    <!-- cardHeader sabit kalır, içerikler küçültülür -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/cardHeader"
         android:layout_width="0dp"
@@ -28,17 +29,19 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:padding="8dp">
 
+            <!-- Görseli küçült: 160dp -> 96dp -->
             <RelativeLayout
-                android:layout_width="160dp"
-                android:layout_height="160dp">
+                android:layout_width="96dp"
+                android:layout_height="96dp">
 
                 <ProgressBar
                     android:id="@+id/imgLoading"
                     style="?android:attr/progressBarStyleSmall"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
                     android:layout_centerInParent="true"
                     android:visibility="gone" />
 
@@ -52,17 +55,19 @@
                     android:src="@android:drawable/ic_menu_report_image" />
             </RelativeLayout>
 
+            <!-- Sağ blok: match_parent -> wrap_content ve iç padding küçült -->
             <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="8dp">
 
                 <TextView
                     android:id="@+id/txtCustomerName"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
+                    android:layout_marginTop="2dp"
                     android:textSize="13sp"
                     android:textColor="#DDDDDD" />
 
@@ -70,21 +75,23 @@
                     android:id="@+id/txtMatchedProduct"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
+                    android:layout_marginTop="2dp"
                     android:textSize="13sp"
                     android:textStyle="italic"
                     android:textColor="#DDDDDD" />
             </LinearLayout>
-
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
-    <!-- Durum geçmişi listesi -->
+    <!-- XML -->
+    <!-- Durum geçmişi listesi: 0dp + weight + minHeight -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/cardHistory"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginTop="8dp"
+        android:minHeight="56dp"
+        android:maxHeight="120dp"
         app:cardCornerRadius="16dp"
         app:cardElevation="1dp"
         app:cardBackgroundColor="#000000"
@@ -93,21 +100,22 @@
         app:layout_constraintTop_toBottomOf="@id/cardHeader"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/cardTemplates">
+        app:layout_constraintBottom_toTopOf="@id/cardTemplates"
+        app:layout_constraintVertical_weight="0.4">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerStatusHistory"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:padding="8dp"
+            android:padding="6dp"
             tools:listitem="@layout/item_product_status" />
     </com.google.android.material.card.MaterialCardView>
 
-    <!-- Şablon + free text kartı -->
+    <!-- Şablon kartı: 0dp + weight, içerik scrollable -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/cardTemplates"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         android:layout_marginTop="8dp"
         app:cardCornerRadius="16dp"
         app:cardElevation="2dp"
@@ -117,93 +125,99 @@
         app:layout_constraintTop_toBottomOf="@id/cardHistory"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/btnUpdate">
+        app:layout_constraintBottom_toTopOf="@id/btnUpdate"
+        app:layout_constraintVertical_weight="2">
 
-        <LinearLayout
+        <androidx.core.widget.NestedScrollView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp">
+            android:layout_height="match_parent"
+            android:fillViewport="true">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnCameraStatus"
-                style="@style/Widget.MaterialComponents.Button.Icon"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="@string/btn_camera_text"
-                android:gravity="center"
-                app:icon="@android:drawable/ic_menu_camera"
-                app:iconGravity="textStart"
-                android:backgroundTint="?attr/colorPrimary"
-                app:iconTint="@color/black" />
+                android:orientation="vertical"
+                android:padding="16dp">
 
-            <ImageView
-                android:id="@+id/imgOrderPhotoStatus"
-                android:layout_width="96dp"
-                android:layout_height="96dp"
-                android:scaleType="centerCrop"
-                android:layout_marginTop="12dp"
-                android:contentDescription="Kamera Resmi"
-                android:visibility="gone" />
-
-            <com.google.android.material.checkbox.MaterialCheckBox
-                android:id="@+id/chkPaymentDone"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="@string/payment_done"
-                android:textColor="#DDDDDD"
-                app:buttonTint="#DDDDDD" />
-            <!-- xml -->
-            <com.google.android.material.checkbox.MaterialCheckBox
-                android:id="@+id/chkOperationDone"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="@string/order_process_completed"
-                android:textColor="#DDDDDD"
-                app:buttonTint="#DDDDDD" />
-
-            <TextView
-                android:id="@+id/txtTemplateTitle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/message_template_title"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:textColor="#333333" />
-
-            <!-- ChipGroup: LinearLayout içinde, match_parent ve constraints yok -->
-            <com.google.android.material.chip.ChipGroup
-                android:id="@+id/radioGroupTemplates"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp"
-                app:singleSelection="true"
-                app:selectionRequired="false"
-                app:singleLine="false"
-                app:chipSpacing="8dp" />
-
-            <com.google.android.material.textfield.TextInputLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:hint="@string/message_template_hint_free_text"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/edtFreeText"
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnCameraStatus"
+                    style="@style/Widget.MaterialComponents.Button.Icon"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="textCapSentences"
-                    android:minLines="2"
-                    android:maxLines="4" />
-            </com.google.android.material.textfield.TextInputLayout>
+                    android:layout_marginTop="16dp"
+                    android:text="@string/btn_camera_text"
+                    android:gravity="center"
+                    app:icon="@android:drawable/ic_menu_camera"
+                    app:iconGravity="textStart"
+                    android:backgroundTint="?attr/colorPrimary"
+                    app:iconTint="@color/black" />
 
-        </LinearLayout>
+                <ImageView
+                    android:id="@+id/imgOrderPhotoStatus"
+                    android:layout_width="96dp"
+                    android:layout_height="96dp"
+                    android:scaleType="centerCrop"
+                    android:layout_marginTop="12dp"
+                    android:contentDescription="Kamera Resmi"
+                    android:visibility="gone" />
+
+                <com.google.android.material.checkbox.MaterialCheckBox
+                    android:id="@+id/chkPaymentDone"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="@string/payment_done"
+                    android:textColor="#DDDDDD"
+                    app:buttonTint="#DDDDDD" />
+
+                <com.google.android.material.checkbox.MaterialCheckBox
+                    android:id="@+id/chkOperationDone"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/order_process_completed"
+                    android:textColor="#DDDDDD"
+                    app:buttonTint="#DDDDDD" />
+
+                <TextView
+                    android:id="@+id/txtTemplateTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/message_template_title"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="#333333" />
+
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/radioGroupTemplates"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="8dp"
+                    app:singleSelection="true"
+                    app:selectionRequired="false"
+                    app:singleLine="false"
+                    app:chipSpacing="8dp" />
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:hint="@string/message_template_hint_free_text"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/edtFreeText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="textCapSentences"
+                        android:minLines="2"
+                        android:maxLines="4" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </LinearLayout>
+        </androidx.core.widget.NestedScrollView>
     </com.google.android.material.card.MaterialCardView>
+
 
     <!-- Güncelle butonu -->
     <com.google.android.material.button.MaterialButton

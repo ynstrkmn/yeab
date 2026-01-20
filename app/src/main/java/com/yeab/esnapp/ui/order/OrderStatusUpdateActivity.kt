@@ -1,10 +1,14 @@
 package com.yeab.esnapp.ui.order
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
+import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
+import android.provider.MediaStore
 import android.view.View
 import android.widget.Button
 import android.widget.ImageButton
@@ -22,7 +26,12 @@ import com.google.firebase.database.*
 import androidx.annotation.AttrRes
 import androidx.annotation.ColorInt
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.core.view.WindowCompat
+import androidx.lifecycle.lifecycleScope
+import com.bumptech.glide.Priority
+import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.request.RequestOptions
 import com.google.firebase.storage.FirebaseStorage
 import com.yeab.esnapp.R
 import com.yeab.esnapp.databinding.ActivityOrderStatusUpdateBinding
@@ -43,6 +52,14 @@ import java.util.Locale
 import kotlin.text.format
 import kotlin.text.get
 import kotlin.toString
+import com.yeab.esnapp.util.FileUtils
+import id.zelory.compressor.Compressor
+import id.zelory.compressor.constraint.format
+import id.zelory.compressor.constraint.quality
+import id.zelory.compressor.constraint.resolution
+import id.zelory.compressor.constraint.size
+import kotlinx.coroutines.launch
+import java.io.File
 
 class OrderStatusUpdateActivity : BaseActivity() {
 
@@ -100,7 +117,8 @@ class OrderStatusUpdateActivity : BaseActivity() {
                 Manifest.permission.CAMERA
             ) == PackageManager.PERMISSION_GRANTED
             if (hasPermission) {
-                takePicturePreview.launch(null)
+                photoUri = createImageUri(this)
+                takePicture.launch(photoUri)
             } else {
                 cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
             }
@@ -144,7 +162,8 @@ class OrderStatusUpdateActivity : BaseActivity() {
     private val cameraPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
             if (granted) {
-                takePicturePreview.launch(null)
+                photoUri = createImageUri(this)
+                takePicture.launch(photoUri)
             } else {
                 Toast.makeText(this, getString(R.string.error_camera_permission_denied), Toast.LENGTH_SHORT).show()
             }
@@ -324,6 +343,9 @@ class OrderStatusUpdateActivity : BaseActivity() {
         Glide.with(this)
             .load(url)
             .centerCrop()
+            .apply( RequestOptions()
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                .priority(Priority.HIGH))
             .placeholder(android.R.drawable.ic_menu_report_image)
             .error(android.R.drawable.ic_menu_report_image)
             .listener(object : RequestListener<Drawable> {
@@ -692,6 +714,39 @@ class OrderStatusUpdateActivity : BaseActivity() {
         }
     }
 
+    private val takePicture =
+        registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
+            if (success) {
+                // photoUri → TAM ÇÖZÜNÜRLÜKLÜ
+                capturedBitmap = photoUri.let { uri ->
+                    val inputStream = contentResolver.openInputStream(uri)
+                    android.graphics.BitmapFactory.decodeStream(inputStream)
+                }
+                imgOrderPhoto.apply {
+                    setImageBitmap(photoUri.let { uri ->
+                        val inputStream = contentResolver.openInputStream(uri)
+                        android.graphics.BitmapFactory.decodeStream(inputStream)
+                    })
+                    visibility = ImageView.VISIBLE
+                }
+            }
+        }
+
+    private lateinit var photoUri: Uri
+
+    fun createImageUri(context: Context): Uri {
+        val imageFile = File(
+            context.getExternalFilesDir(Environment.DIRECTORY_PICTURES),
+            "photo_${System.currentTimeMillis()}.jpg"
+        )
+
+        return FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.fileprovider",
+            imageFile
+        )
+    }
+
     // Kotlin
     private fun uploadCapturedPhotoIfAny(
         merchantUid: String,
@@ -701,6 +756,7 @@ class OrderStatusUpdateActivity : BaseActivity() {
         val storage = FirebaseStorage.getInstance()
         val dirRef = storage.reference.child("ordersPhoto/$merchantUid/$orderId")
 
+
         // Önce mevcut fotoğrafları sil
         dirRef.listAll()
             .addOnSuccessListener { listResult ->
@@ -709,22 +765,34 @@ class OrderStatusUpdateActivity : BaseActivity() {
                 com.google.android.gms.tasks.Tasks.whenAllComplete(deletions)
                     .addOnSuccessListener {
                         val baos = java.io.ByteArrayOutputStream()
-                        bmp.compress(Bitmap.CompressFormat.JPEG, 60, baos)
+                        bmp.compress(Bitmap.CompressFormat.JPEG, 90, baos)
                         val data = baos.toByteArray()
 
-                        // Sabit dosya adı ile yükle (üzerine yazma mantığı için tek dosya)
-                        val fileRef = dirRef.child("${orderId}_latest.jpg")
-                        fileRef.putBytes(data)
-                            .addOnSuccessListener { /* opsiyonel: success handling */ }
-                            .addOnFailureListener { /* opsiyonel: error handling */ }
+                        val uri = Uri.parse(
+                            MediaStore.Images.Media.insertImage(
+                                contentResolver,
+                                bmp,
+                                "temp",
+                                null
+                            )
+                        )
+                        customCompressImageFromCamera(FileUtils.from(this, uri), orderId)
                     }
                     .addOnFailureListener {
                         // Silme başarısızsa yine de yeni fotoğrafı yüklemeyi deneyebilirsin
                         val baos = java.io.ByteArrayOutputStream()
-                        bmp.compress(Bitmap.CompressFormat.JPEG, 60, baos)
+                        bmp.compress(Bitmap.CompressFormat.JPEG, 90, baos)
                         val data = baos.toByteArray()
-                        val fileRef = dirRef.child("${orderId}_latest.jpg")
-                        fileRef.putBytes(data)
+
+                        val uri = Uri.parse(
+                            MediaStore.Images.Media.insertImage(
+                                contentResolver,
+                                bmp,
+                                "temp",
+                                null
+                            )
+                        )
+                        customCompressImageFromCamera(FileUtils.from(this, uri), orderId)
                     }
             }
             .addOnFailureListener {
@@ -732,9 +800,56 @@ class OrderStatusUpdateActivity : BaseActivity() {
                 val baos = java.io.ByteArrayOutputStream()
                 bmp.compress(Bitmap.CompressFormat.JPEG, 60, baos)
                 val data = baos.toByteArray()
-                val fileRef = dirRef.child("${orderId}_latest.jpg")
-                fileRef.putBytes(data)
+
+                val uri = Uri.parse(
+                    MediaStore.Images.Media.insertImage(
+                        contentResolver,
+                        bmp,
+                        "temp",
+                        null
+                    )
+                )
+                customCompressImageFromCamera(FileUtils.from(this, uri), orderId)
             }
+    }
+
+    private var compressedImage: File? = null
+
+    private fun customCompressImageFromCamera(actualImage: File?, orderId: String) {
+        actualImage?.let { imageFile ->
+            lifecycleScope.launch {
+                // Default compression with custom destination file
+                /*compressedImage = Compressor.compress(this@MainActivity, imageFile) {
+                    default()
+                    getExternalFilesDir(Environment.DIRECTORY_PICTURES)?.also {
+                        val file = File("${it.absolutePath}${File.separator}my_image.${imageFile.extension}")
+                        destination(file)
+                    }
+                }*/
+
+                // Full custom
+                compressedImage = Compressor.compress(this@OrderStatusUpdateActivity, imageFile) {
+                    resolution(980, 1280)
+                    quality(40)
+                    format(Bitmap.CompressFormat.JPEG)
+                    size(2_097_152) // 2 MB
+                }
+
+                val ts = System.currentTimeMillis()
+                val path = "ordersPhoto/$merchantUid/$orderId/${orderId}_${ts}.jpg"
+
+                compressedImage?.readBytes()?.let {
+                    FirebaseStorage.getInstance().reference.child(path)
+                        .putBytes(it)
+                        .addOnSuccessListener { }
+                        .addOnFailureListener { }
+                }
+            }
+        } ?: showError("Please choose an image!")
+    }
+
+    private fun showError(errorMessage: String) {
+        Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show()
     }
 
 }
