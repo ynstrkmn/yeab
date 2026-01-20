@@ -472,6 +472,7 @@ class OrderStatusUpdateActivity : BaseActivity() {
             val userOrderRef = dbRef.child(FirebasePaths.USER_ORDERS_ROOT)
                 .child(phone).child(uid).child(orderId)
 
+            //asdasdasdasdasdasdasdasdasdasdasdad
             val baseUpdates = hashMapOf<String, Any?>(
                 "${FirebasePaths.ORDERS_ROOT}/${FirebasePaths.ORDERS_MERCHANT_ORDERS}/$uid/$phone/$orderId" to order,
                 "${FirebasePaths.USER_ORDERS_ROOT}/$phone/$uid/$orderId" to order
