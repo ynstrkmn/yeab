@@ -127,7 +127,7 @@ class OrderStatusUpdateActivity : BaseActivity() {
         binding.btnUpdate.setOnClickListener {
             updateOrderStatus()
         }
-
+        // sadasdasdsas
         setupChipGroupListener();
 
     }
@@ -162,6 +162,7 @@ class OrderStatusUpdateActivity : BaseActivity() {
     private val cameraPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
             if (granted) {
+                // burası da yeni
                 photoUri = createImageUri(this)
                 takePicture.launch(photoUri)
             } else {
