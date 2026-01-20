@@ -8,6 +8,7 @@ public class Order {
     private  boolean IsPaymentDone;
     private String PaymentDate;
     private String ProductImageUrl;
+    private String ProductAdditionalImageUrl;
     private String ProductName;
     private List<ProductStatus> ProductStatus;
     private String CreatedDate; // YENİ EKLEDİĞİMİZ ALAN
@@ -20,6 +21,7 @@ public class Order {
 
     public Order(boolean isFinished,
                  String productImageUrl,
+                 String productAdditionalImageUrl,
                  String productName,
                  List<ProductStatus> productStatus,
                  String createdDate,
@@ -36,6 +38,7 @@ public class Order {
         this.PaymentDate = PaymentDate;
         this.PhoneNumber = PhoneNumber;
         this.OrderNumber = OrderNumber;
+        this.ProductAdditionalImageUrl = productAdditionalImageUrl;
     }
 
     public String getOrderNumber() {
@@ -78,6 +81,14 @@ public class Order {
 
     public void setProductImageUrl(String productImageUrl) {
         ProductImageUrl = productImageUrl;
+    }
+
+    public String getProductAdditionalImageUrl() {
+        return ProductAdditionalImageUrl;
+    }
+
+    public void setProductAdditionalImageUrl(String productAdditionalImageUrl) {
+        ProductAdditionalImageUrl = productAdditionalImageUrl;
     }
 
     public String getProductName() {

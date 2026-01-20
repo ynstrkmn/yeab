@@ -137,14 +137,14 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="10dp">
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnCameraStatus"
                     style="@style/Widget.MaterialComponents.Button.Icon"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
+                    android:layout_marginTop="6dp"
                     android:text="@string/btn_camera_text"
                     android:gravity="center"
                     app:icon="@android:drawable/ic_menu_camera"
@@ -157,7 +157,7 @@
                     android:layout_width="96dp"
                     android:layout_height="96dp"
                     android:scaleType="centerCrop"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="6dp"
                     android:contentDescription="Kamera Resmi"
                     android:visibility="gone" />
 
@@ -165,7 +165,7 @@
                     android:id="@+id/chkPaymentDone"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
+                    android:layout_marginTop="6dp"
                     android:text="@string/payment_done"
                     android:textColor="#DDDDDD"
                     app:buttonTint="#DDDDDD" />
@@ -174,7 +174,7 @@
                     android:id="@+id/chkOperationDone"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginTop="6dp"
                     android:text="@string/order_process_completed"
                     android:textColor="#DDDDDD"
                     app:buttonTint="#DDDDDD" />

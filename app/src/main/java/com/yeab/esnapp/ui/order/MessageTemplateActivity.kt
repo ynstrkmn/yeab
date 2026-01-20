@@ -65,6 +65,7 @@ class MessageTemplateActivity : BaseActivity() {
     private var email: String = ""
     private var productDesc: String = ""
     private var productImageUrl: String? = null
+    private var productAdditionalmageUrl: String? = null
     private var isPaymentDone: Boolean = false
     private var paymentDate: String = ""
 
@@ -114,7 +115,12 @@ class MessageTemplateActivity : BaseActivity() {
         imgOrderPhoto = findViewById(R.id.imgOrderPhoto)
         btnCamera.setOnClickListener {
             photoUri = createImageUri(this)
-            takePicture.launch(photoUri)
+            val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE).apply {
+                putExtra(MediaStore.EXTRA_OUTPUT, photoUri)
+                addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            takePicture.launch(cameraIntent)
         }
 
         binding.txtTitle.text = getString(R.string.message_template_title)
@@ -350,8 +356,14 @@ class MessageTemplateActivity : BaseActivity() {
                     .child(refOrderId)
                     .setValue(meta)
                     .addOnCompleteListener {
-                        // Yükleme bitti, sipariş kaydına devam et
-                        processOrderSave(uid, messageText)
+                        if (capturedBitmap != null) {
+
+                            uploadCapturedPhotoIfAny(uid, refOrderId, messageText)
+                        }
+                        else {
+                            // Yükleme bitti, sipariş kaydına devam et
+                            processOrderSave(uid, messageText)
+                        }
                     }
             }
             .addOnFailureListener {
@@ -462,6 +474,7 @@ class MessageTemplateActivity : BaseActivity() {
         val order = Order(
             false,
             productImageUrl,
+            productAdditionalmageUrl,
             productDesc,
             statusList,
             nowIso,
@@ -495,7 +508,6 @@ class MessageTemplateActivity : BaseActivity() {
             // EKLEME: Kaydetme sonrası OrderNumber'ı +1 olarak güncelle
             incrementMerchantOrderNumber(uid) {
                 hideLoading()
-                uploadCapturedPhotoIfAny(uid, orderId)
 
                 val displayFormatter = SimpleDateFormat(DateFormats.ORDER_STATUS_DISPLAY, Locale.getDefault())
                 val displayDate = displayFormatter.format(now)
@@ -557,8 +569,8 @@ class MessageTemplateActivity : BaseActivity() {
     }
 
     private val takePicture =
-        registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
-            if (success) {
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK  ) {
                 // photoUri → TAM ÇÖZÜNÜRLÜKLÜ
                 capturedBitmap = photoUri.let { uri ->
                     val inputStream = contentResolver.openInputStream(uri)
@@ -590,7 +602,8 @@ class MessageTemplateActivity : BaseActivity() {
     }
     private fun uploadCapturedPhotoIfAny(
         merchantUid: String,
-        orderId: String
+        orderId: String,
+        messageText: String
     ) {
         val bmp = capturedBitmap ?: return;
         val baos = ByteArrayOutputStream()
@@ -605,12 +618,12 @@ class MessageTemplateActivity : BaseActivity() {
                 null
             )
         )
-        customCompressImageFromCamera(FileUtils.from(this, uri), orderId)
+        customCompressImageFromCamera(FileUtils.from(this, uri), orderId, merchantUid, messageText)
     }
 
     private var compressedImage: File? = null
 
-    private fun customCompressImageFromCamera(actualImage: File?, orderId: String) {
+    private fun customCompressImageFromCamera(actualImage: File?, orderId: String, uid: String, messageText: String) {
         actualImage?.let { imageFile ->
             lifecycleScope.launch {
                 // Default compression with custom destination file
@@ -632,11 +645,21 @@ class MessageTemplateActivity : BaseActivity() {
 
                 val ts = System.currentTimeMillis()
                 val path = "ordersPhoto/$merchantUid/$orderId/${orderId}_${ts}.jpg"
+                val imgRef = FirebaseStorage.getInstance().reference.child(path)
 
                 compressedImage?.readBytes()?.let {
-                    FirebaseStorage.getInstance().reference.child(path)
-                        .putBytes(it)
-                        .addOnSuccessListener { }
+                    imgRef.putBytes(it)
+                        .continueWithTask { task ->
+                            if (!task.isSuccessful) throw task.exception ?: Exception("Upload failed")
+                            imgRef.downloadUrl
+                        }
+                        .addOnSuccessListener { downloadUrl ->
+                            // URL'i güncelle
+                            productAdditionalmageUrl = downloadUrl.toString()
+
+                            processOrderSave(uid, messageText)
+
+                        }
                         .addOnFailureListener { }
                 }
             }

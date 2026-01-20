@@ -11,27 +11,25 @@ import android.os.Environment
 import android.provider.MediaStore
 import android.view.View
 import android.widget.Button
-import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.recyclerview.widget.LinearLayoutManager
-import com.bumptech.glide.Glide
-import com.bumptech.glide.load.DataSource
-import com.bumptech.glide.load.engine.GlideException
-import com.bumptech.glide.request.RequestListener
-import com.bumptech.glide.request.target.Target
-import com.google.android.material.chip.Chip
-import com.google.firebase.database.*
 import androidx.annotation.AttrRes
 import androidx.annotation.ColorInt
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
-import com.bumptech.glide.Priority
-import com.bumptech.glide.load.engine.DiskCacheStrategy
-import com.bumptech.glide.request.RequestOptions
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.DataSource
+import com.bumptech.glide.load.engine.GlideException
+import com.bumptech.glide.request.RequestListener
+import com.bumptech.glide.request.target.Target
+import com.facebook.shimmer.Shimmer
+import com.facebook.shimmer.ShimmerDrawable
+import com.google.android.material.chip.Chip
+import com.google.firebase.database.*
 import com.google.firebase.storage.FirebaseStorage
 import com.yeab.esnapp.R
 import com.yeab.esnapp.databinding.ActivityOrderStatusUpdateBinding
@@ -42,17 +40,10 @@ import com.yeab.esnapp.model.Order
 import com.yeab.esnapp.model.ProductStatus
 import com.yeab.esnapp.ui.base.BaseActivity
 import com.yeab.esnapp.util.DateFormats
+import com.yeab.esnapp.util.FileUtils
 import com.yeab.esnapp.util.FirebasePaths
 import com.yeab.esnapp.util.IntentKeys
 import com.yeab.esnapp.util.WhatsAppUtils
-import java.io.ByteArrayOutputStream
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
-import kotlin.text.format
-import kotlin.text.get
-import kotlin.toString
-import com.yeab.esnapp.util.FileUtils
 import id.zelory.compressor.Compressor
 import id.zelory.compressor.constraint.format
 import id.zelory.compressor.constraint.quality
@@ -60,6 +51,9 @@ import id.zelory.compressor.constraint.resolution
 import id.zelory.compressor.constraint.size
 import kotlinx.coroutines.launch
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class OrderStatusUpdateActivity : BaseActivity() {
 
@@ -69,6 +63,7 @@ class OrderStatusUpdateActivity : BaseActivity() {
     private var merchantUid: String? = null
     private lateinit var phone: String
     private lateinit var orderId: String
+    private var productAdditionalmageUrl: String? = null
 
     private lateinit var statusAdapter: ProductStatusAdapter
 
@@ -125,7 +120,12 @@ class OrderStatusUpdateActivity : BaseActivity() {
         }
 
         binding.btnUpdate.setOnClickListener {
-            updateOrderStatus()
+            if(capturedBitmap != null) {
+                uploadCapturedPhotoIfAny(merchantUid!!, orderId)
+            }
+            else {
+                updateOrderStatus()
+            }
         }
         // sadasdasdsas
         setupChipGroupListener();
@@ -147,10 +147,18 @@ class OrderStatusUpdateActivity : BaseActivity() {
                                 visibility = ImageView.VISIBLE
                             }
                             hideLoading()
+                            val shimmer: ShimmerDrawable = ShimmerDrawable()
+                            shimmer.setShimmer(
+                                Shimmer.AlphaHighlightBuilder()
+                                    .setDuration(1000)
+                                    .setBaseAlpha(0.7f)
+                                    .setHighlightAlpha(1f)
+                                    .build()
+                            )
                             Glide.with(this)
                                 .load(uri)
                                 .centerCrop()
-                                .placeholder(android.R.drawable.ic_menu_report_image)
+                                .placeholder(shimmer)
                                 .error(android.R.drawable.ic_menu_report_image)
                                 .into(imgOrderPhoto)
                         }
@@ -344,9 +352,6 @@ class OrderStatusUpdateActivity : BaseActivity() {
         Glide.with(this)
             .load(url)
             .centerCrop()
-            .apply( RequestOptions()
-                .diskCacheStrategy(DiskCacheStrategy.ALL)
-                .priority(Priority.HIGH))
             .placeholder(android.R.drawable.ic_menu_report_image)
             .error(android.R.drawable.ic_menu_report_image)
             .listener(object : RequestListener<Drawable> {
@@ -463,6 +468,7 @@ class OrderStatusUpdateActivity : BaseActivity() {
 
             // Ödeme durumunu güncelle
             order.isPaymentDone = binding.chkPaymentDone.isChecked
+            order.productAdditionalImageUrl = productAdditionalmageUrl
 
             // CreatedDate yoksa set et
             if (order.createdDate.isNullOrEmpty()) {
@@ -587,7 +593,6 @@ class OrderStatusUpdateActivity : BaseActivity() {
 
                 dbRef.updateChildren(baseUpdates).addOnSuccessListener {
 
-                    uploadCapturedPhotoIfAny(uid, orderId)
 
                     // WhatsApp mesajı hazırlığı
                     val displayDate = try {
@@ -839,12 +844,25 @@ class OrderStatusUpdateActivity : BaseActivity() {
 
                 val ts = System.currentTimeMillis()
                 val path = "ordersPhoto/$merchantUid/$orderId/${orderId}_${ts}.jpg"
+                val imgRef = FirebaseStorage.getInstance().reference.child(path)
 
                 compressedImage?.readBytes()?.let {
-                    FirebaseStorage.getInstance().reference.child(path)
-                        .putBytes(it)
-                        .addOnSuccessListener { }
-                        .addOnFailureListener { }
+                    imgRef.putBytes(it)
+                        .continueWithTask { task ->
+                        if (!task.isSuccessful) throw task.exception ?: Exception("Upload failed")
+                        imgRef.downloadUrl
+                    }
+                        .addOnSuccessListener { downloadUrl ->
+                            // URL'i güncelle
+                            productAdditionalmageUrl = downloadUrl.toString()
+                            updateOrderStatus()
+                        }
+                        .addOnFailureListener {
+                            Toast.makeText(
+                                this@OrderStatusUpdateActivity,
+                                it.message ?: getString(R.string.error_generic),
+                                Toast.LENGTH_SHORT).show()
+                        }
                 }
             }
         } ?: showError("Please choose an image!")
