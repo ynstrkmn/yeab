@@ -230,42 +230,37 @@
     <string name="button_info">Bilgi</string>
     <string name="flag_tr">Türkçe</string>
     <string name="flag_en">English</string>
+    <string name="user_manual_title">Başlık</string>
 
-    <string name="user_manual_tr">
-        <![CDATA[
-        <h3><b>Ana Ekran</b></h3>
-        <ul>
-          <li><b>Profil</b>: Ad, Soyad, Mağaza Adı ve Mağaza Tipi alanlarını düzenleyin. <b>Güncelle</b> ile kaydedin.</li>
-          <li><b>Yeni Sipariş</b>: Müşteri ve ürün bilgileri ile yeni sipariş oluşturun.
-          Siparişiniz için ekranda oluşturan sipariş numarasını ürününüze not alın ve sonrasında hızlıca ürününüze ulaşın</li>
-          <li><b>Ürün Listele</b>: İşlemde olan ürünlerinize resim çekerek, sipariş numarası ile ya da müşteri telefon numarası ile kolayca ulaşın</li>
-          <li><b>Şablonlar</b>: Müşterilerinize ileteceğiniz mesajları önceden tanımlayın ve hızlıca iletişime geçin.</li>
-          <li><b>Siparişlerim</b>: İşlemde olan ve tamamlanmış tüm siparişlerinize buradan erişebilirsiniz.</li>
-          <li><b>Bilgi</b>: Bu kullanıcı kılavuzunu açar.</li>
-        </ul>
 
-        <h3><b>Ürün İle Alakalı Resim Çek</b></h3>
-        <p>Ürününüze ait fotoğrafı ek olarak sistemde kaydedebilir ve sonrasında karşılaştırma yapabilirsiniz</p>
-        ]]>
-    </string>
-
-    <string name="user_manual_en">
+    <string name="user_manual_content">
     <![CDATA[
-    <h3><b>Home</b></h3>
-    <ul>
-      <li><b>Profile</b>: Edit Name, Surname, Store Name, and Store Type. Save with <b>Update</b>.</li>
-      <li><b>New Order</b>: Create a new order with customer and product details. Note the generated <b>OrderNumber</b> on the screen for your product and quickly access it later.</li>
-      <li><b>List Products</b>: Easily find your in-progress products by taking a photo, by <b>OrderNumber</b>, or by the customer\'s phone number.</li>
-      <li><b>Templates</b>: Predefine the messages you will send to your customers and contact them quickly.</li>
-      <li><b>My Orders</b>: Access all your in-progress and completed orders here.</li>
-      <li><b>Info</b>: Opens this user manual.</li>
-    </ul>
+    <h1><b>Ana Ekran</b></h1>
 
-    <h3><b>Capture Product Photo</b></h3>
-    <p>You can additionally save a photo of your product in the system and later perform a comparison.</p>
+
+    <h2><b>Yeni Sipariş Oluştur</b></h2>
+    <p>Müşteri ve ürün bilgileri ile yeni sipariş oluşturun. Sipariş numarasını ürününüze not alın ve sonrasında hızlıca ulaşın.</p>
+
+    <h2><b>Sipariş Arama</b></h2>
+    <p>İşlemde olan ürünlerinize resim çekerek, sipariş numarası ile ya da müşteri telefon numarası ile kolayca ulaşın.</p>
+
+    <h2><b>Mesaj Şablonları</b></h2>
+    <p>Müşterilerinize ileteceğiniz mesajları önceden tanımlayın ve hızlıca iletişime geçin.</p>
+
+    <h2><b>Siparişlerim</b></h2>
+    <p>İşlemde olan ve tamamlanmış tüm siparişlerinize buradan erişebilirsiniz.</p>
+
+    <h2><b>Profil</b></h2>
+    <p>Ad, Soyad, Mağaza Adı ve Mağaza Tipi alanlarını düzenleyin. <b>Güncelle</b> ile kaydedin.</p>
+
+
+    <h2><b>Bilgi</b></h2>
+    <p>Bu kullanıcı kılavuzunu açar.</p>
+
+    <h2><b>Ürün İle Alakalı Resim Çek</b></h2>
+    <p>Ürününüze ait fotoğrafı ek olarak sistemde kaydedebilir ve sonrasında karşılaştırma yapabilirsiniz.</p>
     ]]>
 </string>
-
 
 
 </resources>
