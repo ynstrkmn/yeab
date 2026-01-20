@@ -1,11 +1,9 @@
 <resources>
-    <string name="app_name">EsnApp</string>
     <string name="default_web_client_id">306751667039-1vrcsnsim921975ucp0s0ms7j8n8s2d9.apps.googleusercontent.com</string>
 
     <!-- Login / Auth -->
     <string name="login_title">ESNAPP</string>
-    <string name="login_button_create_account">Create Account</string>
-    <string name="login_button_sign_in">Sign In</string>
+
 
     <string name="auth_title_register">Create account</string>
     <string name="auth_title_login">Sign in</string>
@@ -19,9 +17,6 @@
     <string name="home_info_user_welcome_messsage">Hello,</string>
 
     <!-- Home -->
-    <string name="home_button_new_order">Add New Product</string>
-    <string name="home_button_list_orders">List Products</string>
-    <string name="home_button_message_templates">Saved Messages</string>
     <string name="home_button_orders">Orders</string>
     <string name="home_button_only_add">Add</string>
     <string name="home_button_active_orders">Active Orders</string>
@@ -160,4 +155,68 @@
     <string name="user_info">User Info</string>
     <string name="profile_info">Profile Info</string>
 
+    <!-- Kontrol et Sonra -->
+    <string name="home_new_order_add_bottom_text">Are you read for work</string>
+    <string name="home_app_name">Merchant Panel</string>
+    <string name="home_welcome_prefix">Hello,</string>
+    <string name="home_summary_title">DAILY SUMMARY</string>
+    <string name="home_summary_subtitle">Today\'s Orders</string>
+    <string name="home_button_new_order">Create New Order</string>
+    <string name="home_button_new_order_desc">Open a new record quickly</string>
+    <string name="home_button_list_orders">Order List</string>
+    <string name="home_button_list_orders_desc">View and manage all orders</string>
+    <string name="home_button_message_templates">Message Templates</string>
+    <string name="home_button_message_templates_desc">Use ready-made registration forms</string>
+    <string name="home_system_status_active">System active and up to date: %1$s</string>
+    <string name="home_profile_desc">My Profile</string>
+
+
+    <string name="app_name">EsnApp</string>
+
+    <string name="login_welcome_title">Welcome</string>
+    <string name="login_welcome_subtitle">Start managing your business\nin the digital world now</string>
+    <string name="login_button_create_account">Create Account</string>
+    <string name="login_button_sign_in">Sign In</string>
+    <string name="login_footer_help">Need help?</string>
+    <string name="login_footer_support">Get Support</string>
+
+
+    <string name="orders_title">My Orders</string>
+    <string name="orders_subtitle">General status of your business</string>
+
+    <string name="orders_active_title">Active Orders</string>
+    <string name="orders_active_desc">Current preparations and\ndeliveries</string>
+
+    <string name="orders_past_title">Past Orders</string>
+    <string name="orders_past_desc">All previous transactions and\nreports</string>
+
+    <string name="home_button_search_orders_title">Search Order</string>
+    <string name="home_button_search_orders_desc">Find by ID or customer name</string>
+
+    <string name="profile_title">My Profile</string>
+    <string name="profile_section_title">Business Profile</string>
+    <string name="profile_section_desc">You can update your information here</string>
+
+    <string name="profile_label_name">Name</string>
+    <string name="profile_label_surname">Surname</string>
+    <string name="profile_label_merchant_name">Business Name</string>
+    <string name="profile_label_merchant_type">Business Type</string>
+
+    <string name="profile_btn_update">Update</string>
+
+
+    <string name="search_title">Search Order</string>
+    <string name="search_subtitle">Please select a search method</string>
+
+    <string name="search_image_title">Search by Image</string>
+    <string name="search_image_desc">Find orders quickly using visuals\nor product photos</string>
+    <string name="search_image_action">TAKE PHOTO</string>
+
+    <string name="search_id_title">Search by Order ID</string>
+    <string name="search_id_desc">Enter specific order ID or\ninvoice number</string>
+    <string name="search_id_action">QUERY</string>
+
+    <string name="search_phone_title">Search by Phone</string>
+    <string name="search_phone_desc">List all past orders by customer\nGSM number</string>
+    <string name="search_phone_action">SEARCH IN CONTACTS</string>
 </resources>

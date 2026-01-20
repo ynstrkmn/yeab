@@ -22,6 +22,9 @@ import com.yeab.esnapp.ui.order.SearchOrderActivity
 import com.yeab.esnapp.util.FirebasePaths
 import com.yeab.esnapp.util.IntentKeys
 import com.yeab.esnapp.util.MerchantSession
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class HomeActivity : BaseActivity() {
 
@@ -59,6 +62,9 @@ class HomeActivity : BaseActivity() {
         // Veritabanından Merchant bilgisini çek ve Session'a kaydet
         fetchMerchantData()
 
+        // Saat Bilgisi Alınması
+        onResume()
+
         // Yeni Ürün Ekle
         binding.btnNewOrder.setOnClickListener {
             val i = Intent(this, NewOrderActivity::class.java)
@@ -94,6 +100,28 @@ class HomeActivity : BaseActivity() {
             showLogoutConfirmDialog()
         }
     }
+
+    // Uygulamaya geri dönüldüğünde saati tekrar güncelle
+    override fun onResume() {
+        super.onResume()
+        updateSystemTime()
+    }
+
+    // --- YENİ EKLENEN FONKSİYON ---
+    private fun updateSystemTime() {
+        try {
+            // Şu anki zamanı al: Örnek format "14:30"
+            val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
+            val currentTime = sdf.format(Date())
+
+            // XML'deki TextView'e yaz (ID'sinin txtSystemInfo olduğunu varsayıyoruz)
+            // Eğer XML'de ID vermediysen hata verir, XML adımını yapmayı unutma.
+            binding.txtSystemInfo.text = "Sistem aktif ve güncel: $currentTime"
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
 
     private fun fetchMerchantData() {
         val uid = merchantUid
