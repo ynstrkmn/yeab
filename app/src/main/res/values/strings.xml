@@ -270,4 +270,21 @@
     <string name="pagination_info">Sayfa %1$d / %2$d</string>
 
 
+    <string name="search_page_title">Detaylı Arama</string>
+    <string name="search_page_subtitle">Telefon veya tarih aralığı seçerek siparişlerinizi bulun</string>
+    <string name="search_label_phone">Telefon Numarası</string>
+    <string name="search_label_date">Tarih Aralığı</string>
+    <string name="search_note">İpucu: Sadece telefon numarası ya da tarih alanlarından birini seçerek de arama yapabilirsiniz.</string>
+    <string name="search_button">Ara</string>
+
+    <string name="search_id_page_title">Sipariş No ile Ara</string>
+    <string name="search_id_page_subtitle">Sipariş numarasını girerek detaylara ulaşın</string>
+
+    <string name="search_phone_page_title">Telefon ile Ara</string>
+    <string name="search_phone_page_subtitle">Müşteri numarasını girerek kayıtları bulun</string>
+    <string name="search_by_phone_label">Telefon Numarası</string>
+
+
+
+
 </resources>

@@ -251,4 +251,24 @@
     <string name="pagination_prev">PREV</string>
     <string name="pagination_next">NEXT</string>
     <string name="pagination_info">Page %1$d / %2$d</string>
+
+    <string name="search_page_title">Detailed Search</string>
+    <string name="search_page_subtitle">Find orders by phone or date range</string>
+    <string name="search_label_phone">Phone Number</string>
+    <string name="search_label_date">Date Range</string>
+    <string name="search_note">Tip: You can search by selecting only phone number or date range.</string>
+    <string name="search_button">Search</string>
+
+    <string name="search_id_page_title">Search by Order ID</string>
+    <string name="search_id_page_subtitle">Enter order ID to see details</string>
+
+    <string name="search_phone_page_title">Search by Phone</string>
+    <string name="search_phone_page_subtitle">Find records by entering customer number</string>
+    <string name="search_by_phone_label">Phone Number</string>
+
+    <string name="templates_page_title">Message Templates</string>
+    <string name="templates_page_subtitle">Manage templates for quick replies</string>
+    <string name="templates_section_new">New Template Entry</string>
+    <string name="templates_section_saved">Saved Templates</string>
+
 </resources>
