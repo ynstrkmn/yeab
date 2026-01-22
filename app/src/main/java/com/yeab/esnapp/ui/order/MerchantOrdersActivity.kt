@@ -24,6 +24,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
+import com.yeab.esnapp.R
 
 class MerchantOrdersActivity : BaseActivity() {
     private lateinit var binding: ActivityMerchantOrdersBinding
@@ -100,9 +101,17 @@ class MerchantOrdersActivity : BaseActivity() {
 
     private fun setupSpinner() {
         val sizes = listOf(5, 10, 20, 50)
-        binding.spinnerPageSize.adapter =
-            ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, sizes)
+
+        // DÜZELTME: Kendi oluşturduğumuz 'item_spinner_custom' dosyasını kullanıyoruz.
+        // Böylece yazı rengi kesinlikle siyah oluyor.
+        val adapter = ArrayAdapter(this, R.layout.item_spinner_custom, sizes)
+
+        // Açılır liste görünümü için standart Android tasarımı yeterli (genelde beyaz zeminli olur)
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+
+        binding.spinnerPageSize.adapter = adapter
         binding.spinnerPageSize.setSelection(sizes.indexOf(pageSize))
+
         binding.spinnerPageSize.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
                 val newSize = sizes[position]
@@ -195,7 +204,9 @@ class MerchantOrdersActivity : BaseActivity() {
 
         binding.btnPrevPage.isEnabled = currentPage > 1
         binding.btnNextPage.isEnabled = currentPage < totalPages
-        binding.txtPageInfo.text = "Sayfa $currentPage / $totalPages"
+
+        // Burayı strings.xml'den alacak şekilde güncelledik:
+        binding.txtPageInfo.text = getString(R.string.pagination_info, currentPage, totalPages)
     }
 
     private fun totalPages(): Int {

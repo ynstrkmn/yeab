@@ -243,4 +243,12 @@
     <string name="search_phone_title">Search by Phone</string>
     <string name="search_phone_desc">List all past orders by customer\nGSM number</string>
     <string name="search_phone_action">SEARCH IN CONTACTS</string>
+
+
+    <string name="orders_list_title">My Orders</string>
+    <string name="orders_list_subtitle">Manage all your orders here</string>
+
+    <string name="pagination_prev">PREV</string>
+    <string name="pagination_next">NEXT</string>
+    <string name="pagination_info">Page %1$d / %2$d</string>
 </resources>

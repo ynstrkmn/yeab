@@ -1,69 +1,93 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView
-
+<com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_margin="8dp"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    app:cardCornerRadius="8dp"
-    app:cardElevation="4dp"
-    android:fitsSystemWindows="true">
+    android:layout_marginBottom="12dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="0dp"
+    app:strokeColor="#E0E0E0"
+    app:strokeWidth="1dp"
+    app:cardBackgroundColor="#FFFFFF">
 
-    <LinearLayout
-        android:padding="12dp"
-        android:orientation="horizontal"
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:padding="12dp">
 
-        <ImageView
-            android:id="@+id/imgProduct"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:scaleType="centerCrop"
-            android:contentDescription="Ürün resmi"/>
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardImageContainer"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            app:cardCornerRadius="10dp"
+            app:cardElevation="0dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent">
+
+            <ImageView
+                android:id="@+id/imgProduct"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:src="@android:drawable/ic_menu_gallery" />
+        </androidx.cardview.widget.CardView>
 
         <LinearLayout
-            android:layout_marginStart="12dp"
-            android:orientation="vertical"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1">
+            android:orientation="vertical"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="8dp"
+            app:layout_constraintStart_toEndOf="@id/cardImageContainer"
+            app:layout_constraintEnd_toStartOf="@id/btnUserInfo"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent">
 
             <TextView
                 android:id="@+id/txtProduct"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                tools:text="Laptop Klavyesi"
+                android:textColor="#171717"
                 android:textStyle="bold"
-                android:text="Ürün ismi"/>
+                android:textSize="15sp"
+                android:maxLines="1"
+                android:ellipsize="end"/>
 
             <TextView
                 android:id="@+id/txtOwner"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Ad Soyad • Telefon"/>
+                android:layout_marginTop="4dp"
+                tools:text="0555 123 45 67"
+                android:textColor="#546E7A"
+                android:textSize="13sp"/>
 
             <TextView
                 android:id="@+id/txtStatus"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Son statu"/>
+                android:layout_marginTop="4dp"
+                tools:text="Hazırlanıyor"
+                android:textColor="#1ABC9C"
+                android:textStyle="bold"
+                android:textSize="12sp"/>
         </LinearLayout>
 
-
-
-        <!-- Sağ tarafta kafa ikonu -->
-        <androidx.appcompat.widget.AppCompatImageButton
+        <ImageButton
             android:id="@+id/btnUserInfo"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            app:srcCompat="@drawable/ic_user_small"
-            app:tint="@android:color/holo_green_dark"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="@string/user_info"
-            android:clickable="true"
-            android:focusable="true"
-            android:layout_marginStart="8dp"
-            android:visibility="visible"/>
-    </LinearLayout>
-</androidx.cardview.widget.CardView>
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_user_small"
+            app:tint="#1ABC9C"
+            android:contentDescription="Müşteri Bilgisi"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</com.google.android.material.card.MaterialCardView>
