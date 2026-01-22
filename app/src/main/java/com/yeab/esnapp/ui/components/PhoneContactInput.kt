@@ -3,6 +3,8 @@ package com.yeab.esnapp.ui.components
 import android.content.Context
 import android.net.Uri
 import android.provider.ContactsContract
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.widget.ImageButton
@@ -22,6 +24,8 @@ class PhoneContactInput @JvmOverloads constructor(
 
     // Activity'den tetiklenecek lambda fonksiyonu
     var onPickContactClick: (() -> Unit)? = null
+    // Dışarıya telefon değişim geri çağrısı
+    private var onPhoneChanged: ((String) -> Unit)? = null
 
     init {
         orientation = HORIZONTAL
@@ -33,6 +37,20 @@ class PhoneContactInput @JvmOverloads constructor(
         btnPickContact.setOnClickListener {
             onPickContactClick?.invoke()
         }
+
+        edtPhone.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                onPhoneChanged?.invoke(s?.toString().orEmpty())
+            }
+        })
+    }
+
+    fun setOnPhoneChangedListener(listener: (String) -> Unit) {
+        onPhoneChanged = listener
+        // İlk değer gerekli ise tetikleyebilirsiniz:
+        // onPhoneChanged?.invoke(getPhoneNumber())
     }
 
     /**
@@ -57,7 +75,7 @@ class PhoneContactInput @JvmOverloads constructor(
         if (cleaned.length > 10) {
             cleaned = cleaned.takeLast(10)
         }
-        
+
         return cleaned
     }
 

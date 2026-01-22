@@ -5,46 +5,47 @@
     android:id="@+id/layoutNewOrder"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/black"
+    android:background="#F9FAFB"
     android:padding="16dp"
     android:fitsSystemWindows="true">
 
-    <!-- Başlık -->
-    <TextView
-        android:id="@+id/txtTitleNewOrder"
-        android:layout_width="0dp"
+    <LinearLayout
+        android:id="@+id/headerLayout"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/home_button_new_order"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:textColor="#FFFFFF"
-        android:gravity="center_horizontal"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        android:orientation="vertical"
+        android:gravity="center"
+        app:layout_constraintTop_toTopOf="parent">
 
-    <!-- Alt açıklama (istersen string ekleyebilirsin) -->
-    <TextView
-        android:id="@+id/txtSubtitleNewOrder"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="@string/home_button_new_order"
-        android:textSize="13sp"
-        android:textColor="#777777"
-        android:gravity="center_horizontal"
-        android:layout_marginTop="4dp"
-        android:visibility="gone"
-        app:layout_constraintTop_toBottomOf="@id/txtTitleNewOrder"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        <TextView
+            android:id="@+id/txtTitleNewOrder"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/home_button_new_order"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="#171717"
+            android:gravity="center" />
 
-    <!-- İçerik: scroll + kartlar -->
+        <TextView
+            android:id="@+id/txtSubtitleNewOrder"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/home_button_new_order"
+            android:textSize="14sp"
+            android:textColor="#7F8C8D"
+            android:gravity="center"
+            android:layout_marginTop="4dp"
+            android:visibility="gone" />
+    </LinearLayout>
+
     <ScrollView
         android:id="@+id/scrollNewOrder"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:fillViewport="true"
-        app:layout_constraintTop_toBottomOf="@id/txtSubtitleNewOrder"
+        android:layout_marginTop="16dp"
+        app:layout_constraintTop_toBottomOf="@id/headerLayout"
         app:layout_constraintBottom_toTopOf="@+id/chkPaymentDone"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
@@ -52,119 +53,141 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:paddingBottom="16dp">
 
-            <!-- Telefon kartı -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardPhone"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
                 app:cardCornerRadius="16dp"
-                app:cardBackgroundColor="@color/black"
-                app:cardElevation="2dp"
+                app:cardBackgroundColor="#FFFFFF"
+                app:cardElevation="0dp"
                 app:strokeWidth="1dp"
-                app:strokeColor="@color/deneme">
+                app:strokeColor="#E0E0E0">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:padding="24dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Müşteri Telefonu"
+                        android:textStyle="bold"
+                        android:textColor="#171717"
+                        android:textSize="14sp"
+                        android:layout_marginBottom="8dp"/>
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
 
-                        <!-- Yeni Bileşen Entegrasyonu -->
                         <com.yeab.esnapp.ui.components.PhoneContactInput
                             android:id="@+id/phoneInputComponent"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1" />
+                            android:layout_weight="1"
+                            android:theme="@style/ThemeOverlay.AppCompat.Light"/>
 
                         <ImageButton
                             android:id="@+id/btnSearchPhone"
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
                             android:layout_marginStart="8dp"
-                            android:background="@color/black"
+                            android:background="?attr/selectableItemBackgroundBorderless"
                             android:contentDescription="@string/search_order_button_by_phone"
-                            android:padding="8dp"
+                            android:padding="10dp"
                             android:src="@android:drawable/ic_menu_search"
-                            app:tint="#FFFFFF" />
-                    </LinearLayout>
-
-
+                            app:tint="#1ABC9C" /> </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Müşteri bilgileri kartı -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardCustomerInfo"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 app:cardCornerRadius="16dp"
-                app:cardBackgroundColor="@color/black"
-                app:cardElevation="2dp"
+                app:cardBackgroundColor="#FFFFFF"
+                app:cardElevation="0dp"
                 app:strokeWidth="1dp"
-                app:strokeColor="@color/deneme">
+                app:strokeColor="#E0E0E0">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:padding="24dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Müşteri Detayları"
+                        android:textStyle="bold"
+                        android:textColor="#171717"
+                        android:textSize="14sp"
+                        android:layout_marginBottom="16dp"/>
 
                     <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
                         android:hint="@string/new_order_name_hint"
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        app:boxStrokeColor="#1ABC9C"
+                        app:hintTextColor="#1ABC9C"
+                        android:textColorHint="#757575">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/edtName"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:textColor="#171717"
                             android:inputType="textPersonName" />
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
+                        android:layout_marginTop="16dp"
                         android:hint="@string/new_order_surname_hint"
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        app:boxStrokeColor="#1ABC9C"
+                        app:hintTextColor="#1ABC9C"
+                        android:textColorHint="#757575">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/edtSurname"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:textColor="#171717"
                             android:inputType="textPersonName" />
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
+                        android:layout_marginTop="16dp"
                         android:hint="@string/new_order_email_hint"
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        app:boxStrokeColor="#1ABC9C"
+                        app:hintTextColor="#1ABC9C"
+                        android:textColorHint="#757575">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/edtEmail"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:textColor="#171717"
                             android:inputType="textEmailAddress" />
                     </com.google.android.material.textfield.TextInputLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Ürün bilgisi kartı -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardProduct"
                 android:layout_width="match_parent"
@@ -172,30 +195,43 @@
                 android:layout_marginTop="16dp"
                 android:layout_marginBottom="16dp"
                 app:cardCornerRadius="16dp"
-                app:cardBackgroundColor="@color/black"
-                app:cardElevation="2dp"
+                app:cardBackgroundColor="#FFFFFF"
+                app:cardElevation="0dp"
                 app:strokeWidth="1dp"
-                app:strokeColor="@color/deneme">
+                app:strokeColor="#E0E0E0">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:padding="24dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Ürün / Arıza Bilgisi"
+                        android:textStyle="bold"
+                        android:textColor="#171717"
+                        android:textSize="14sp"
+                        android:layout_marginBottom="16dp"/>
 
                     <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
                         android:hint="@string/new_order_product_desc_hint"
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        app:boxStrokeColor="#1ABC9C"
+                        app:hintTextColor="#1ABC9C"
+                        android:textColorHint="#757575">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/edtProductDesc"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:minLines="2"
-                            android:maxLines="4"
+                            android:minLines="3"
+                            android:maxLines="5"
+                            android:textColor="#171717"
+                            android:gravity="top|start"
                             android:inputType="textMultiLine" />
                     </com.google.android.material.textfield.TextInputLayout>
 
@@ -209,23 +245,27 @@
         android:id="@+id/chkPaymentDone"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
+        android:layout_marginBottom="16dp"
         android:text="@string/payment_done"
-        android:textColor="@android:color/white"
-        android:theme="@style/ThemeOverlay.AppCompat.Dark"
+        android:textColor="#546E7A"
+        android:buttonTint="#1ABC9C"
         app:layout_constraintBottom_toTopOf="@+id/btnAddProduct"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Alt buton -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnAddProduct"
         style="@style/Widget.MaterialComponents.Button"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="60dp"
         android:text="@string/home_button_only_add"
         android:textAllCaps="false"
-        app:cornerRadius="24dp"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF"
+        app:backgroundTint="#1ABC9C"
+        app:cornerRadius="30dp"
+        android:insetBottom="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"

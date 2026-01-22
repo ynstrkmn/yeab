@@ -285,6 +285,14 @@
     <string name="search_by_phone_label">Telefon Numarası</string>
 
 
+    <string name="templates_page_title">Mesaj Şablonları</string>
+    <string name="templates_page_subtitle">Hızlı yanıtlar için şablonlarınızı yönetin</string>
+    <string name="templates_section_new">Yeni Şablon Ekle</string>
+    <string name="templates_section_saved">Kaydedilmiş Şablonlar</string>
+
+    <string name="merchant_info_subtitle">İşletme ve kişisel bilgilerinizi buradan düzenleyebilirsiniz.</string>
+
+
 
 
 </resources>

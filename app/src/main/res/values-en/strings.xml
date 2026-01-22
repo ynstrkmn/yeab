@@ -270,5 +270,6 @@
     <string name="templates_page_subtitle">Manage templates for quick replies</string>
     <string name="templates_section_new">New Template Entry</string>
     <string name="templates_section_saved">Saved Templates</string>
+    <string name="merchant_info_subtitle">İşletme ve kişisel bilgilerinizi buradan düzenleyebilirsiniz.</string>
 
 </resources>

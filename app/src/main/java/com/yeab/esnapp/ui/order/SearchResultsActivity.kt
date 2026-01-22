@@ -1,6 +1,7 @@
 // kotlin
 package com.yeab.esnapp.ui.order
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
@@ -13,6 +14,7 @@ import com.yeab.esnapp.databinding.ActivityMerchantOrdersBinding
 import com.yeab.esnapp.ui.base.BaseActivity
 import com.yeab.esnapp.ui.model.OrderItem
 import com.yeab.esnapp.ui.order.dialog.UserInfoDialogFragment
+import com.yeab.esnapp.util.IntentKeys
 import kotlinx.coroutines.launch
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -80,6 +82,20 @@ class SearchResultsActivity : BaseActivity() {
                 finish()
             }
         }
+
+        adapter.setOnItemClickListener(object : MerchantOrderAdapter.OnItemClickListener {
+            override fun onItemClick(item: OrderItem) {
+                val intent = Intent(this@SearchResultsActivity, OrderStatusUpdateActivity::class.java).apply {
+                    putExtra(IntentKeys.MERCHANT_UID, merchantUid)
+                    putExtra(IntentKeys.PHONE, item.ownerPhone)
+                    putExtra(IntentKeys.ORDER_ID, item.id)
+                    putExtra(IntentKeys.PRODUCT_NAME, item.productName)
+                    putExtra(IntentKeys.SEARCH_SCREEN, true)
+                }
+                startActivity(intent)
+                finish()
+            }
+        })
 
         // \[Yeni\] Kafa ikonuna tıklama: UserInfoDialogFragment aç
         adapter.setOnUserIconClickListener(object : MerchantOrderAdapter.OnUserIconClickListener {
@@ -175,7 +191,7 @@ class SearchResultsActivity : BaseActivity() {
                 ?: orderSnap.child("date").getValue(String::class.java)
 
         return OrderItem(
-            id = "$orderId-${orderSnap.key.orEmpty()}",
+            id = orderId,
             imageUrl = imageUrl,
             ownerName = ownerName,
             ownerSurname = ownerSurname,

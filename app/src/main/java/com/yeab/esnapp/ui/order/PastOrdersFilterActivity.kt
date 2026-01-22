@@ -59,12 +59,25 @@ class PastOrdersFilterActivity : BaseActivity() {
             }
         }
 
-        val ranges = listOf("Seçiniz", "1 gün", "1 hafta", "1 ay", "3 ay", "1 yıl")
-        binding.spnDateRange.adapter = ArrayAdapter(
-            this,
-            android.R.layout.simple_spinner_dropdown_item,
-            ranges
-        )
+//        val tarihSecenekleri = listOf("Seçiniz", "1 gün", "1 hafta", "1 ay", "3 ay", "1 yıl")
+//// 1. Listeni tanımla (Örnek veriler)
+        val tarihSecenekleri = listOf("Seçiniz","Son 24 Saat", "Son 1 Hafta", "Son 1 Ay", "Son 3 Ay", "Son 1 Yıl")
+// 2. Kendi oluşturduğumuz 'item_spinner_custom' dosyasını buraya yazıyoruz!
+        val adapter = ArrayAdapter(this, R.layout.item_spinner_custom, tarihSecenekleri)
+
+// 3. Açılır liste görünümü standart kalabilir
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+
+// 4. Adapteri Spinner'a bağla
+        binding.spnDateRange.adapter = adapter
+
+        // Telefon değişimini dinle
+        binding.phoneInputComponent.setOnPhoneChangedListener { phoneText ->
+            if (!phoneText.isNullOrBlank()) {
+                // Telefon doluysa tarih aralığını varsayılan "Seçiniz" konumuna al
+                binding.spnDateRange.setSelection(0, true)
+            }
+        }
 
         binding.spnDateRange.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(

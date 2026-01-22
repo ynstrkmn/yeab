@@ -5,7 +5,7 @@
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:gravity="center_vertical"
-    android:padding="4dp"
+    android:padding="0dp"
     android:fitsSystemWindows="true">
 
     <com.google.android.material.textfield.TextInputLayout
@@ -14,6 +14,16 @@
         android:layout_height="wrap_content"
         android:layout_weight="1"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        app:boxStrokeColor="#1ABC9C"
+        app:hintTextColor="#1ABC9C"
+        android:textColorHint="#757575"
+        app:startIconDrawable="@android:drawable/ic_menu_call"
+        app:startIconTint="#95A5A6"
+        app:boxCornerRadiusTopStart="12dp"
+        app:boxCornerRadiusTopEnd="12dp"
+        app:boxCornerRadiusBottomStart="12dp"
+        app:boxCornerRadiusBottomEnd="12dp"
+        android:theme="@style/ThemeOverlay.AppCompat.Light"
         android:hint="@string/phone_number_component">
 
         <com.google.android.material.textfield.TextInputEditText
@@ -21,17 +31,19 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="phone"
+            android:maxLength="10"
+            android:textColor="#171717"
             android:maxLines="1" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <ImageButton
         android:id="@+id/btnPickContact"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
         android:layout_marginStart="8dp"
         android:background="?attr/selectableItemBackgroundBorderless"
-        android:src="@android:drawable/ic_menu_call"
+        android:src="@android:drawable/ic_menu_my_calendar"
         android:contentDescription="Rehberden Seç"
-        app:tint="?attr/colorPrimary" />
-
+        android:scaleType="center"
+        app:tint="#1ABC9C" />
 </LinearLayout>

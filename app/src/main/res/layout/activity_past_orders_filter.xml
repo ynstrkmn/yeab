@@ -94,7 +94,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="56dp"
                     android:spinnerMode="dropdown"
-                    android:theme="@style/ThemeOverlay.AppCompat.Light"/>
+                    android:theme="@style/ThemeOverlay.AppCompat.Light"
+                    android:overlapAnchor="false"/>
             </FrameLayout>
 
             <LinearLayout

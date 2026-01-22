@@ -58,6 +58,7 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.text.get
 
 class OrderStatusUpdateActivity : BaseActivity() {
 
@@ -98,6 +99,16 @@ class OrderStatusUpdateActivity : BaseActivity() {
         statusAdapter = ProductStatusAdapter()
         binding.recyclerStatusHistory.layoutManager = LinearLayoutManager(this)
         binding.recyclerStatusHistory.adapter = statusAdapter
+
+        val fromSearchResults = intent.getBooleanExtra(IntentKeys.SEARCH_SCREEN, false)
+        if (fromSearchResults) {
+            // Güncelleme butonunu kapat
+            binding.btnUpdate.isEnabled = false
+            binding.btnUpdate.alpha = 0.5f // görsel olarak pasif
+        } else {
+            binding.btnUpdate.isEnabled = true
+            binding.btnUpdate.alpha = 1f
+        }
 
         showLoading()
         loadTemplates()
@@ -302,6 +313,7 @@ class OrderStatusUpdateActivity : BaseActivity() {
     /**
      * Order detayını (ProductName, ProductImageUrl, ProductStatus) yükler ve ekrana basar.
      */
+    // kotlin
     private fun loadOrderDetails() {
         val uid = merchantUid ?: return
 
@@ -311,71 +323,98 @@ class OrderStatusUpdateActivity : BaseActivity() {
             .child(phone)
             .child(orderId)
 
-        merchantOrderRef.get().addOnSuccessListener { snapshot ->
+        showLoading()
+        merchantOrderRef.get()
+            .addOnSuccessListener { snapshot ->
+                val order = snapshot.getValue(Order::class.java)
+                if (order == null) {
+                    // Yedek sorgu: CompletedOrders/MerchantOrders/PhoneOrders/{uid}/{phone}/{orderId}
+                    val completedRef = dbRef.child("CompletedOrders")
+                        .child("MerchantOrders")
+                        .child("PhoneOrders")
+                        .child(uid)
+                        .child(phone)
+                        .child(orderId)
 
-            val order = snapshot.getValue(Order::class.java)
-            if (order == null) {
+                    completedRef.get()
+                        .addOnSuccessListener { completedSnap ->
+                            val completedOrder = completedSnap.getValue(Order::class.java)
+                            if (completedOrder == null) {
+                                hideLoading()
+                                Toast.makeText(
+                                    this,
+                                    getString(R.string.error_no_records_found),
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                return@addOnSuccessListener
+                            }
+                            // Yedek kaydı ekrana bas
+                            bindOrderDetails(completedOrder)
+                        }
+                        .addOnFailureListener {
+                            hideLoading()
+                            Toast.makeText(
+                                this,
+                                it.message ?: getString(R.string.error_generic),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    return@addOnSuccessListener
+                }
+
+                // Asıl Orders kaydı ekrana bas
+                bindOrderDetails(order)
+            }
+            .addOnFailureListener {
                 hideLoading()
                 Toast.makeText(
                     this,
-                    getString(R.string.error_no_records_found),
+                    it.message ?: getString(R.string.error_generic),
                     Toast.LENGTH_SHORT
                 ).show()
-                return@addOnSuccessListener
             }
+    }
 
-            // Ödeme durumunu ayarla
-            binding.chkPaymentDone.isChecked = order.isPaymentDone
+    // kotlin
+    private fun bindOrderDetails(order: Order) {
+        // Ödeme durumunu ayarla
+        binding.chkPaymentDone.isChecked = order.isPaymentDone
+        if (binding.chkPaymentDone.isChecked) {
+            binding.chkPaymentDone.isEnabled = false
+        }
 
-            // Eğer giriş aşamasında veya önceden ödeme yapıldıysan karıştırma olmaması için disable edildi.
-            if(binding.chkPaymentDone.isChecked){
-                binding.chkPaymentDone.isEnabled = false
-            }
+        // Ürün adı
+        val productNameFromIntent = intent.getStringExtra(IntentKeys.PRODUCT_NAME)
+        val finalProductName = productNameFromIntent ?: order.productName ?: ""
+        productName = finalProductName
 
-            // Ürün adı: Intent'ten geldiyse onu kullan, yoksa DB'dekini
-            val productNameFromIntent = intent.getStringExtra(IntentKeys.PRODUCT_NAME)
-            val finalProductName = productNameFromIntent
-                ?: order.productName
-                ?: ""
-
-            productName = finalProductName
-
+        binding.txtMatchedProduct.text =
             if (finalProductName.isNotEmpty()) {
-                binding.txtMatchedProduct.text =
-                    getString(R.string.order_status_matched_product, finalProductName)
+                getString(R.string.order_status_matched_product, finalProductName)
             } else {
-                binding.txtMatchedProduct.text =
-                    getString(R.string.order_status_matched_product_placeholder)
+                getString(R.string.order_status_matched_product_placeholder)
             }
 
-            // Ürün görseli: ProductImageUrl doluysa thumbnail'e yükle
-            val imageUrl = order.productImageUrl
-            if (!imageUrl.isNullOrEmpty()) {
-                loadProductImage(imageUrl)
-            } else {
-                // Görsel yoksa global loading'i kapat
-                hideLoading()
-            }
-
-            // Durum geçmişi: ProductStatus listesini adapter'a ver
-            val statusList = order.productStatus ?: emptyList<ProductStatus>()
-            if (statusList.isEmpty()) {
-                Toast.makeText(
-                    this,
-                    getString(R.string.order_status_history_empty),
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-            statusAdapter.submitList(statusList)
-        }.addOnFailureListener {
+        // Ürün görseli
+        val imageUrl = order.productImageUrl
+        if (!imageUrl.isNullOrEmpty()) {
+            loadProductImage(imageUrl)
+        } else {
             hideLoading()
+        }
+
+        // Durum geçmişi
+        val statusList = order.productStatus ?: emptyList()
+        if (statusList.isEmpty()) {
             Toast.makeText(
                 this,
-                it.message ?: getString(R.string.error_generic),
+                getString(R.string.order_status_history_empty),
                 Toast.LENGTH_SHORT
             ).show()
         }
+        statusAdapter.submitList(statusList)
     }
+
 
     private fun loadProductImage(url: String) {
         binding.imgLoading.visibility = View.VISIBLE

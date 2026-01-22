@@ -1,28 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="16dp"
-    android:fitsSystemWindows="true">
+    android:orientation="vertical"
+    android:layout_marginBottom="16dp">
 
-    <EditText
-        android:id="@+id/etMessage"
+    <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="@string/template_hint_text"
-        android:maxLength="100"/>
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        app:boxStrokeColor="#1ABC9C"
+        app:hintTextColor="#1ABC9C"
+        android:textColorHint="#757575"
+        app:boxCornerRadiusTopStart="12dp"
+        app:boxCornerRadiusTopEnd="12dp"
+        app:boxCornerRadiusBottomStart="12dp"
+        app:boxCornerRadiusBottomEnd="12dp"
+        android:theme="@style/ThemeOverlay.AppCompat.Light"> <com.google.android.material.textfield.TextInputEditText
+        android:id="@+id/etMessage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:maxLength="100"
+        android:inputType="textMultiLine"
+        android:textColor="#171717"
+        android:textSize="14sp"/>
+
+    </com.google.android.material.textfield.TextInputLayout>
 
     <LinearLayout
-        android:orientation="horizontal"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
 
         <CheckBox
             android:id="@+id/cbFinish"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/template_checkbox_text"/>
-    </LinearLayout>
+            android:text="@string/template_checkbox_text"
+            android:textColor="#546E7A"
+            android:textSize="13sp"
+            android:buttonTint="#1ABC9C"/> </LinearLayout>
 
 </LinearLayout>

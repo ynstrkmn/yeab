@@ -6,20 +6,18 @@
     android:id="@+id/layoutOrderStatusUpdate"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#000000"
+    android:background="#F9FAFB"
     android:padding="16dp"
     tools:context=".ui.order.OrderStatusUpdateActivity"
     android:fitsSystemWindows="true">
 
-    <!-- XML -->
-    <!-- cardHeader sabit kalır, içerikler küçültülür -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/cardHeader"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         app:cardCornerRadius="16dp"
-        app:cardElevation="2dp"
-        app:cardBackgroundColor="#000000"
+        app:cardElevation="0dp"
+        app:cardBackgroundColor="#FFFFFF"
         app:strokeWidth="1dp"
         app:strokeColor="#E0E0E0"
         app:layout_constraintTop_toTopOf="parent"
@@ -30,12 +28,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:padding="8dp">
+            android:padding="12dp">
 
-            <!-- Görseli küçült: 160dp -> 96dp -->
             <RelativeLayout
-                android:layout_width="96dp"
-                android:layout_height="96dp">
+                android:layout_width="80dp"
+                android:layout_height="80dp">
 
                 <ProgressBar
                     android:id="@+id/imgLoading"
@@ -43,58 +40,68 @@
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:layout_centerInParent="true"
-                    android:visibility="gone" />
+                    android:visibility="gone"
+                    android:indeterminateTint="#1ABC9C"/>
 
-                <ImageView
-                    android:id="@+id/imgProductThumbnail"
+                <androidx.cardview.widget.CardView
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:scaleType="centerCrop"
-                    android:background="#EEEEEE"
-                    android:contentDescription="@string/order_status_matched_product_placeholder"
-                    android:src="@android:drawable/ic_menu_report_image" />
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="0dp"
+                    app:cardPreventCornerOverlap="true">
+
+                    <ImageView
+                        android:id="@+id/imgProductThumbnail"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:scaleType="centerCrop"
+                        android:background="#F5F5F5"
+                        android:contentDescription="@string/order_status_matched_product_placeholder"
+                        android:src="@android:drawable/ic_menu_report_image"/>
+                </androidx.cardview.widget.CardView>
             </RelativeLayout>
 
-            <!-- Sağ blok: match_parent -> wrap_content ve iç padding küçült -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:orientation="vertical"
-                android:padding="8dp">
+                android:paddingStart="16dp"
+                android:paddingEnd="4dp"
+                android:gravity="center_vertical"
+                android:layout_gravity="center_vertical">
 
                 <TextView
                     android:id="@+id/txtCustomerName"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:textSize="13sp"
-                    android:textColor="#DDDDDD" />
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="#171717"
+                    tools:text="Ahmet Yılmaz"/>
 
                 <TextView
                     android:id="@+id/txtMatchedProduct"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:textSize="13sp"
-                    android:textStyle="italic"
-                    android:textColor="#DDDDDD" />
+                    android:layout_marginTop="4dp"
+                    android:textSize="14sp"
+                    android:textColor="#7F8C8D"
+                    tools:text="Laptop Tamiri"/>
             </LinearLayout>
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
-    <!-- XML -->
-    <!-- Durum geçmişi listesi: 0dp + weight + minHeight -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/cardHistory"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="12dp"
         android:minHeight="56dp"
         android:maxHeight="120dp"
         app:cardCornerRadius="16dp"
-        app:cardElevation="1dp"
-        app:cardBackgroundColor="#000000"
+        app:cardElevation="0dp"
+        app:cardBackgroundColor="#FFFFFF"
         app:strokeWidth="1dp"
         app:strokeColor="#E0E0E0"
         app:layout_constraintTop_toBottomOf="@id/cardHeader"
@@ -107,19 +114,18 @@
             android:id="@+id/recyclerStatusHistory"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:padding="6dp"
+            android:padding="8dp"
             tools:listitem="@layout/item_product_status" />
     </com.google.android.material.card.MaterialCardView>
 
-    <!-- Şablon kartı: 0dp + weight, içerik scrollable -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/cardTemplates"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="12dp"
         app:cardCornerRadius="16dp"
-        app:cardElevation="2dp"
-        app:cardBackgroundColor="#000000"
+        app:cardElevation="0dp"
+        app:cardBackgroundColor="#FFFFFF"
         app:strokeWidth="1dp"
         app:strokeColor="#E0E0E0"
         app:layout_constraintTop_toBottomOf="@id/cardHistory"
@@ -137,56 +143,72 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="10dp">
+                android:padding="16dp">
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnCameraStatus"
-                    style="@style/Widget.MaterialComponents.Button.Icon"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
+                    android:layout_height="50dp"
                     android:text="@string/btn_camera_text"
                     android:gravity="center"
+                    android:textColor="#1ABC9C"
+                    app:strokeColor="#1ABC9C"
+                    app:strokeWidth="1dp"
                     app:icon="@android:drawable/ic_menu_camera"
                     app:iconGravity="textStart"
-                    android:backgroundTint="?attr/colorPrimary"
-                    app:iconTint="@color/black" />
+                    app:iconTint="#1ABC9C"
+                    app:cornerRadius="25dp"/>
 
-                <ImageView
-                    android:id="@+id/imgOrderPhotoStatus"
-                    android:layout_width="96dp"
-                    android:layout_height="96dp"
-                    android:scaleType="centerCrop"
-                    android:layout_marginTop="6dp"
-                    android:contentDescription="Kamera Resmi"
-                    android:visibility="gone" />
-
-                <com.google.android.material.checkbox.MaterialCheckBox
-                    android:id="@+id/chkPaymentDone"
+                <androidx.cardview.widget.CardView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:text="@string/payment_done"
-                    android:textColor="#DDDDDD"
-                    app:buttonTint="#DDDDDD" />
+                    android:layout_marginTop="12dp"
+                    android:layout_gravity="center"
+                    app:cardCornerRadius="8dp"
+                    app:cardElevation="0dp">
 
-                <com.google.android.material.checkbox.MaterialCheckBox
-                    android:id="@+id/chkOperationDone"
-                    android:layout_width="wrap_content"
+                    <ImageView
+                        android:id="@+id/imgOrderPhotoStatus"
+                        android:layout_width="96dp"
+                        android:layout_height="96dp"
+                        android:scaleType="centerCrop"
+                        android:contentDescription="Kamera Resmi"
+                        android:visibility="gone" />
+                </androidx.cardview.widget.CardView>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:text="@string/order_process_completed"
-                    android:textColor="#DDDDDD"
-                    app:buttonTint="#DDDDDD" />
+                    android:layout_marginTop="8dp"
+                    android:orientation="vertical">
+
+                    <com.google.android.material.checkbox.MaterialCheckBox
+                        android:id="@+id/chkPaymentDone"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/payment_done"
+                        android:textColor="#171717"
+                        app:buttonTint="#1ABC9C" />
+
+                    <com.google.android.material.checkbox.MaterialCheckBox
+                        android:id="@+id/chkOperationDone"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/order_process_completed"
+                        android:textColor="#171717"
+                        app:buttonTint="#1ABC9C" />
+                </LinearLayout>
 
                 <TextView
                     android:id="@+id/txtTemplateTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
                     android:text="@string/message_template_title"
                     android:textSize="14sp"
                     android:textStyle="bold"
-                    android:textColor="#333333" />
+                    android:textColor="#546E7A" />
 
                 <com.google.android.material.chip.ChipGroup
                     android:id="@+id/radioGroupTemplates"
@@ -204,13 +226,18 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:hint="@string/message_template_hint_free_text"
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    app:boxStrokeColor="#1ABC9C"
+                    app:hintTextColor="#1ABC9C"
+                    android:textColorHint="#757575"
+                    android:theme="@style/ThemeOverlay.AppCompat.Light">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/edtFreeText"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="textCapSentences"
+                        android:textColor="#171717"
                         android:minLines="2"
                         android:maxLines="4" />
                 </com.google.android.material.textfield.TextInputLayout>
@@ -218,17 +245,20 @@
         </androidx.core.widget.NestedScrollView>
     </com.google.android.material.card.MaterialCardView>
 
-
-    <!-- Güncelle butonu -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnUpdate"
         style="@style/Widget.MaterialComponents.Button"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="60dp"
+        android:layout_marginTop="16dp"
         android:text="@string/message_template_button_update_order"
         android:textAllCaps="false"
-        app:cornerRadius="24dp"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:cornerRadius="30dp"
         android:textColor="@android:color/white"
+        app:backgroundTint="#1ABC9C"
+        android:insetBottom="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />

@@ -16,4 +16,5 @@ object IntentKeys {
 
     const val IS_PAYMENT_DONE = "isPaymentDone"
     const val ORDER_NUMBER = "order_number"
+    const val SEARCH_SCREEN = "search_screen"
 }
