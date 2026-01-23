@@ -101,7 +101,6 @@ class OrderListActivity : BaseActivity() {
         i.putExtra(IntentKeys.ORDER_ID, orderItem.orderId)
         i.putExtra(IntentKeys.PRODUCT_NAME, orderItem.order.productName)
         startActivity(i)
-        finish()
     }
 
     private fun showImageDialog(imageUrl: String) {
