@@ -66,7 +66,6 @@ class NewOrderActivity : BaseActivity() {
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == RESULT_OK) {
                 lastOrderNumber = result.data?.getStringExtra(IntentKeys.ORDER_NUMBER)
-                checkCameraPermissionAndOpen()
             }
         }
 
@@ -82,10 +81,12 @@ class NewOrderActivity : BaseActivity() {
             return
         }
 
-        val intent = Intent(this, OrderPreparationActivity::class.java).apply {
+        /*val intent = Intent(this, OrderPreparationActivity::class.java).apply {
             putExtra(IntentKeys.MERCHANT_UID, merchantUid)
         }
-        orderPreparationLauncher.launch(intent)
+        orderPreparationLauncher.launch(intent)*/
+
+        checkCameraPermissionAndOpen()
     }
 
     // Kamera sonucu
