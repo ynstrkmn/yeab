@@ -267,7 +267,7 @@
 
     <string name="pagination_prev">ÖNCEKİ</string>
     <string name="pagination_next">SONRAKİ</string>
-    <string name="pagination_info">Sayfa %1$d / %2$d</string>
+    <string name="pagination_info">%1$d / %2$d</string>
 
 
     <string name="search_page_title">Detaylı Arama</string>

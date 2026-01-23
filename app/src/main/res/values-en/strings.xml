@@ -250,7 +250,7 @@
 
     <string name="pagination_prev">PREV</string>
     <string name="pagination_next">NEXT</string>
-    <string name="pagination_info">Page %1$d / %2$d</string>
+    <string name="pagination_info">%1$d / %2$d</string>
 
     <string name="search_page_title">Detailed Search</string>
     <string name="search_page_subtitle">Find orders by phone or date range</string>
