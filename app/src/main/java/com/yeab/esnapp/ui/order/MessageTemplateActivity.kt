@@ -275,17 +275,17 @@ class MessageTemplateActivity : BaseActivity() {
                         return
                     }
 
-                    if (currentDbOrderNumber == orderNumber) {
+                    //if (currentDbOrderNumber == orderNumber) {
                         // Eşleşti, mevcut akışa devam
                         if (localPhotoUriStr != null) {
                             uploadImageAndProcess(uid, Uri.parse(localPhotoUriStr!!), messageText)
                         } else {
                             processOrderSave(uid, messageText)
                         }
-                    } else {
+                    /*} else {
                         hideLoading()
                         Toast.makeText(this@MessageTemplateActivity, "Ürün numarası güncel değil. Lütfen yeniden deneyin.", Toast.LENGTH_SHORT).show()
-                    }
+                    }*/
                 }
                 override fun onCancelled(error: DatabaseError) {
                     hideLoading()

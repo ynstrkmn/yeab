@@ -334,7 +334,7 @@ class NewOrderActivity : BaseActivity() {
         intent.putExtra(IntentKeys.EMAIL, binding.edtEmail.text.toString().trim())
         intent.putExtra(IntentKeys.PRODUCT_DESC, binding.edtProductDesc.text.toString().trim())
         intent.putExtra(IntentKeys.IS_PAYMENT_DONE, binding.chkPaymentDone.isChecked)
-        intent.putExtra(IntentKeys.ORDER_NUMBER, lastOrderNumber ?: "-")
+        intent.putExtra(IntentKeys.ORDER_NUMBER, lastOrderNumber ?: "100")
         // ÖNEMLİ: Upload edilmemiş yerel dosya yolunu gönderiyoruz
         if (photoUri != null) {
             intent.putExtra("extra_local_photo_uri", photoUri.toString())
