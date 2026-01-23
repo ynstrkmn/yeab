@@ -78,7 +78,6 @@ class MerchantOrdersActivity : BaseActivity() {
                     putExtra(IntentKeys.PRODUCT_NAME, item.productName)
                 }
                 startActivity(intent)
-                finish()
             }
         })
 
