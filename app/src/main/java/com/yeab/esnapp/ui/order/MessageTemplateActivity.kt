@@ -284,7 +284,7 @@ class MessageTemplateActivity : BaseActivity() {
                         }
                     } else {
                         hideLoading()
-                        Toast.makeText(this@MessageTemplateActivity, "Sipariş numarası güncel değil. Lütfen yeniden deneyin.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@MessageTemplateActivity, "Ürün numarası güncel değil. Lütfen yeniden deneyin.", Toast.LENGTH_SHORT).show()
                     }
                 }
                 override fun onCancelled(error: DatabaseError) {
