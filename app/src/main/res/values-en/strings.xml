@@ -17,10 +17,10 @@
     <string name="home_info_user_welcome_messsage">Hello,</string>
 
     <!-- Home -->
-    <string name="home_button_orders">Orders</string>
+    <string name="home_button_orders">My Products</string>
     <string name="home_button_only_add">Add</string>
-    <string name="home_button_active_orders">Active Orders</string>
-    <string name="home_button_completed_orders">Completed Orders</string>
+    <string name="home_button_active_orders">My Products Currently in Process</string>
+    <string name="home_button_completed_orders">My Completed Products</string>
 
     <!-- New Order -->
     <string name="new_order_phone_hint">Phone (10 digits)</string>
@@ -34,14 +34,14 @@
     <!-- Search Order -->
     <string name="search_order_button_by_image">Search by Image</string>
     <string name="search_order_button_by_phone">Search by Phone</string>
-    <string name="search_order_button_by_id">Search by OrderNumber</string>
+    <string name="search_order_button_by_id">Search by Product Number</string>
 
     <!-- Search By Phone -->
     <string name="search_by_phone_phone_hint">Phone (10 digits)</string>
     <string name="search_by_phone_button_search">Search</string>
 
     <!-- Search By Order ID -->
-    <string name="search_by_order_id_hint">Order Number</string>
+    <string name="search_by_order_id_hint">Product Number</string>
     <string name="search_by_order_id_button_search">Search</string>
 
     <!-- Message Template -->
@@ -68,8 +68,8 @@
     <string name="error_generic">An error occurred</string>
     <string name="error_camera_permission_denied">Camera permission was denied</string>
 
-    <string name="error_no_image_match">No order found matching this image</string>
-    <string name="info_image_match_found">Order found with %1$d%% similarity</string>
+    <string name="error_no_image_match">No product found matching this image</string>
+    <string name="info_image_match_found">Product found with %1$d%% similarity</string>
 
     <string name="order_status_matched_product">Product: %1$s</string>
     <string name="order_status_matched_product_placeholder">Matched product: -</string>
@@ -81,7 +81,7 @@
     <!-- WhatsApp message (EN) -->
     <string name="whatsapp_status_message">
     Hello %1$s,
-    \nThe latest status of your product "%4$s" (OrderNumber %3$s, dated %2$s) is: %5$s
+    \nThe latest status of your product "%4$s" (Product Number %3$s, dated %2$s) is: %5$s
     \nHave a nice day.
     \nYou can see detailed information from the link below:
     \n%6$s
@@ -100,7 +100,7 @@
 
     <string name="loading_default">Please wait…</string>
 
-    <string name="order_list_subtitle">View all orders from your customers</string>
+    <string name="order_list_subtitle">View all products from your customers</string>
     <string name="order_list_last_status_format">Latest situation: %1$s</string>
     <string name="order_item_last_status_unknown">Unknown</string>
     <string name="order_item_status_label">Last Status:</string>
@@ -145,12 +145,12 @@
     <string name="phone_number_component">Phone Number</string>
     <string name="payment_done">Payment Done</string>
     <string name="order_process_completed">Process Completed</string>
-    <string name="order_number_note">Please note the OrderNumber for product and continue.</string>
+    <string name="order_number_note">Please note the Product Number for product and continue.</string>
     <string name="order_number_continue">Continue.</string>
     <string name="back">Back</string>
 
     <string name="dialog_no_match_title">No Match Found</string>
-    <string name="dialog_no_match_message">No order matching the image was found. You are being redirected to the search by OrderNumber screen.</string>
+    <string name="dialog_no_match_message">No product matching the image was found. You are being redirected to the search by Product Number screen.</string>
     <string name="ok">OK</string>
     <string name="user_info">User Info</string>
     <string name="profile_info">Profile Info</string>
@@ -184,11 +184,11 @@
     <string name="home_app_name">Merchant Panel</string>
     <string name="home_welcome_prefix">Hello,</string>
     <string name="home_summary_title">DAILY SUMMARY</string>
-    <string name="home_summary_subtitle">Today\'s Orders</string>
-    <string name="home_button_new_order">Create New Order</string>
+    <string name="home_summary_subtitle">Today\'s Products</string>
+    <string name="home_button_new_order">Create New Record</string>
     <string name="home_button_new_order_desc">Open a new record quickly</string>
-    <string name="home_button_list_orders">Order List</string>
-    <string name="home_button_list_orders_desc">View and manage all orders</string>
+    <string name="home_button_list_orders">Product List</string>
+    <string name="home_button_list_orders_desc">View and manage all products</string>
     <string name="home_button_message_templates">Message Templates</string>
     <string name="home_button_message_templates_desc">Use ready-made registration forms</string>
     <string name="home_system_status_active">System active and up to date: %1$s</string>
@@ -205,17 +205,17 @@
     <string name="login_footer_support">Get Support</string>
 
 
-    <string name="orders_title">My Orders</string>
+    <string name="orders_title">My Products</string>
     <string name="orders_subtitle">General status of your business</string>
 
-    <string name="orders_active_title">Active Orders</string>
+    <string name="orders_active_title">Products in Process</string>
     <string name="orders_active_desc">Current preparations and\ndeliveries</string>
 
-    <string name="orders_past_title">Past Orders</string>
+    <string name="orders_past_title">Completed Products</string>
     <string name="orders_past_desc">All previous transactions and\nreports</string>
 
-    <string name="home_button_search_orders_title">Search Order</string>
-    <string name="home_button_search_orders_desc">Find by ID or customer name</string>
+    <string name="home_button_search_orders_title">Search Product</string>
+    <string name="home_button_search_orders_desc">Find by Product ID or customer name</string>
 
     <string name="profile_title">My Profile</string>
     <string name="profile_section_title">Business Profile</string>
@@ -229,38 +229,38 @@
     <string name="profile_btn_update">Update</string>
 
 
-    <string name="search_title">Search Order</string>
+    <string name="search_title">Search Product</string>
     <string name="search_subtitle">Please select a search method</string>
 
     <string name="search_image_title">Search by Image</string>
-    <string name="search_image_desc">Find orders quickly using visuals\nor product photos</string>
+    <string name="search_image_desc">Find products quickly using visuals\nor product photos</string>
     <string name="search_image_action">TAKE PHOTO</string>
 
-    <string name="search_id_title">Search by Order ID</string>
+    <string name="search_id_title">Search by Product ID</string>
     <string name="search_id_desc">Enter specific order ID or\ninvoice number</string>
     <string name="search_id_action">QUERY</string>
 
     <string name="search_phone_title">Search by Phone</string>
-    <string name="search_phone_desc">List all past orders by customer\nGSM number</string>
+    <string name="search_phone_desc">List all completed products along with the customer\'s mobile phone number.</string>
     <string name="search_phone_action">SEARCH IN CONTACTS</string>
 
 
-    <string name="orders_list_title">My Orders</string>
-    <string name="orders_list_subtitle">Manage all your orders here</string>
+    <string name="orders_list_title">My Products</string>
+    <string name="orders_list_subtitle">Manage all your products here</string>
 
     <string name="pagination_prev">PREV</string>
     <string name="pagination_next">NEXT</string>
     <string name="pagination_info">%1$d / %2$d</string>
 
     <string name="search_page_title">Detailed Search</string>
-    <string name="search_page_subtitle">Find orders by phone or date range</string>
+    <string name="search_page_subtitle">Find products by phone or date range</string>
     <string name="search_label_phone">Phone Number</string>
     <string name="search_label_date">Date Range</string>
     <string name="search_note">Tip: You can search by selecting only phone number or date range.</string>
     <string name="search_button">Search</string>
 
-    <string name="search_id_page_title">Search by Order ID</string>
-    <string name="search_id_page_subtitle">Enter order ID to see details</string>
+    <string name="search_id_page_title">Search by Product ID</string>
+    <string name="search_id_page_subtitle">Enter product ID to see details</string>
 
     <string name="search_phone_page_title">Search by Phone</string>
     <string name="search_phone_page_subtitle">Find records by entering customer number</string>
