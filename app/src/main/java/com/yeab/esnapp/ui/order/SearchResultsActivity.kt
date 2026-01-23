@@ -93,7 +93,6 @@ class SearchResultsActivity : BaseActivity() {
                     putExtra(IntentKeys.SEARCH_SCREEN, true)
                 }
                 startActivity(intent)
-                finish()
             }
         })
 
