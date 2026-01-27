@@ -77,6 +77,10 @@
         <activity android:name=".ui.order.UserManualActivity"
             android:screenOrientation="portrait" />
         <activity
+            android:name=".ui.order.AutoCaptureActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+        <activity
             android:name=".ui.splash.SplashActivity"
             android:screenOrientation="portrait"
             android:exported="true">

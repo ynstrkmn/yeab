@@ -1,8 +1,9 @@
-// kotlin
 package com.yeab.esnapp.ui.order
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.WindowCompat
 import com.google.firebase.database.*
 import com.yeab.esnapp.databinding.ActivityOrderPreparationBinding
@@ -17,6 +18,27 @@ class OrderPreparationActivity : BaseActivity() {
     private var merchantUid: String? = null
     private var currentOrderNumber: String = "-"
 
+    // 1. ADIM: Kameradan (AutoCaptureActivity) gelecek sonucu bekleyen yapı
+    private val autoCaptureLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK) {
+                // Kamera fotoğrafı çekti ve bize URI'yi geri gönderdi
+                val capturedImageUri = result.data?.getStringExtra("captured_image_uri")
+
+                if (capturedImageUri != null) {
+                    // Biz de bu sonucu alıp bizi çağıran NewOrderActivity'ye iletiyoruz
+                    val data = Intent().apply {
+                        putExtra(IntentKeys.ORDER_NUMBER, currentOrderNumber)
+                        putExtra("captured_image_uri", capturedImageUri)
+                    }
+                    setResult(RESULT_OK, data)
+                    finish() // Kendimizi kapatıyoruz, NewOrderActivity'ye dönüyoruz
+                } else {
+                    Toast.makeText(this, "Fotoğraf verisi alınamadı", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -25,14 +47,21 @@ class OrderPreparationActivity : BaseActivity() {
 
         merchantUid = intent.getStringExtra(IntentKeys.MERCHANT_UID)
 
+        // Sipariş numarasını yükle
         loadOrderNumber()
 
+        // 2. ADIM: Butona basınca Kamerayı (AutoCaptureActivity) aç
         binding.btnContinue.setOnClickListener {
-            val data = Intent().apply {
-                putExtra(IntentKeys.ORDER_NUMBER, currentOrderNumber)
+            if (currentOrderNumber == "-" || currentOrderNumber.isEmpty()) {
+                Toast.makeText(this, "Sipariş numarası yüklenemedi, lütfen bekleyin.", Toast.LENGTH_SHORT).show()
+            } else {
+                // HATA DÜZELTİLDİ: Artık SearchByOrderIdActivity'ye değil, AutoCaptureActivity'ye gidiyor.
+                val intent = Intent(this, AutoCaptureActivity::class.java)
+                intent.putExtra(IntentKeys.ORDER_NUMBER, currentOrderNumber)
+
+                // Sonuç bekleyerek başlatıyoruz
+                autoCaptureLauncher.launch(intent)
             }
-            setResult(RESULT_OK, data)
-            finish()
         }
     }
 
@@ -46,18 +75,33 @@ class OrderPreparationActivity : BaseActivity() {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     hideLoading()
                     val value = snapshot.value
+                    // Firebase'den gelen değerin tipini güvenli bir şekilde String'e çeviriyoruz
                     val orderNumber = when (value) {
                         is String -> value
                         is Number -> value.toLong().toString()
                         else -> "-"
                     }
-                    currentOrderNumber = orderNumber
-                    binding.tvOrderNumber.text = orderNumber
+
+                    // Veritabanındaki son numarayı alıp +1 ekliyoruz (Yeni sipariş için)
+                    val nextOrderNumber = if (orderNumber != "-") {
+                        try {
+                            (orderNumber.toLong() + 1).toString()
+                        } catch (e: Exception) {
+                            orderNumber // Çevrilemezse olduğu gibi bırak
+                        }
+                    } else {
+                        "1" // Hiç numara yoksa 1'den başla
+                    }
+
+                    currentOrderNumber = nextOrderNumber
+                    binding.tvOrderNumber.text = nextOrderNumber
                 }
+
                 override fun onCancelled(error: DatabaseError) {
                     hideLoading()
                     currentOrderNumber = "-"
                     binding.tvOrderNumber.text = "-"
+                    Toast.makeText(this@OrderPreparationActivity, "Hata: ${error.message}", Toast.LENGTH_SHORT).show()
                 }
             })
     }

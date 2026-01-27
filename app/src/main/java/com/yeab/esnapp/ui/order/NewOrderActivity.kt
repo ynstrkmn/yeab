@@ -1,10 +1,10 @@
-// kotlin
 package com.yeab.esnapp.ui.order
 
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.net.Uri
 import android.os.Bundle
 import android.provider.ContactsContract
 import android.provider.MediaStore
@@ -14,47 +14,29 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.view.WindowCompat
-import com.google.firebase.crashlytics.FirebaseCrashlytics
+import androidx.lifecycle.lifecycleScope
 import com.google.firebase.database.*
 import com.yeab.esnapp.R
 import com.yeab.esnapp.databinding.ActivityNewOrderBinding
 import com.yeab.esnapp.model.MerchantUser
 import com.yeab.esnapp.ui.base.BaseActivity
+import com.yeab.esnapp.util.FileUtils
 import com.yeab.esnapp.util.FirebasePaths
 import com.yeab.esnapp.util.IntentKeys
-import com.google.mlkit.vision.common.InputImage
-import com.google.mlkit.vision.text.TextRecognition
-import com.google.mlkit.vision.text.latin.TextRecognizerOptions
-import java.io.File
-import kotlin.toString
-import androidx.activity.result.ActivityResult
-import androidx.activity.result.ActivityResultCallback
-import android.net.Uri
-import android.view.View
-import androidx.lifecycle.lifecycleScope
-import com.yeab.esnapp.util.FileUtils
 import id.zelory.compressor.Compressor
 import id.zelory.compressor.constraint.format
 import id.zelory.compressor.constraint.quality
 import id.zelory.compressor.constraint.resolution
 import id.zelory.compressor.constraint.size
 import kotlinx.coroutines.launch
-
+import java.io.File
 
 class NewOrderActivity : BaseActivity() {
 
     private lateinit var binding: ActivityNewOrderBinding
     private val dbRef = FirebaseDatabase.getInstance().reference
     private var merchantUid: String? = null
-
-    // State preservation için anahtar
     private val KEY_IS_PAYMENT_DONE = "key_is_payment_done"
-
-    // FULL RES fotoğraf URI'si
-    private var photoUri: android.net.Uri? = null
-
-    // Geçici olarak tutulan OCR metni
-    private var tempRecognizedText: String = ""
 
     // -- CONTACT PICKER START --
     private lateinit var contactLauncher: ActivityResultLauncher<Intent>
@@ -62,11 +44,24 @@ class NewOrderActivity : BaseActivity() {
     // -- CONTACT PICKER END --
 
     private var lastOrderNumber: String? = null
+
+    // 1. DÜZELTME: Burası artık kamerayı açmıyor, gelen fotoğrafı işliyor
     private val orderPreparationLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == RESULT_OK) {
-                lastOrderNumber = result.data?.getStringExtra(IntentKeys.ORDER_NUMBER)
-                checkCameraPermissionAndOpen()
+                val data = result.data
+                lastOrderNumber = data?.getStringExtra(IntentKeys.ORDER_NUMBER)
+                val capturedUriString = data?.getStringExtra("captured_image_uri")
+
+                if (capturedUriString != null) {
+                    // Otomatik çekilen fotoğrafın URI'si geldi
+                    val photoUri = Uri.parse(capturedUriString)
+
+                    // Direkt sıkıştırma ve geçiş işlemine başla (Tekrar kamera açma!)
+                    customCompressImageFromCamera(FileUtils.from(this, photoUri), photoUri)
+                } else {
+                    Toast.makeText(this, "Fotoğraf alınamadı", Toast.LENGTH_SHORT).show()
+                }
             }
         }
 
@@ -88,41 +83,6 @@ class NewOrderActivity : BaseActivity() {
         orderPreparationLauncher.launch(intent)
     }
 
-    // Kamera sonucu
-    private val cameraLauncher =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == RESULT_OK) {
-                val uri = photoUri
-                if (uri == null) {
-                    Toast.makeText(this, getString(R.string.error_generic), Toast.LENGTH_SHORT).show()
-                    return@registerForActivityResult
-                }
-                try {
-                    // Sadece OCR kontrolü için Bitmap oluşturuyoruz
-                    contentResolver.openInputStream(uri)?.use { inputStream ->
-                        val bitmap = android.graphics.BitmapFactory.decodeStream(inputStream)
-                        if (bitmap != null) {
-                            processImageForOcr(bitmap, uri)
-                        } else {
-                            Toast.makeText(this, getString(R.string.error_generic), Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                } catch (e: Exception) {
-                    Toast.makeText(this, getString(R.string.error_generic) + ": " + e.message, Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-
-    // Kamera izni sonucu
-    private val cameraPermissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-            if (granted) {
-                openCameraForProduct()
-            } else {
-                Toast.makeText(this, getString(R.string.error_camera_permission_denied), Toast.LENGTH_SHORT).show()
-            }
-        }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -137,7 +97,13 @@ class NewOrderActivity : BaseActivity() {
             binding.chkPaymentDone.isChecked = isPaymentDone
         }
 
-        // Rehber seçici launcher
+        setupContactPickers()
+
+        binding.btnSearchPhone.setOnClickListener { searchCustomer() }
+        binding.btnAddProduct.setOnClickListener { startAddProductFlow() }
+    }
+
+    private fun setupContactPickers() {
         contactLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == RESULT_OK) {
                 result.data?.data?.let { uri ->
@@ -147,13 +113,8 @@ class NewOrderActivity : BaseActivity() {
             }
         }
 
-        // İzin isteği launcher
         requestContactPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-            if (granted) {
-                pickContact()
-            } else {
-                Toast.makeText(this, getString(R.string.error_permission_required), Toast.LENGTH_SHORT).show()
-            }
+            if (granted) pickContact() else Toast.makeText(this, getString(R.string.error_permission_required), Toast.LENGTH_SHORT).show()
         }
 
         binding.phoneInputComponent.onPickContactClick = {
@@ -162,14 +123,6 @@ class NewOrderActivity : BaseActivity() {
             } else {
                 requestContactPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
             }
-        }
-
-        binding.btnSearchPhone.setOnClickListener {
-            searchCustomer()
-        }
-
-        binding.btnAddProduct.setOnClickListener {
-            startAddProductFlow()
         }
     }
 
@@ -221,110 +174,33 @@ class NewOrderActivity : BaseActivity() {
             })
     }
 
-
-    private fun checkCameraPermissionAndOpen() {
-        val hasPermission = ContextCompat.checkSelfPermission(
-            this,
-            Manifest.permission.CAMERA
-        ) == PackageManager.PERMISSION_GRANTED
-
-        if (hasPermission) {
-            openCameraForProduct()
-        } else {
-            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
-        }
-    }
-
-    private fun openCameraForProduct() {
-        val photoFile = File(
-            cacheDir,
-            "neworder_${System.currentTimeMillis()}.jpg"
-        )
-
-        photoUri = FileProvider.getUriForFile(
-            this,
-            "$packageName.fileprovider",
-            photoFile
-        )
-
-        val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE).apply {
-            putExtra(MediaStore.EXTRA_OUTPUT, photoUri)
-            addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        }
-
-        cameraLauncher.launch(cameraIntent)
-    }
-
     private fun pickContact() {
         val intent = Intent(Intent.ACTION_PICK, ContactsContract.CommonDataKinds.Phone.CONTENT_URI)
         contactLauncher.launch(intent)
     }
 
-    /**
-     * Resim çekildikten sonra:
-     * 1) ML Kit ile üzerindeki metni tanı (Kalite kontrolü amaçlı)
-     * 2) Tanınan metin varsa diğer sayfaya geç
-     */
-    private fun processImageForOcr(bitmap: Bitmap, uri: Uri) {
-        showLoading()
-
-        val image = InputImage.fromBitmap(bitmap, 0)
-        val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
-
-        recognizer.process(image)
-            .addOnSuccessListener { visionText ->
-                hideLoading()
-                val recognizedText = visionText.text
-                if (recognizedText.isNullOrBlank()) {
-                    Toast.makeText(this, "Çektiğiniz fotoğraf düzgün alınmadı, lütfen ürünü daha net bir şekilde tekrar çekin.", Toast.LENGTH_LONG).show()
-                    openCameraForProduct()
-                } else {
-                    tempRecognizedText = recognizedText
-
-                    customCompressImageFromCamera(FileUtils.from(this, uri))
-                }
-            }
-            .addOnFailureListener {
-                hideLoading()
-                Toast.makeText(this, "Çektiğiniz fotoğraf düzgün alınmadı, lütfen ürünü daha net bir şekilde tekrar çekin.", Toast.LENGTH_LONG).show()
-                FirebaseCrashlytics.getInstance().recordException(Throwable("OCR failed: ${it.message}"))
-                openCameraForProduct()
-            }
-    }
-
     private var compressedImage: File? = null
 
-    private fun customCompressImageFromCamera(actualImage: File?) {
+    // 2. DÜZELTME: Parametre olarak orijinal URI'yi de alıyoruz ki diğer tarafa gönderelim
+    private fun customCompressImageFromCamera(actualImage: File?, originalUri: Uri) {
         actualImage?.let { imageFile ->
             lifecycleScope.launch {
-                // Default compression with custom destination file
-                /*compressedImage = Compressor.compress(this@MainActivity, imageFile) {
-                    default()
-                    getExternalFilesDir(Environment.DIRECTORY_PICTURES)?.also {
-                        val file = File("${it.absolutePath}${File.separator}my_image.${imageFile.extension}")
-                        destination(file)
-                    }
-                }*/
-
-                // Full custom
                 compressedImage = Compressor.compress(this@NewOrderActivity, imageFile) {
                     resolution(980, 1280)
                     quality(40)
                     format(Bitmap.CompressFormat.JPEG)
                     size(2_097_152) // 2 MB
                 }
-
-                goToMessageTemplateScreen()
+                goToMessageTemplateScreen(originalUri)
             }
-        } ?: showError("Please choose an image!")
+        } ?: showError("Resim işlenemedi!")
     }
 
     private fun showError(errorMessage: String) {
         Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show()
     }
 
-    private fun goToMessageTemplateScreen() {
+    private fun goToMessageTemplateScreen(originalUri: Uri) {
         val intent = Intent(this, MessageTemplateActivity::class.java)
         intent.putExtra(IntentKeys.MERCHANT_UID, merchantUid)
         intent.putExtra(IntentKeys.PHONE, binding.phoneInputComponent.getPhoneNumber())
@@ -334,13 +210,13 @@ class NewOrderActivity : BaseActivity() {
         intent.putExtra(IntentKeys.PRODUCT_DESC, binding.edtProductDesc.text.toString().trim())
         intent.putExtra(IntentKeys.IS_PAYMENT_DONE, binding.chkPaymentDone.isChecked)
         intent.putExtra(IntentKeys.ORDER_NUMBER, lastOrderNumber ?: "-")
-        // ÖNEMLİ: Upload edilmemiş yerel dosya yolunu gönderiyoruz
-        if (photoUri != null) {
-            intent.putExtra("extra_local_photo_uri", photoUri.toString())
-            intent.putExtra("extra_local_photo_uri", Uri.fromFile(compressedImage).toString())
-        }
-        intent.putExtra("extra_recognized_text", tempRecognizedText)
-        // Order ID'yi burada oluşturmuyoruz, diğer tarafta oluşturulacak veya null gidecek
+
+        // Orijinal (Otomatik çekilen) fotoğrafı gönderiyoruz
+        intent.putExtra("extra_local_photo_uri", originalUri.toString())
+
+        // Not: OCR metni artık AutoCapture'da işlendiği için buraya boş veya oradan gelen veriyle doldurulabilir.
+        // Şimdilik boş gönderiyoruz, önemli olan fotoğraf.
+        intent.putExtra("extra_recognized_text", lastOrderNumber ?: "")
 
         startActivity(intent)
         finish()
