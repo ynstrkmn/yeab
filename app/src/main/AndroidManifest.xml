@@ -81,6 +81,10 @@
             android:exported="false"
             android:screenOrientation="portrait" />
         <activity
+            android:name=".ui.order.SearchCameraActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat.NoActionBar"/>
+        <activity
             android:name=".ui.splash.SplashActivity"
             android:screenOrientation="portrait"
             android:exported="true">

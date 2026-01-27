@@ -82,19 +82,10 @@ class OrderPreparationActivity : BaseActivity() {
                         else -> "-"
                     }
 
-                    // Veritabanındaki son numarayı alıp +1 ekliyoruz (Yeni sipariş için)
-                    val nextOrderNumber = if (orderNumber != "-") {
-                        try {
-                            (orderNumber.toLong() + 1).toString()
-                        } catch (e: Exception) {
-                            orderNumber // Çevrilemezse olduğu gibi bırak
-                        }
-                    } else {
-                        "1" // Hiç numara yoksa 1'den başla
-                    }
 
-                    currentOrderNumber = nextOrderNumber
-                    binding.tvOrderNumber.text = nextOrderNumber
+
+                    currentOrderNumber = orderNumber
+                    binding.tvOrderNumber.text = orderNumber
                 }
 
                 override fun onCancelled(error: DatabaseError) {

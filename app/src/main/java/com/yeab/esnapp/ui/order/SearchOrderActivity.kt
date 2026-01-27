@@ -1,21 +1,16 @@
 package com.yeab.esnapp.ui.order
 
 import ImageMatchAdapter
-import android.Manifest
 import android.app.Dialog
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
-import android.provider.MediaStore
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.content.ContextCompat
-import androidx.core.content.FileProvider
 import androidx.core.view.WindowCompat
 import com.bumptech.glide.Glide
 import com.google.firebase.database.*
@@ -26,7 +21,6 @@ import com.yeab.esnapp.ui.base.BaseActivity
 import com.yeab.esnapp.util.FirebasePaths
 import com.yeab.esnapp.util.ImageSimilarityUtils
 import com.yeab.esnapp.util.IntentKeys
-import java.io.File
 
 class SearchOrderActivity : BaseActivity() {
 
@@ -34,53 +28,20 @@ class SearchOrderActivity : BaseActivity() {
     private var merchantUid: String? = null
     private val dbRef = FirebaseDatabase.getInstance().reference
 
-    private var photoUri: Uri? = null
-
-    // Kamera sonucu
-    private val cameraLauncher =
+    // DEĞİŞİKLİK 1: Eski "cameraLauncher" yerine bizim özel kamerayı bekleyen launcher
+    private val customCameraLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == RESULT_OK) {
-                val uri = photoUri
-                if (uri == null) {
-                    Toast.makeText(this, getString(R.string.error_generic), Toast.LENGTH_SHORT)
-                        .show()
-                    return@registerForActivityResult
-                }
+                // SearchCameraActivity'den dönen fotoğrafın yolu
+                val capturedUriString = result.data?.getStringExtra("captured_image_uri")
 
-                try {
-                    contentResolver.openInputStream(uri)?.use { inputStream ->
-                        val bitmap = BitmapFactory.decodeStream(inputStream)
-                        if (bitmap != null) {
-                            searchByImage(bitmap)
-                        } else {
-                            Toast.makeText(
-                                this,
-                                getString(R.string.error_generic),
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                    }
-                } catch (e: Exception) {
-                    Toast.makeText(
-                        this,
-                        getString(R.string.error_generic) + ": " + e.message,
-                        Toast.LENGTH_SHORT
-                    ).show()
+                if (capturedUriString != null) {
+                    val uri = Uri.parse(capturedUriString)
+                    // Fotoğrafı Bitmap'e çevirip ESKİ MANTIĞA gönderiyoruz
+                    processCapturedImage(uri)
+                } else {
+                    Toast.makeText(this, getString(R.string.error_generic), Toast.LENGTH_SHORT).show()
                 }
-            }
-        }
-
-    // Kamera izni sonucu
-    private val cameraPermissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-            if (granted) {
-                openCameraForSearch()
-            } else {
-                Toast.makeText(
-                    this,
-                    getString(R.string.error_camera_permission_denied),
-                    Toast.LENGTH_SHORT
-                ).show()
             }
         }
 
@@ -92,8 +53,9 @@ class SearchOrderActivity : BaseActivity() {
 
         merchantUid = intent.getStringExtra(IntentKeys.MERCHANT_UID)
 
+        // DEĞİŞİKLİK 2: Butona basınca System Kamerası değil, bizim Özel Kamera açılıyor
         binding.btnSearchByImage.setOnClickListener {
-            checkCameraPermissionAndOpen()
+            openCustomCamera()
         }
 
         binding.btnSearchByOrderId.setOnClickListener {
@@ -107,41 +69,35 @@ class SearchOrderActivity : BaseActivity() {
             i.putExtra(IntentKeys.MERCHANT_UID, merchantUid)
             startActivity(i)
         }
+
+        // Back butonu varsa (XML'de ekli görünüyor)
+        binding.btnBack.setOnClickListener { finish() }
     }
 
-    private fun checkCameraPermissionAndOpen() {
-        val hasPermission = ContextCompat.checkSelfPermission(
-            this,
-            Manifest.permission.CAMERA
-        ) == PackageManager.PERMISSION_GRANTED
+    // Bizim gölgeli/kareli kamerayı açan fonksiyon
+    private fun openCustomCamera() {
+        val intent = Intent(this, SearchCameraActivity::class.java)
+        customCameraLauncher.launch(intent)
+    }
 
-        if (hasPermission) {
-            openCameraForSearch()
-        } else {
-            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+    // Gelen fotoğrafı Bitmap'e çevirip senin eski arama fonksiyonuna veren köprü
+    private fun processCapturedImage(uri: Uri) {
+        try {
+            contentResolver.openInputStream(uri)?.use { inputStream ->
+                val bitmap = BitmapFactory.decodeStream(inputStream)
+                if (bitmap != null) {
+                    // İŞTE BURASI: Senin orijinal kodun çalışıyor
+                    searchByImage(bitmap)
+                } else {
+                    Toast.makeText(this, getString(R.string.error_generic), Toast.LENGTH_SHORT).show()
+                }
+            }
+        } catch (e: Exception) {
+            Toast.makeText(this, getString(R.string.error_generic) + ": " + e.message, Toast.LENGTH_SHORT).show()
         }
     }
 
-    private fun openCameraForSearch() {
-        val photoFile = File(
-            cacheDir,
-            "search_${System.currentTimeMillis()}.jpg"
-        )
-
-        photoUri = FileProvider.getUriForFile(
-            this,
-            "$packageName.fileprovider",
-            photoFile
-        )
-
-        val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE).apply {
-            putExtra(MediaStore.EXTRA_OUTPUT, photoUri)
-            addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        }
-
-        cameraLauncher.launch(intent)
-    }
+    // --- BURADAN AŞAĞISI SENİN ORİJİNAL KODUN (HİÇ DOKUNULMADI) ---
 
     private fun showNoMatchDialog(uid: String) {
         androidx.appcompat.app.AlertDialog.Builder(this)
@@ -196,7 +152,7 @@ class SearchOrderActivity : BaseActivity() {
                                 val phoneKey = phoneSnap.key ?: continue
                                 for (orderSnap in phoneSnap.children) {
                                     val order = orderSnap.getValue(Order::class.java) ?: continue
-                                    val url = order.productImageUrl
+                                    // val url = order.productImageUrl
                                     val orderId = orderSnap.key ?: continue
 
                                     if ( !urlToOrderInfo.containsKey(orderId)) {

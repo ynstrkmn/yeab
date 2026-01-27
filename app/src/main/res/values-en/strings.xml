@@ -277,4 +277,7 @@
     <string name="templates_section_saved">Saved Templates</string>
     <string name="merchant_info_subtitle">İşletme ve kişisel bilgilerinizi buradan düzenleyebilirsiniz.</string>
 
+    <string name="camera_product_number_note">ÜRÜN NOTUNA YAZILMASI GEREKEN NUMARA:</string>
+    <string name="camera_product_number_subnote">KAMERAYI ÜRÜN NOTUNA TUTUN</string>
+
 </resources>

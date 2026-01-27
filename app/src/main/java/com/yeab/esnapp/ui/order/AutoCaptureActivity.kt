@@ -90,12 +90,20 @@ class AutoCaptureActivity : BaseActivity() {
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .build()
                 .also {
-                    it.setAnalyzer(cameraExecutor, TextAnalyzer(targetOrderNumber) { found ->
-                        if (found) {
-                            // Bulundu!
-                            lockAndCapture("YAKALANDI: $targetOrderNumber")
-                        }
-                    })
+                    it.setAnalyzer(
+                        cameraExecutor,
+                        TextAnalyzer(
+                            targetText = targetOrderNumber,
+                            onMatch = { text ->
+                                runOnUiThread { binding.tvDetectedText.text = text ?: "" }
+                            },
+                            onFound = { found ->
+                                if (found) {
+                                    lockAndCapture("YAKALANDI: $targetOrderNumber")
+                                }
+                            }
+                        )
+                    )
                 }
 
             val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
@@ -176,6 +184,7 @@ class AutoCaptureActivity : BaseActivity() {
     // --- KATI KURAL UYGULAYAN ANALİZ SINIFI ---
     private class TextAnalyzer(
         private val targetText: String,
+        private val onMatch: (String?) -> Unit,
         private val onFound: (Boolean) -> Unit
     ) : ImageAnalysis.Analyzer {
 
@@ -213,26 +222,20 @@ class AutoCaptureActivity : BaseActivity() {
                 recognizer.process(image)
                     .addOnSuccessListener { visionText ->
                         for (block in visionText.textBlocks) {
-                            val box = block.boundingBox
-
-                            if (box != null) {
-                                // 1. KONTROL: Metin aranan numarayı içeriyor mu?
-                                if (block.text.contains(targetText)) {
-
-                                    // 2. KONTROL: KATI KAPSAMA (CONTAINMENT)
-                                    // Yazının tamamı (%100'ü) yeşil kutunun içinde mi?
-                                    if (isCompletelyInside(scanRect, box)) {
-                                        onFound(true)
-                                        imageProxy.close() // Bulduk, kaynağı serbest bırak
-                                        return@addOnSuccessListener
-                                    }
-                                }
+                            val box = block.boundingBox ?: continue
+                            if (block.text.contains(targetText) && isCompletelyInside(scanRect, box)) {
+                                onMatch(block.text)      // TextView'i doldur
+                                onFound(true)            // Yakalandı sinyali
+                                imageProxy.close()
+                                return@addOnSuccessListener
                             }
                         }
-                        // Bulamadıysak kapat, bir sonraki kareye geç
+                        // Eşleşme yoksa temizle
+                        onMatch(null)
                         imageProxy.close()
                     }
                     .addOnFailureListener {
+                        onMatch(null)
                         imageProxy.close()
                     }
             } else {
