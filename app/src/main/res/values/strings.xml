@@ -80,17 +80,18 @@
     <string name="order_status_customer_placeholder">Müşteri: -</string>
     <!-- WhatsApp mesajı (TR) -->
     <string name="whatsapp_status_message">
-    Sayın *%1$s*,
+    Sayın *%1$s* , \n\n
 
-    📦 *Ürün Durum Güncellemesi*
+        *%7$s* işletmesindeki ürününüzün son durumu; \n\n
 
-    *%2$s* tarihli, *%3$s* numaralı ve *%4$s* isimli ürününüzün son durumu:
-    👉 *%5$s* olarak güncellenmiştir.
+        👉 *%5$s* olarak değiştirilmiştir. \n\n\n\n
 
-    Detaylı bilgi ve takip için aşağıdaki bağlantıya tıklayabilirsiniz:
-    🔗 %6$s
 
-    %7$s, İyi günler dileriz.
+    📦 *Ürün Detay Bilgileri* \n\n
+
+    🔗 %6$s \n\n
+
+    *%7$s*, İyi günler dileriz.
 </string>
 
     <string name="welcome_message">%1$s %2$s</string>

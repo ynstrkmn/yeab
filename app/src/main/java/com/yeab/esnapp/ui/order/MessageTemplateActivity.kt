@@ -203,16 +203,44 @@ class MessageTemplateActivity : BaseActivity() {
         val selectedColor = ContextCompat.getColor(this, R.color.chip_selected_background)
         val selectedStrokeColor = ContextCompat.getColor(this, R.color.chip_selected_stroke)
 
+        val selectedTextSizeSp = 22f
+        val unselectedTextSizeSp = 20f
+
+        // Başlangıçta tüm Chip'lere varsayılan metin boyutu ve ellipsize uygula
+        for (i in 0 until binding.radioGroupTemplates.childCount) {
+            (binding.radioGroupTemplates.getChildAt(i) as? Chip)?.apply {
+                setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, unselectedTextSizeSp)
+                ellipsize = android.text.TextUtils.TruncateAt.END
+            }
+        }
+
         binding.radioGroupTemplates.setOnCheckedStateChangeListener { group, checkedIds ->
             resetAllChipStyles()
+
+            // Tüm Chip'leri unselected boyuta döndür
+            for (i in 0 until group.childCount) {
+                (group.getChildAt(i) as? Chip)?.apply {
+                    setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, unselectedTextSizeSp)
+                    requestLayout()
+                }
+            }
+
             if (checkedIds.isNotEmpty()) {
                 binding.edtFreeText.isEnabled = false
                 val selectedChipId = checkedIds.first()
                 val selectedChip = group.findViewById<Chip>(selectedChipId)
-                if (selectedChip != null) {
-                    selectedChip.chipBackgroundColor = android.content.res.ColorStateList.valueOf(selectedColor)
-                    selectedChip.chipStrokeWidth = 4f
-                    selectedChip.chipStrokeColor = android.content.res.ColorStateList.valueOf(selectedStrokeColor)
+                selectedChip?.apply {
+                    chipBackgroundColor = android.content.res.ColorStateList.valueOf(selectedColor)
+                    chipStrokeWidth = 4f
+                    chipStrokeColor = android.content.res.ColorStateList.valueOf(selectedStrokeColor)
+
+                    // Yazı boyutunu biraz arttır ve yeniden ölçüm/yerleşim tetikle
+                    setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, selectedTextSizeSp)
+                    post {
+                        requestLayout()
+                        group.requestLayout()
+                        group.invalidate()
+                    }
                 }
             } else {
                 binding.edtFreeText.isEnabled = true
@@ -516,15 +544,21 @@ class MessageTemplateActivity : BaseActivity() {
                 val safeProductName = if (productDesc.isNotEmpty()) productDesc else getString(R.string.app_name)
                 val detailLink = "https://esnaf.online/index.html?merchantId=$uid&orderId=$orderId&orderDate=$dateKey"
 
+                val trLocale = Locale.forLanguageTag("tr-TR")
+                val customerDisplayNameUpper = customerDisplayName.uppercase(trLocale)
+                val safeProductNameUpper = safeProductName.uppercase(trLocale)
+                val messageTextUpper = messageText.uppercase(trLocale)
+                val merchantNameUpper = (MerchantSession.merchant?.MerchantName ?: "").uppercase(trLocale)
+
                 val formattedMessage = getString(
                     R.string.whatsapp_status_message,
-                    customerDisplayName,
+                    customerDisplayNameUpper,
                     displayDate,
                     orderId,
-                    safeProductName,
-                    messageText,
+                    safeProductNameUpper,
+                    messageTextUpper,
                     detailLink,
-                    MerchantSession.merchant?.MerchantName
+                    merchantNameUpper
                 )
 
                 WhatsAppUtils.sendMessage(this, phone, formattedMessage)

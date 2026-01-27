@@ -47,6 +47,7 @@ import com.yeab.esnapp.util.DateFormats
 import com.yeab.esnapp.util.FileUtils
 import com.yeab.esnapp.util.FirebasePaths
 import com.yeab.esnapp.util.IntentKeys
+import com.yeab.esnapp.util.MerchantSession
 import com.yeab.esnapp.util.WhatsAppUtils
 import id.zelory.compressor.Compressor
 import id.zelory.compressor.constraint.format
@@ -277,27 +278,47 @@ class OrderStatusUpdateActivity : BaseActivity() {
         val selectedColor = ContextCompat.getColor(this, R.color.chip_selected_background)
         val selectedStrokeColor = ContextCompat.getColor(this, R.color.chip_selected_stroke)
 
+        val selectedTextSizeSp = 22f
+        val unselectedTextSizeSp = 20f
+
+        // Başlangıçta tüm Chip'lere varsayılan metin boyutu ve ellipsize uygula
+        for (i in 0 until binding.radioGroupTemplates.childCount) {
+            (binding.radioGroupTemplates.getChildAt(i) as? Chip)?.apply {
+                setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, unselectedTextSizeSp)
+                ellipsize = android.text.TextUtils.TruncateAt.END
+            }
+        }
+
         binding.radioGroupTemplates.setOnCheckedStateChangeListener { group, checkedIds ->
-            // Önce tüm çiplerin stilini sıfırla
             resetAllChipStyles()
+
+            // Tüm Chip'leri unselected boyuta döndür
+            for (i in 0 until group.childCount) {
+                (group.getChildAt(i) as? Chip)?.apply {
+                    setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, unselectedTextSizeSp)
+                    requestLayout()
+                }
+            }
 
             if (checkedIds.isNotEmpty()) {
                 binding.edtFreeText.isEnabled = false
-                // 1. BİR ÇİP SEÇİLDİ
                 val selectedChipId = checkedIds.first()
                 val selectedChip = group.findViewById<Chip>(selectedChipId)
+                selectedChip?.apply {
+                    chipBackgroundColor = android.content.res.ColorStateList.valueOf(selectedColor)
+                    chipStrokeWidth = 4f
+                    chipStrokeColor = android.content.res.ColorStateList.valueOf(selectedStrokeColor)
 
-                if (selectedChip != null) {
-                    // a) Seçilen çipin stilini YEŞİL yap
-                    selectedChip.chipBackgroundColor = android.content.res.ColorStateList.valueOf(selectedColor)
-                    selectedChip.chipStrokeWidth = 4f // Çerçeveyi belirgin yap
-                    selectedChip.setChipStrokeColor(android.content.res.ColorStateList.valueOf(selectedStrokeColor))
-
+                    // Yazı boyutunu biraz arttır ve yeniden ölçüm/yerleşim tetikle
+                    setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, selectedTextSizeSp)
+                    post {
+                        requestLayout()
+                        group.requestLayout()
+                        group.invalidate()
+                    }
                 }
-
             } else {
-                // EditText'i tekrar aktif hale getir
-                binding.edtFreeText.isEnabled=true
+                binding.edtFreeText.isEnabled = true
             }
         }
     }
@@ -634,15 +655,21 @@ class OrderStatusUpdateActivity : BaseActivity() {
                             val detailLink =
                                 "https://esnaf.online/index.html?merchantId=$uid&orderId=$orderId&orderDate=$dateKey"
 
+                            val trLocale = Locale.forLanguageTag("tr-TR")
+                            val customerDisplayNameUpper = customerDisplayName.uppercase(trLocale)
+                            val safeProductNameUpper = safeProductName.uppercase(trLocale)
+                            val messageTextUpper = messageText.uppercase(trLocale)
+                            val merchantNameUpper = (MerchantSession.merchant?.MerchantName ?: "").uppercase(trLocale)
+
                             val formattedMessage = getString(
                                 R.string.whatsapp_status_message,
-                                customerDisplayName,
+                                customerDisplayNameUpper,
                                 displayDate,
                                 orderId,
-                                safeProductName,
-                                messageText,
+                                safeProductNameUpper,
+                                messageTextUpper,
                                 detailLink,
-                                "asdadasdasdsad"
+                                merchantNameUpper
                             )
 
                             hideLoading()
@@ -709,15 +736,21 @@ class OrderStatusUpdateActivity : BaseActivity() {
                     val detailLink =
                         "https://esnaf.online/index.html?merchantId=$uid&orderId=$orderId&orderDate=$dateKey"
 
+                    val trLocale = Locale.forLanguageTag("tr-TR")
+                    val customerDisplayNameUpper = customerDisplayName.uppercase(trLocale)
+                    val safeProductNameUpper = safeProductName.uppercase(trLocale)
+                    val messageTextUpper = messageText.uppercase(trLocale)
+                    val merchantNameUpper = (MerchantSession.merchant?.MerchantName ?: "").uppercase(trLocale)
+
                     val formattedMessage = getString(
                         R.string.whatsapp_status_message,
-                        customerDisplayName,
+                        customerDisplayNameUpper,
                         displayDate,
                         orderId,
-                        safeProductName,
-                        messageText,
+                        safeProductNameUpper,
+                        messageTextUpper,
                         detailLink,
-                        "asdadasdasdsad"
+                        merchantNameUpper
                     )
 
                     hideLoading()

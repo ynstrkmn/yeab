@@ -80,12 +80,17 @@
     <string name="order_status_customer_placeholder">Customer: -</string>
     <!-- WhatsApp message (EN) -->
     <string name="whatsapp_status_message">
-    Hello %1$s,
-    \nThe latest status of your product "%4$s" (Product Number %3$s, dated %2$s) is: %5$s
-    \nHave a nice day.
-    \nYou can see detailed information from the link below:
-    \n%6$s
-        \n%7$s
+    Dear *%1$s*, \n\n
+
+    The latest status of your product at *%7$s*; \n\n
+
+    👉 has been updated to *%5$s*. \n\n\n\n
+
+    📦 *Product Details* \n\n
+
+    🔗 %6$s \n\n
+
+    *%7$s*, wishing you a nice day.
     </string>
 
     <string name="welcome_message">%1$s %2$s</string>
