@@ -84,7 +84,9 @@
 
     The latest status of your product at *%7$s*; \n\n
 
-    👉 has been updated to *%5$s*. \n\n\n\n
+    👉 has been updated to *%5$s*. \n\n
+
+        *Paymen Status: %8$s* \n\n
 
     📦 *Product Details* \n\n
 
@@ -92,6 +94,10 @@
 
     *%7$s*, wishing you a nice day.
     </string>
+
+
+    <string name="order_status_paid">PAID:)</string>
+    <string name="order_status_not_paid">UNPAID!</string>
 
     <string name="welcome_message">%1$s %2$s</string>
 

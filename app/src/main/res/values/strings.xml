@@ -84,8 +84,9 @@
 
         *%7$s* işletmesindeki ürününüzün son durumu; \n\n
 
-        👉 *%5$s* olarak değiştirilmiştir. \n\n\n\n
+        👉 *%5$s* olarak değiştirilmiştir. \n\n
 
+        *Ödeme Durumu: %8$s* \n\n
 
     📦 *Ürün Detay Bilgileri* \n\n
 
@@ -93,6 +94,10 @@
 
     *%7$s*, İyi günler dileriz.
 </string>
+
+    <string name="order_status_paid">ÖDENDİ:)</string>
+    <string name="order_status_not_paid">ÖDENMEDİ!</string>
+
 
     <string name="welcome_message">%1$s %2$s</string>
 

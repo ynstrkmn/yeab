@@ -543,6 +543,7 @@ class MessageTemplateActivity : BaseActivity() {
                 val customerDisplayName = if (customerNameSurname.isNotEmpty()) customerNameSurname else phone
                 val safeProductName = if (productDesc.isNotEmpty()) productDesc else getString(R.string.app_name)
                 val detailLink = "https://esnaf.online/index.html?merchantId=$uid&orderId=$orderId&orderDate=$dateKey"
+                val paymentStatus = if (isPaymentDone) getString(R.string.order_status_paid) else getString(R.string.order_status_not_paid)
 
                 val trLocale = Locale.forLanguageTag("tr-TR")
                 val customerDisplayNameUpper = customerDisplayName.uppercase(trLocale)
@@ -558,7 +559,8 @@ class MessageTemplateActivity : BaseActivity() {
                     safeProductNameUpper,
                     messageTextUpper,
                     detailLink,
-                    merchantNameUpper
+                    merchantNameUpper,
+                    paymentStatus
                 )
 
                 WhatsAppUtils.sendMessage(this, phone, formattedMessage)

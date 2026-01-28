@@ -652,6 +652,8 @@ class OrderStatusUpdateActivity : BaseActivity() {
                             } catch (_: Exception) {
                                 SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(now)
                             }
+                            val paymentStatus = if (order.isPaymentDone) getString(R.string.order_status_paid) else getString(R.string.order_status_not_paid)
+
                             val detailLink =
                                 "https://esnaf.online/index.html?merchantId=$uid&orderId=$orderId&orderDate=$dateKey"
 
@@ -669,7 +671,8 @@ class OrderStatusUpdateActivity : BaseActivity() {
                                 safeProductNameUpper,
                                 messageTextUpper,
                                 detailLink,
-                                merchantNameUpper
+                                merchantNameUpper,
+                                paymentStatus
                             )
 
                             hideLoading()
@@ -733,6 +736,8 @@ class OrderStatusUpdateActivity : BaseActivity() {
                     } catch (_: Exception) {
                         SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(now)
                     }
+                    val paymentStatus = if (order.isPaymentDone) getString(R.string.order_status_paid) else getString(R.string.order_status_not_paid)
+
                     val detailLink =
                         "https://esnaf.online/index.html?merchantId=$uid&orderId=$orderId&orderDate=$dateKey"
 
@@ -750,7 +755,8 @@ class OrderStatusUpdateActivity : BaseActivity() {
                         safeProductNameUpper,
                         messageTextUpper,
                         detailLink,
-                        merchantNameUpper
+                        merchantNameUpper,
+                        paymentStatus
                     )
 
                     hideLoading()
