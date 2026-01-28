@@ -503,10 +503,11 @@ class OrderStatusUpdateActivity : BaseActivity() {
         val uid = merchantUid ?: return
 
         val checkedId = binding.radioGroupTemplates.checkedChipId
-        val selectedTemplateText = if (checkedId != View.NO_ID) {
-            val chip = binding.radioGroupTemplates.findViewById<Chip>(checkedId)
-            chip?.text?.toString()
+        val selectedTemplate = if (checkedId != View.NO_ID) {
+            templateMap[checkedId]
         } else null
+
+        val selectedTemplateText = selectedTemplate?.Text
 
         val freeText = binding.edtFreeText.text.toString().trim()
 
@@ -576,8 +577,12 @@ class OrderStatusUpdateActivity : BaseActivity() {
                 "${FirebasePaths.USER_ORDERS_ROOT}/$phone/$uid/$orderId" to order
             )
 
+            // \[YENİ] moveToCompleted: checkbox veya şablon finished=true ise
+
+            val isFinishedTemplate = selectedTemplate?.Finish ?: false
+
             // chkOperationDone işaretliyse CompletedOrders node'larına taşı
-            val moveToCompleted = binding.chkOperationDone.isChecked;
+            val moveToCompleted = binding.chkOperationDone.isChecked  || isFinishedTemplate
             if (moveToCompleted) {
                 // JSON yapısına uygun ek alanlar
                 order.isFinished = true
