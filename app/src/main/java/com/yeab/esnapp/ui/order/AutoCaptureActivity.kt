@@ -24,6 +24,12 @@ import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import kotlin.compareTo
+import kotlin.div
+import kotlin.ranges.rangeTo
+import kotlin.text.compareTo
+import kotlin.text.toDouble
+import kotlin.times
 
 class AutoCaptureActivity : BaseActivity() {
 
@@ -58,6 +64,8 @@ class AutoCaptureActivity : BaseActivity() {
         } else {
             requestPermissions.launch(REQUIRED_PERMISSIONS)
         }
+
+        binding.tvDetectedTextStatus.setTextColor(android.graphics.Color.RED)
 
         // Manuel butona basılırsa da kilitleyip çekelim
         binding.btnManualCapture.setOnClickListener {
@@ -95,10 +103,12 @@ class AutoCaptureActivity : BaseActivity() {
                         TextAnalyzer(
                             targetText = targetOrderNumber,
                             onMatch = { text ->
-                                runOnUiThread { binding.tvDetectedText.text = text ?: "" }
+                                runOnUiThread { binding.tvDetectedText.text = text ?: "yazı bulunamadı" }
                             },
                             onFound = { found ->
                                 if (found) {
+                                    binding.tvDetectedTextStatus.text = "Doğru numara tespit edildi"
+                                    binding.tvDetectedTextStatus.setTextColor(android.graphics.Color.GREEN)
                                     lockAndCapture("YAKALANDI: $targetOrderNumber")
                                 }
                             }
@@ -223,19 +233,26 @@ class AutoCaptureActivity : BaseActivity() {
                     .addOnSuccessListener { visionText ->
                         for (block in visionText.textBlocks) {
                             val box = block.boundingBox ?: continue
-                            if (block.text.contains(targetText) && isCompletelyInside(scanRect, box)) {
+                            if (block.text.contains(targetText) ) {
+
+                                if(isCompletelyInside(scanRect, box))
+                                {
+
+                                    onFound(true)            // Yakalandı sinyali
+                                    imageProxy.close()
+                                    return@addOnSuccessListener
+                                }
+                            }
+
+                            if(isCompletelyInside(scanRect, box)) {
+
                                 onMatch(block.text)      // TextView'i doldur
-                                onFound(true)            // Yakalandı sinyali
-                                imageProxy.close()
-                                return@addOnSuccessListener
                             }
                         }
-                        // Eşleşme yoksa temizle
-                        onMatch(null)
                         imageProxy.close()
                     }
                     .addOnFailureListener {
-                        onMatch(null)
+                        onMatch("eşleşme hata aldı")
                         imageProxy.close()
                     }
             } else {
@@ -254,6 +271,67 @@ class AutoCaptureActivity : BaseActivity() {
                     textRect.top >= scanRect.top &&
                     textRect.right <= scanRect.right &&
                     textRect.bottom <= scanRect.bottom
+        }
+
+        /**
+         * Metnin merkezinin kutu içinde olması ve IoU >= threshold ise true.
+         * threshold: 0.50-0.70 aralığı önerilir (0.60 varsayılan).
+         * marginPx: küçük tolerans için piksel (örn. 8-16px).
+         */
+        private fun isConfidentlyInside(scanRect: Rect, textRect: Rect, threshold: Double = 0.60, marginPx: Int = 12): Boolean {
+            val expandedScan = Rect(
+                scanRect.left - marginPx,
+                scanRect.top - marginPx,
+                scanRect.right + marginPx,
+                scanRect.bottom + marginPx
+            )
+
+            // 1) Metnin merkezi kutu içinde mi?
+            val cx = (textRect.left + textRect.right) / 2
+            val cy = (textRect.top + textRect.bottom) / 2
+            val centerInside = cx in expandedScan.left..expandedScan.right && cy in expandedScan.top..expandedScan.bottom
+            if (!centerInside) return false
+
+            // 2) IoU (Intersection over Union) hesapla ve eşik uygula
+            val iou = iou(expandedScan, textRect)
+            return iou >= threshold
+        }
+
+        /** Dikdörtgenler için IoU hesabı. */
+        private fun iou(a: Rect, b: Rect): Double {
+            val interLeft = maxOf(a.left, b.left)
+            val interTop = maxOf(a.top, b.top)
+            val interRight = minOf(a.right, b.right)
+            val interBottom = minOf(a.bottom, b.bottom)
+
+            val interW = (interRight - interLeft).coerceAtLeast(0)
+            val interH = (interBottom - interTop).coerceAtLeast(0)
+            val interArea = interW * interH
+            if (interArea == 0) return 0.0
+
+            val areaA = (a.right - a.left) * (a.bottom - a.top)
+            val areaB = (b.right - b.left) * (b.bottom - b.top)
+            val union = areaA + areaB - interArea
+            if (union <= 0) return 0.0
+
+            return interArea.toDouble() / union.toDouble()
+        }
+
+        /**
+         * Tam kapsama gerektiren eski kontrolün toleranslı hali.
+         * marginPx ile kutuyu biraz büyütür.
+         */
+        private fun isCompletelyInsideTol(scanRect: Rect, textRect: Rect, marginPx: Int = 8): Boolean {
+            val expanded = Rect(
+                scanRect.left - marginPx,
+                scanRect.top - marginPx,
+                scanRect.right + marginPx,
+                scanRect.bottom + marginPx
+            )
+            return textRect.left >= expanded.left &&
+                    textRect.top >= expanded.top &&
+                    textRect.right <= expanded.right &&
+                    textRect.bottom <= expanded.bottom
         }
     }
 
@@ -281,4 +359,6 @@ class AutoCaptureActivity : BaseActivity() {
         private const val FILENAME_FORMAT = "yyyy-MM-dd-HH-mm-ss-SSS"
         private val REQUIRED_PERMISSIONS = arrayOf(Manifest.permission.CAMERA)
     }
+
+
 }

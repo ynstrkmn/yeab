@@ -155,7 +155,7 @@
     <string name="phone_number_component">Telefon Numarası</string>
     <string name="payment_done">Ödeme Yapıldı</string>
     <string name="order_process_completed">İşlem Tamamlandı</string>
-    <string name="order_number_note">Lütfen Ürün Numarası bilgisini ürünün üzerine not edin ve devam edin.</string>
+    <string name="order_number_note">Lütfen Ürün Numarası bilgisini ürünün üzerine not kağıdı ile not edin ve açılacak kamera ile fotoğrafını çekin.</string>
     <string name="order_number_continue">Devam.</string>
     <string name="back">Geri</string>
 
