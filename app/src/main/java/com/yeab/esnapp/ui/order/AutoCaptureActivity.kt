@@ -136,17 +136,6 @@ class AutoCaptureActivity : BaseActivity() {
         isLocked = true // Kilitle
 
         runOnUiThread {
-            // 1. KRİTİK ADIM: Analizi kameradan sök (Gözü kapat)
-            // Böylece kamera artık okuma yapamaz ve ikinci kez tetiklenmez.
-            try {
-                cameraProvider?.unbind(imageAnalysis)
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-
-            // 2. Kullanıcıya bilgi ver
-            binding.txtStatus.text = statusMessage
-            binding.txtStatus.setTextColor(android.graphics.Color.GREEN)
 
             // 3. Fotoğrafı çek
             takePhoto()

@@ -73,7 +73,7 @@
         android:layout_height="wrap_content"
         android:text="Fotoğraf çekme düğmesine basabilirsiniz"
         android:textAlignment="center"
-        android:textColor="#FFFFFFFF"
+        android:textColor="#1ABC9C"
         android:textStyle="bold"
         android:textSize="16sp"
         android:ellipsize="end"
