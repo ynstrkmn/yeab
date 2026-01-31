@@ -52,13 +52,14 @@ class NewOrderActivity : BaseActivity() {
                 val data = result.data
                 lastOrderNumber = data?.getStringExtra(IntentKeys.ORDER_NUMBER)
                 val capturedUriString = data?.getStringExtra("captured_image_uri")
+                val recognizedText = data?.getStringExtra(IntentKeys.RECOGNIZED_TEXT)
 
                 if (capturedUriString != null) {
                     // Otomatik çekilen fotoğrafın URI'si geldi
                     val photoUri = Uri.parse(capturedUriString)
 
                     // Direkt sıkıştırma ve geçiş işlemine başla (Tekrar kamera açma!)
-                    customCompressImageFromCamera(FileUtils.from(this, photoUri), photoUri)
+                    customCompressImageFromCamera(FileUtils.from(this, photoUri), photoUri, recognizedText)
                 } else {
                     Toast.makeText(this, "Fotoğraf alınamadı", Toast.LENGTH_SHORT).show()
                 }
@@ -182,7 +183,7 @@ class NewOrderActivity : BaseActivity() {
     private var compressedImage: File? = null
 
     // 2. DÜZELTME: Parametre olarak orijinal URI'yi de alıyoruz ki diğer tarafa gönderelim
-    private fun customCompressImageFromCamera(actualImage: File?, originalUri: Uri) {
+    private fun customCompressImageFromCamera(actualImage: File?, originalUri: Uri, recognizedText: String?) {
         actualImage?.let { imageFile ->
             lifecycleScope.launch {
                 compressedImage = Compressor.compress(this@NewOrderActivity, imageFile) {
@@ -191,7 +192,7 @@ class NewOrderActivity : BaseActivity() {
                     format(Bitmap.CompressFormat.JPEG)
                     size(2_097_152) // 2 MB
                 }
-                goToMessageTemplateScreen(originalUri)
+                goToMessageTemplateScreen(originalUri, recognizedText)
             }
         } ?: showError("Resim işlenemedi!")
     }
@@ -200,7 +201,7 @@ class NewOrderActivity : BaseActivity() {
         Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show()
     }
 
-    private fun goToMessageTemplateScreen(originalUri: Uri) {
+    private fun goToMessageTemplateScreen(originalUri: Uri, recognizedText: String?) {
         val intent = Intent(this, MessageTemplateActivity::class.java)
         intent.putExtra(IntentKeys.MERCHANT_UID, merchantUid)
         intent.putExtra(IntentKeys.PHONE, binding.phoneInputComponent.getPhoneNumber())
@@ -216,7 +217,7 @@ class NewOrderActivity : BaseActivity() {
 
         // Not: OCR metni artık AutoCapture'da işlendiği için buraya boş veya oradan gelen veriyle doldurulabilir.
         // Şimdilik boş gönderiyoruz, önemli olan fotoğraf.
-        intent.putExtra("extra_recognized_text", lastOrderNumber ?: "")
+        intent.putExtra("extra_recognized_text", recognizedText ?: "")
 
         startActivity(intent)
         finish()

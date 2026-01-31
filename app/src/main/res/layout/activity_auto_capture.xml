@@ -27,26 +27,6 @@
             android:padding="16dp"
             android:gravity="center">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/camera_product_number_note"
-                android:textColor="#B0BEC5"
-                android:textAlignment="center"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:letterSpacing="0.1"/>
-
-            <TextView
-                android:id="@+id/txtTargetOrderNumber"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="---"
-                android:textColor="#FFFFFF"
-                android:textAlignment="center"
-                android:textSize="40dp"
-                android:textStyle="bold"
-                android:layout_marginTop="4dp"/>
 
             <TextView
                 android:id="@+id/txtStatus"
@@ -63,7 +43,7 @@
     <View
         android:id="@+id/viewScanFrame"
         android:layout_width="280dp"
-        android:layout_height="180dp"
+        android:layout_height="300dp"
         android:background="@drawable/bg_scan_frame"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -91,7 +71,7 @@
         android:id="@+id/tvDetectedTextStatus"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Doğru Ürün Numarası Bulunamadı"
+        android:text="Fotoğraf çekme düğmesine basabilirsiniz"
         android:textAlignment="center"
         android:textColor="#FFFFFFFF"
         android:textStyle="bold"

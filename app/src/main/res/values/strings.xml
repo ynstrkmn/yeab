@@ -160,7 +160,7 @@
     <string name="phone_number_component">Telefon Numarası</string>
     <string name="payment_done">Ödeme Yapıldı</string>
     <string name="order_process_completed">İşlem Tamamlandı</string>
-    <string name="order_number_note">Lütfen Ürün Numarası bilgisini ürünün üzerine not kağıdı ile not edin ve açılacak kamera ile fotoğrafını çekin.</string>
+    <string name="order_number_note">Lütfen ürününüze ait numarayı çekmek için devam tuşuna basın ve açılan kamera ile ürününüze ait numaranın fotoğrafını çekin.</string>
     <string name="order_number_continue">Devam.</string>
     <string name="back">Geri</string>
 
@@ -298,7 +298,7 @@
 
     <string name="merchant_info_subtitle">İşletme ve kişisel bilgilerinizi buradan düzenleyebilirsiniz.</string>
     <string name="camera_product_number_note">ÜRÜN NOTUNA YAZILMASI GEREKEN NUMARA:</string>
-    <string name="camera_product_number_subnote">ÜRÜN NUMARASI BULUNAN NOTUN KAMERA ÇERÇEVESİ İÇERİSİNDE OLDUĞUNDAN EMİN OLUN</string>
+    <string name="camera_product_number_subnote">ÜRÜNÜNÜZE AİT NUMARANIN KAMERA ÇERÇEVESİ İÇERİSİNDE OLDUĞUNDAN EMİN OLUN</string>
 
 
 

@@ -24,12 +24,14 @@ class OrderPreparationActivity : BaseActivity() {
             if (result.resultCode == RESULT_OK) {
                 // Kamera fotoğrafı çekti ve bize URI'yi geri gönderdi
                 val capturedImageUri = result.data?.getStringExtra("captured_image_uri")
+                val recognizedText = result.data?.getStringExtra(IntentKeys.RECOGNIZED_TEXT)
 
                 if (capturedImageUri != null) {
                     // Biz de bu sonucu alıp bizi çağıran NewOrderActivity'ye iletiyoruz
                     val data = Intent().apply {
                         putExtra(IntentKeys.ORDER_NUMBER, currentOrderNumber)
                         putExtra("captured_image_uri", capturedImageUri)
+                        putExtra(IntentKeys.RECOGNIZED_TEXT, recognizedText)
                     }
                     setResult(RESULT_OK, data)
                     finish() // Kendimizi kapatıyoruz, NewOrderActivity'ye dönüyoruz
@@ -52,16 +54,14 @@ class OrderPreparationActivity : BaseActivity() {
 
         // 2. ADIM: Butona basınca Kamerayı (AutoCaptureActivity) aç
         binding.btnContinue.setOnClickListener {
-            if (currentOrderNumber == "-" || currentOrderNumber.isEmpty()) {
-                Toast.makeText(this, "Sipariş numarası yüklenemedi, lütfen bekleyin.", Toast.LENGTH_SHORT).show()
-            } else {
+
                 // HATA DÜZELTİLDİ: Artık SearchByOrderIdActivity'ye değil, AutoCaptureActivity'ye gidiyor.
                 val intent = Intent(this, AutoCaptureActivity::class.java)
                 intent.putExtra(IntentKeys.ORDER_NUMBER, currentOrderNumber)
 
                 // Sonuç bekleyerek başlatıyoruz
                 autoCaptureLauncher.launch(intent)
-            }
+
         }
     }
 
@@ -85,13 +85,11 @@ class OrderPreparationActivity : BaseActivity() {
 
 
                     currentOrderNumber = orderNumber
-                    binding.tvOrderNumber.text = orderNumber
                 }
 
                 override fun onCancelled(error: DatabaseError) {
                     hideLoading()
-                    currentOrderNumber = "-"
-                    binding.tvOrderNumber.text = "-"
+                    currentOrderNumber = "0"
                     Toast.makeText(this@OrderPreparationActivity, "Hata: ${error.message}", Toast.LENGTH_SHORT).show()
                 }
             })

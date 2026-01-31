@@ -27,7 +27,7 @@ class SearchOrderActivity : BaseActivity() {
     private lateinit var binding: ActivitySearchOrderBinding
     private var merchantUid: String? = null
     private val dbRef = FirebaseDatabase.getInstance().reference
-
+    val currentOrderNumber = ""
     // DEĞİŞİKLİK 1: Eski "cameraLauncher" yerine bizim özel kamerayı bekleyen launcher
     private val customCameraLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -45,6 +45,27 @@ class SearchOrderActivity : BaseActivity() {
             }
         }
 
+    private val autoCaptureLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK) {
+                // Kamera fotoğrafı çekti ve bize URI'yi geri gönderdi
+                val capturedImageUri = result.data?.getStringExtra("captured_image_uri")
+                val recognizedText = result.data?.getStringExtra(IntentKeys.RECOGNIZED_TEXT)
+
+                if (capturedImageUri != null) {
+                    // Biz de bu sonucu alıp bizi çağıran NewOrderActivity'ye iletiyoruz
+                    val data = Intent().apply {
+                        putExtra(IntentKeys.ORDER_NUMBER, currentOrderNumber)
+                        putExtra("captured_image_uri", capturedImageUri)
+                        putExtra(IntentKeys.RECOGNIZED_TEXT, recognizedText)
+                    }
+                    searchByImageText(recognizedText ?: "")
+                } else {
+                    Toast.makeText(this, "Fotoğraf verisi alınamadı", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -55,7 +76,11 @@ class SearchOrderActivity : BaseActivity() {
 
         // DEĞİŞİKLİK 2: Butona basınca System Kamerası değil, bizim Özel Kamera açılıyor
         binding.btnSearchByImage.setOnClickListener {
-            openCustomCamera()
+            val intent = Intent(this, AutoCaptureActivity::class.java)
+            intent.putExtra(IntentKeys.ORDER_NUMBER, currentOrderNumber)
+
+            // Sonuç bekleyerek başlatıyoruz
+            autoCaptureLauncher.launch(intent)
         }
 
         binding.btnSearchByOrderId.setOnClickListener {
@@ -192,6 +217,162 @@ class SearchOrderActivity : BaseActivity() {
                                     ).show()
                                 }
                                 return@calculateSimilarity
+                            }
+
+                            runOnUiThread {
+                                hideLoading()
+
+                                val dialogView = layoutInflater.inflate(
+                                    R.layout.dialog_image_matches,
+                                    null
+                                )
+                                val recycler =
+                                    dialogView.findViewById<androidx.recyclerview.widget.RecyclerView>(
+                                        R.id.recyclerImageMatches
+                                    )
+                                recycler.layoutManager =
+                                    androidx.recyclerview.widget.LinearLayoutManager(this@SearchOrderActivity)
+
+                                // Dialog referansı, tıklamada kapatmak için
+                                var alertDialog: androidx.appcompat.app.AlertDialog? = null
+
+                                val adapter = ImageMatchAdapter(
+                                    matchedOrders,
+                                    onClick = { selected ->
+                                        val intent = Intent(
+                                            this@SearchOrderActivity,
+                                            OrderStatusUpdateActivity::class.java
+                                        )
+                                        intent.putExtra(IntentKeys.MERCHANT_UID, uid)
+                                        intent.putExtra(IntentKeys.PHONE, selected.phone)
+                                        intent.putExtra(IntentKeys.ORDER_ID, selected.orderId)
+                                        intent.putExtra(IntentKeys.PRODUCT_NAME, selected.productName)
+                                        startActivity(intent)
+                                        alertDialog?.dismiss()
+                                    },
+                                    onImageClick = { imageUrl ->
+                                        showImageDialog(imageUrl)
+                                    }
+                                )
+
+                                recycler.adapter = adapter
+
+                                alertDialog =
+                                    androidx.appcompat.app.AlertDialog.Builder(this@SearchOrderActivity)
+                                        .setTitle(getString(R.string.search_results_title))
+                                        .setView(dialogView)
+                                        .create()
+
+                                alertDialog.show()
+                            }
+                        },
+                        onError = { e ->
+                            runOnUiThread {
+                                hideLoading()
+                                Toast.makeText(
+                                    this@SearchOrderActivity,
+                                    getString(R.string.error_generic) + ": " + e.message,
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
+                    )
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    runOnUiThread {
+                        hideLoading()
+                        Toast.makeText(
+                            this@SearchOrderActivity,
+                            error.message,
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            })
+
+    }
+
+    private fun searchByImageText(recognizedText: String) {
+        val uid = merchantUid ?: return
+
+        showLoading()
+
+        dbRef.child(FirebasePaths.ORDERS_ROOT)
+            .child(FirebasePaths.ORDERS_MERCHANT_ORDERS)
+            .child(uid)
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+
+                    val threshold = 40
+
+                    ImageSimilarityUtils.calculateSimilarityFromText(
+                        recognizedText,
+                        uid,
+                        threshold,
+                        onResult = { matches ->
+                            if (matches.isEmpty()) {
+                                runOnUiThread {
+                                    hideLoading()
+                                    Toast.makeText(
+                                        this@SearchOrderActivity,
+                                        getString(R.string.error_no_image_match).plus(".."),
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    showNoMatchDialog(uid)
+                                }
+                                return@calculateSimilarityFromText
+                            }
+
+                            val topMatches = matches.take(3)
+
+                            val urlToOrderInfo =
+                                mutableMapOf<String, Triple<String, String, String?>>()
+
+                            for (phoneSnap in snapshot.children) {
+                                val phoneKey = phoneSnap.key ?: continue
+                                for (orderSnap in phoneSnap.children) {
+                                    val order = orderSnap.getValue(Order::class.java) ?: continue
+                                    // val url = order.productImageUrl
+                                    val orderId = orderSnap.key ?: continue
+
+                                    if ( !urlToOrderInfo.containsKey(orderId)) {
+                                        urlToOrderInfo[orderId] =
+                                            Triple(phoneKey, orderId, order.productName)
+                                    }
+                                }
+                            }
+
+                            val matchedOrders = mutableListOf<ImageMatchAdapter.MatchedOrderUi>()
+
+                            for (match in topMatches) {
+                                val orderId = match.imageId
+                                if (!orderId.isNullOrEmpty()) {
+                                    val info = urlToOrderInfo[orderId]
+                                    if (info != null) {
+                                        val (phone, orderId, productName) = info
+                                        matchedOrders.add(
+                                            ImageMatchAdapter.MatchedOrderUi(
+                                                match = match,
+                                                phone = phone,
+                                                orderId = orderId,
+                                                productName = productName
+                                            )
+                                        )
+                                    }
+                                }
+                            }
+
+                            if (matchedOrders.isEmpty()) {
+                                runOnUiThread {
+                                    hideLoading()
+                                    Toast.makeText(
+                                        this@SearchOrderActivity,
+                                        getString(R.string.error_no_image_match),
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                                return@calculateSimilarityFromText
                             }
 
                             runOnUiThread {

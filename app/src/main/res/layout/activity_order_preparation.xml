@@ -29,34 +29,9 @@
             android:gravity="center"
             android:padding="32dp">
 
-            <ImageView
-                android:layout_width="64dp"
-                android:layout_height="64dp"
-                android:src="@android:drawable/checkbox_on_background"
-                app:tint="#1ABC9C"
-                android:layout_marginBottom="24dp"/>
 
-            <com.google.android.material.textview.MaterialTextView
-                android:id="@+id/tvOrderNumberLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:text="@string/search_by_order_id_hint"
-                android:textColor="#7F8C8D"
-                android:textSize="16sp"
-                android:letterSpacing="0.05"
-                android:textStyle="bold"/>
 
-            <com.google.android.material.textview.MaterialTextView
-                android:id="@+id/tvOrderNumber"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:text="000000"
-                android:textStyle="bold"
-                android:textColor="#171717"
-                android:textSize="48sp"
-                android:layout_marginTop="8dp"/>
+
 
             <View
                 android:layout_width="match_parent"
@@ -71,7 +46,7 @@
                 android:gravity="center"
                 android:text="@string/order_number_note"
                 android:textColor="#546E7A"
-                android:textSize="16sp"
+                android:textSize="28sp"
                 android:lineSpacingExtra="4dp"/>
 
         </LinearLayout>
