@@ -165,7 +165,7 @@
     <string name="back">Geri</string>
 
     <string name="dialog_no_match_title">Eşleşme Bulunamadı</string>
-    <string name="dialog_no_match_message">Görsel ile eşleşen bir ürün bulunamadı. Ürün numarası ile arama ekranına yönlendiriliyorsunuz.</string>
+    <string name="dialog_no_match_message">Görsel ile eşleşen bir ürün bulunamadı. Ürünlerim->İşlemde Olan Ürünler sayfasından ürününüzü bulabilirsiniz.</string>
     <string name="ok">Tamam</string>
     <string name="user_info">Kullanıcı Bilgisi</string>
     <string name="profile_info">Profil Bilgilerim</string>

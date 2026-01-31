@@ -128,12 +128,7 @@ class SearchOrderActivity : BaseActivity() {
         androidx.appcompat.app.AlertDialog.Builder(this)
             .setTitle(getString(R.string.dialog_no_match_title))
             .setMessage(getString(R.string.dialog_no_match_message))
-            .setPositiveButton(getString(R.string.ok)) { _, _ ->
-                val intent = Intent(this, SearchByOrderIdActivity::class.java)
-                intent.putExtra(IntentKeys.MERCHANT_UID, uid)
-                startActivity(intent)
-            }
-            .setCancelable(false)
+            .setCancelable(true)
             .show()
     }
 
