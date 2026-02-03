@@ -379,6 +379,21 @@
         </LinearLayout>
     </ScrollView>
 
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabVoiceCommand"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="24dp"
+        android:layout_marginBottom="24dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:src="@android:drawable/ic_btn_speak_now"
+        app:backgroundTint="#1ABC9C"
+        app:tint="#FFFFFF"
+        app:elevation="6dp"
+        app:layout_constraintBottom_toTopOf="@+id/layoutBottomButtons"
+        app:layout_constraintEnd_toEndOf="parent" />
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/layoutBottomButtons"
         android:layout_width="match_parent"

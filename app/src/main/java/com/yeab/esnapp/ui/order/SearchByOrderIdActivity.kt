@@ -41,6 +41,17 @@ class SearchByOrderIdActivity : BaseActivity() {
         binding.btnBack.setOnClickListener {
             finish()
         }
+
+        // --- YENİ EKLENEN KISIM: OTOMATİK ARAMA KONTROLÜ ---
+        // HomeActivity'den sesli komutla gelen numara var mı?
+        val autoNumber = intent.getStringExtra("AUTO_SEARCH_NUMBER")
+
+        if (!autoNumber.isNullOrEmpty()) {
+            // Numarayı kutucuğa yaz (Kullanıcı görsün)
+            binding.etOrderNumber.setText(autoNumber)
+            // Sanki butona basılmış gibi aramayı başlat
+            searchByOrderNumber()
+        }
     }
 
     private fun searchByOrderNumber() {

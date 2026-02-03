@@ -2,7 +2,10 @@ package com.yeab.esnapp.ui.home
 
 import android.content.Intent
 import android.os.Bundle
+import android.speech.RecognizerIntent
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import com.yeab.esnapp.ui.order.SearchByOrderIdActivity
 import androidx.appcompat.app.AlertDialog
 import androidx.core.view.WindowCompat
 import com.google.firebase.auth.FirebaseAuth
@@ -104,6 +107,12 @@ class HomeActivity : BaseActivity() {
         binding.btnLogout.setOnClickListener {
             showLogoutConfirmDialog()
         }
+
+
+        // MİKROFON BUTONU
+        binding.fabVoiceCommand.setOnClickListener {
+            startVoiceRecognition()
+        }
     }
 
     // Uygulamaya geri dönüldüğünde saati tekrar güncelle
@@ -184,5 +193,41 @@ class HomeActivity : BaseActivity() {
 
         // Bu activity'yi kapat
         finish()
+    }
+
+
+    // --- SESLİ KOMUT KODLARI ---
+
+    private fun startVoiceRecognition() {
+        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE, "tr-TR")
+            putExtra(RecognizerIntent.EXTRA_PROMPT, "Sipariş Numarasını Söyleyin...")
+        }
+
+        try {
+            voiceLauncher.launch(intent)
+        } catch (e: Exception) {
+            Toast.makeText(this, "Ses özelliği desteklenmiyor.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private val voiceLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == RESULT_OK && result.data != null) {
+            val matches = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+            if (!matches.isNullOrEmpty()) {
+                val spokenText = matches[0]
+
+                    openSearchWithNumber(spokenText)
+            }
+        }
+    }
+
+    private fun openSearchWithNumber(number: String) {
+        // ARTIK IMPORT EDİLDİĞİ İÇİN HATA VERMEZ
+        val intent = Intent(this, SearchByOrderIdActivity::class.java)
+        intent.putExtra(IntentKeys.MERCHANT_UID, merchantUid)
+        intent.putExtra("AUTO_SEARCH_NUMBER", number)
+        startActivity(intent)
     }
 }
