@@ -7,6 +7,7 @@ import android.graphics.Rect
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.*
@@ -28,8 +29,11 @@ import kotlin.compareTo
 import kotlin.div
 import kotlin.ranges.rangeTo
 import kotlin.text.compareTo
+import kotlin.text.format
 import kotlin.text.toDouble
+import kotlin.text.toInt
 import kotlin.times
+import kotlin.toString
 
 class AutoCaptureActivity : BaseActivity() {
 
@@ -40,8 +44,7 @@ class AutoCaptureActivity : BaseActivity() {
     private var imageAnalysis: ImageAnalysis? = null
     private var cameraProvider: ProcessCameraProvider? = null
 
-    // Aranacak numara (Örn: 106)
-    private var targetOrderNumber: String = ""
+    private var extraNote: String = ""
 
     // Çift çekimi önlemek için kilit
     @Volatile
@@ -52,10 +55,8 @@ class AutoCaptureActivity : BaseActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         binding = ActivityAutoCaptureBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
         // Intent'ten numarayı al
-        targetOrderNumber = intent.getStringExtra(IntentKeys.ORDER_NUMBER) ?: ""
-        binding.txtTargetOrderNumber.text = targetOrderNumber
+        extraNote = intent.getStringExtra(IntentKeys.RECOGNIZED_TEXT) ?: ""
 
         isLocked = false
 
@@ -65,7 +66,7 @@ class AutoCaptureActivity : BaseActivity() {
             requestPermissions.launch(REQUIRED_PERMISSIONS)
         }
 
-        binding.tvDetectedTextStatus.setTextColor(android.graphics.Color.RED)
+        binding.tvDetectedTextStatus.visibility = View.GONE
 
         // Manuel butona basılırsa da kilitleyip çekelim
         binding.btnManualCapture.setOnClickListener {
@@ -101,15 +102,17 @@ class AutoCaptureActivity : BaseActivity() {
                     it.setAnalyzer(
                         cameraExecutor,
                         TextAnalyzer(
-                            targetText = targetOrderNumber,
                             onMatch = { text ->
-                                runOnUiThread { binding.tvDetectedText.text = text ?: "yazı bulunamadı" }
+                                runOnUiThread {
+
+                                    binding.tvDetectedTextStatus.visibility = View.VISIBLE
+                                    binding.tvDetectedText.text = text ?: "yazı bulunamadı" }
                             },
-                            onFound = { found ->
-                                if (found) {
-                                    binding.tvDetectedTextStatus.text = "Doğru numara tespit edildi"
-                                    binding.tvDetectedTextStatus.setTextColor(android.graphics.Color.GREEN)
-                                    lockAndCapture("YAKALANDI: $targetOrderNumber")
+                            onNoMatch = {
+                                runOnUiThread {
+                                    binding.tvDetectedTextStatus.visibility = View.GONE
+                                    binding.tvDetectedText.text = ""
+                                    // Alternatif: binding.tvDetectedTextStatus.isVisible = false
                                 }
                             }
                         )
@@ -137,24 +140,20 @@ class AutoCaptureActivity : BaseActivity() {
         isLocked = true // Kilitle
 
         runOnUiThread {
-            // 1. KRİTİK ADIM: Analizi kameradan sök (Gözü kapat)
-            // Böylece kamera artık okuma yapamaz ve ikinci kez tetiklenmez.
-            try {
-                cameraProvider?.unbind(imageAnalysis)
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-
-            // 2. Kullanıcıya bilgi ver
-            binding.txtStatus.text = statusMessage
-            binding.txtStatus.setTextColor(android.graphics.Color.GREEN)
 
             // 3. Fotoğrafı çek
             takePhoto()
         }
     }
 
+    // Kotlin
+// 'app/src/main/java/com/yeab/esnapp/ui/order/AutoCaptureActivity.kt'
     private fun takePhoto() {
+        if(extraNote.trim().isNullOrBlank()) {
+            // Algılanan metni al ve kontrol et
+            extraNote = binding.tvDetectedText.text?.toString()?.trim() ?: ""
+        }
+
         val imageCapture = imageCapture ?: return
 
         val photoFile = File(
@@ -170,7 +169,6 @@ class AutoCaptureActivity : BaseActivity() {
             object : ImageCapture.OnImageSavedCallback {
                 override fun onError(exc: ImageCaptureException) {
                     Log.e(TAG, "Fotoğraf hatası: ${exc.message}", exc)
-                    // Hata olursa kilidi açalım ki tekrar denesin
                     isLocked = false
                     runOnUiThread {
                         binding.txtStatus.text = "Hata oluştu, tekrar deneyin."
@@ -180,9 +178,10 @@ class AutoCaptureActivity : BaseActivity() {
                 override fun onImageSaved(output: ImageCapture.OutputFileResults) {
                     val savedUri = Uri.fromFile(photoFile)
 
-                    // Sonucu hazırla ve dön
                     val resultIntent = Intent().apply {
                         putExtra("captured_image_uri", savedUri.toString())
+                        // Metin boş değil, geri gönder
+                        putExtra(IntentKeys.RECOGNIZED_TEXT, extraNote)
                     }
                     setResult(RESULT_OK, resultIntent)
                     finish()
@@ -191,149 +190,92 @@ class AutoCaptureActivity : BaseActivity() {
         )
     }
 
-    // --- KATI KURAL UYGULAYAN ANALİZ SINIFI ---
+
+    // Kotlin
+// 'app/src/main/java/com/yeab/esnapp/ui/order/AutoCaptureActivity.kt'
     private class TextAnalyzer(
-        private val targetText: String,
         private val onMatch: (String?) -> Unit,
-        private val onFound: (Boolean) -> Unit
+        private val onNoMatch: () -> Unit
     ) : ImageAnalysis.Analyzer {
 
-        val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+        private val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+
+        // Histerezis sayaçları
+        private var consecutiveMatches = 0
+        private var consecutiveMisses = 0
+
+        // Eşikler (ihtiyaca göre ayarlayın)
+        private val minConsecutiveMatches = 2
+        private val minConsecutiveMisses = 3
 
         @androidx.camera.core.ExperimentalGetImage
         override fun analyze(imageProxy: ImageProxy) {
-            val mediaImage = imageProxy.image
-            if (mediaImage != null) {
-                val rotation = imageProxy.imageInfo.rotationDegrees
-                // Cihazın tutuş yönüne göre genişlik/yükseklik ayarı
-                val width = if (rotation == 90 || rotation == 270) imageProxy.height else imageProxy.width
-                val height = if (rotation == 90 || rotation == 270) imageProxy.width else imageProxy.height
+            val mediaImage = imageProxy.image ?: return imageProxy.close()
+            val rotation = imageProxy.imageInfo.rotationDegrees
+            val width = if (rotation == 90 || rotation == 270) imageProxy.height else imageProxy.width
+            val height = if (rotation == 90 || rotation == 270) imageProxy.width else imageProxy.height
 
-                // --- TARAMA ALANI (KUTU) ---
-                // Ekranın tam ortasında sanal bir kutu oluşturuyoruz.
-                // XML'deki görsel kutuyla (280dp x 120dp) uyumlu olması için oranlar:
-                // Genişlik %65, Yükseklik %25 (Biraz esneme payı ile)
-                val boxWidth = (width * 0.65).toInt()
-                val boxHeight = (height * 0.25).toInt()
+            // UI’daki yeşil çerçeveye yakın oranlar (gerekirse güncelleyin)
+            val boxWidth = (width * 0.65).toInt()
+            val boxHeight = (height * 0.25).toInt()
+            val cx = width / 2
+            val cy = height / 2
+            val scanRect = Rect(
+                cx - (boxWidth / 2),
+                cy - (boxHeight / 2),
+                cx + (boxWidth / 2),
+                cy + (boxHeight / 2)
+            )
 
-                val cx = width / 2
-                val cy = height / 2
+            val image = InputImage.fromMediaImage(mediaImage, rotation)
 
-                // Kutunun koordinatlarını hesapla
-                val scanRect = Rect(
-                    cx - (boxWidth / 2),
-                    cy - (boxHeight / 2),
-                    cx + (boxWidth / 2),
-                    cy + (boxHeight / 2)
-                )
+            recognizer.process(image)
+                .addOnSuccessListener { visionText ->
+                    var insideFound = false
+                    var insideText: String? = null
 
-                val image = InputImage.fromMediaImage(mediaImage, rotation)
+                    for (block in visionText.textBlocks) {
+                        val box = block.boundingBox ?: continue
+                        // Basit merkez testi yeterli olabilir; isConfidentlyInside’ı çok katı buluyorsanız bunu kullanın:
+                        val cxText = (box.left + box.right) / 2
+                        val cyText = (box.top + box.bottom) / 2
+                        val centerInside = cxText in scanRect.left..scanRect.right &&
+                                cyText in scanRect.top..scanRect.bottom
 
-                recognizer.process(image)
-                    .addOnSuccessListener { visionText ->
-                        for (block in visionText.textBlocks) {
-                            val box = block.boundingBox ?: continue
-                            if (block.text.contains(targetText) ) {
-
-                                if(isCompletelyInside(scanRect, box))
-                                {
-
-                                    onFound(true)            // Yakalandı sinyali
-                                    imageProxy.close()
-                                    return@addOnSuccessListener
-                                }
-                            }
-
-                            if(isCompletelyInside(scanRect, box)) {
-
-                                onMatch(block.text)      // TextView'i doldur
-                            }
+                        if (centerInside) {
+                            insideFound = true
+                            insideText = block.text
+                            break
                         }
-                        imageProxy.close()
                     }
-                    .addOnFailureListener {
-                        onMatch("eşleşme hata aldı")
-                        imageProxy.close()
+
+                    if (insideFound) {
+                        consecutiveMatches++
+                        consecutiveMisses = 0
+                        if (consecutiveMatches >= minConsecutiveMatches) {
+                            onMatch(insideText)
+                        }
+                    } else {
+                        consecutiveMisses++
+                        if (consecutiveMisses >= minConsecutiveMisses) {
+                            consecutiveMatches = 0
+                            onNoMatch()
+                        }
                     }
-            } else {
-                imageProxy.close()
-            }
-        }
 
-        // --- YAZI TAMAMEN KUTUNUN İÇİNDE Mİ? ---
-        private fun isCompletelyInside(scanRect: Rect, textRect: Rect): Boolean {
-            // Text Sol kenarı >= Kutu Sol kenarı
-            // Text Sağ kenarı <= Kutu Sağ kenarı
-            // Text Üst kenarı >= Kutu Üst kenarı
-            // Text Alt kenarı <= Kutu Alt kenarı
-
-            return textRect.left >= scanRect.left &&
-                    textRect.top >= scanRect.top &&
-                    textRect.right <= scanRect.right &&
-                    textRect.bottom <= scanRect.bottom
-        }
-
-        /**
-         * Metnin merkezinin kutu içinde olması ve IoU >= threshold ise true.
-         * threshold: 0.50-0.70 aralığı önerilir (0.60 varsayılan).
-         * marginPx: küçük tolerans için piksel (örn. 8-16px).
-         */
-        private fun isConfidentlyInside(scanRect: Rect, textRect: Rect, threshold: Double = 0.60, marginPx: Int = 12): Boolean {
-            val expandedScan = Rect(
-                scanRect.left - marginPx,
-                scanRect.top - marginPx,
-                scanRect.right + marginPx,
-                scanRect.bottom + marginPx
-            )
-
-            // 1) Metnin merkezi kutu içinde mi?
-            val cx = (textRect.left + textRect.right) / 2
-            val cy = (textRect.top + textRect.bottom) / 2
-            val centerInside = cx in expandedScan.left..expandedScan.right && cy in expandedScan.top..expandedScan.bottom
-            if (!centerInside) return false
-
-            // 2) IoU (Intersection over Union) hesapla ve eşik uygula
-            val iou = iou(expandedScan, textRect)
-            return iou >= threshold
-        }
-
-        /** Dikdörtgenler için IoU hesabı. */
-        private fun iou(a: Rect, b: Rect): Double {
-            val interLeft = maxOf(a.left, b.left)
-            val interTop = maxOf(a.top, b.top)
-            val interRight = minOf(a.right, b.right)
-            val interBottom = minOf(a.bottom, b.bottom)
-
-            val interW = (interRight - interLeft).coerceAtLeast(0)
-            val interH = (interBottom - interTop).coerceAtLeast(0)
-            val interArea = interW * interH
-            if (interArea == 0) return 0.0
-
-            val areaA = (a.right - a.left) * (a.bottom - a.top)
-            val areaB = (b.right - b.left) * (b.bottom - b.top)
-            val union = areaA + areaB - interArea
-            if (union <= 0) return 0.0
-
-            return interArea.toDouble() / union.toDouble()
-        }
-
-        /**
-         * Tam kapsama gerektiren eski kontrolün toleranslı hali.
-         * marginPx ile kutuyu biraz büyütür.
-         */
-        private fun isCompletelyInsideTol(scanRect: Rect, textRect: Rect, marginPx: Int = 8): Boolean {
-            val expanded = Rect(
-                scanRect.left - marginPx,
-                scanRect.top - marginPx,
-                scanRect.right + marginPx,
-                scanRect.bottom + marginPx
-            )
-            return textRect.left >= expanded.left &&
-                    textRect.top >= expanded.top &&
-                    textRect.right <= expanded.right &&
-                    textRect.bottom <= expanded.bottom
+                    imageProxy.close()
+                }
+                .addOnFailureListener {
+                    consecutiveMisses++
+                    if (consecutiveMisses >= minConsecutiveMisses) {
+                        consecutiveMatches = 0
+                        onNoMatch()
+                    }
+                    imageProxy.close()
+                }
         }
     }
+
 
     // --- İZİN YÖNETİMİ ---
     private val requestPermissions = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {

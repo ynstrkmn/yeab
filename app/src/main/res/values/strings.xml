@@ -41,7 +41,7 @@
     <string name="search_by_phone_button_search">Ara</string>
 
     <!-- Search By Order ID -->
-    <string name="search_by_order_id_hint">Ürün Numarası</string>
+    <string name="search_by_order_id_hint">Ürün Bilgisi</string>
     <string name="search_by_order_id_button_search">Ara</string>
 
     <!-- Message Template -->
@@ -160,12 +160,13 @@
     <string name="phone_number_component">Telefon Numarası</string>
     <string name="payment_done">Ödeme Yapıldı</string>
     <string name="order_process_completed">İşlem Tamamlandı</string>
-    <string name="order_number_note">Lütfen Ürün Numarası bilgisini ürünün üzerine not kağıdı ile not edin ve açılacak kamera ile fotoğrafını çekin.</string>
+    <string name="order_number_note">Lütfen Ürün Numarası bilgisini ürünün üzerine not kağıdı ile not edin veya aşağıdaki alana ürün ile alakalı bir metin girin ve devama basın.</string>
     <string name="order_number_continue">Devam.</string>
     <string name="back">Geri</string>
 
     <string name="dialog_no_match_title">Eşleşme Bulunamadı</string>
-    <string name="dialog_no_match_message">Görsel ile eşleşen bir ürün bulunamadı. Ürün numarası ile arama ekranına yönlendiriliyorsunuz.</string>
+    <string name="dialog_no_match_message">Görsel ile eşleşen bir ürün bulunamadı. Ürün metni ile arama ekranına yönlendiriliyorsunuz.</string>
+    <string name="dialog_no_match_for_order_message">Bu bilgiler ile herhangi bir ürün bulamadım. İsterseniz işlemde olan ürünlerim sayfasına yönlendirebilirim.</string>
     <string name="ok">Tamam</string>
     <string name="user_info">Kullanıcı Bilgisi</string>
     <string name="profile_info">Profil Bilgilerim</string>
@@ -224,7 +225,7 @@
     <string name="search_image_desc">Görsel veya ürün fotoğrafı kullanarak\nhızlıca ürünü bulun</string>
     <string name="search_image_action">FOTOĞRAF ÇEK</string>
 
-    <string name="search_id_title">Ürün No ile Ara</string>
+    <string name="search_id_title">Ürün Metni ile Ara</string>
     <string name="search_id_desc">Spesifik ürün ID veya fatura\nnumarasını girin</string>
     <string name="search_id_action">SORGULA</string>
 
@@ -284,7 +285,7 @@
     <string name="search_button">Ara</string>
 
     <string name="search_id_page_title">Ürün No ile Ara</string>
-    <string name="search_id_page_subtitle">Ürün numarasını girerek detaylara ulaşın</string>
+    <string name="search_id_page_subtitle">Ürün numarası veya metnini girerek detaylara ulaşın</string>
 
     <string name="search_phone_page_title">Telefon ile Ara</string>
     <string name="search_phone_page_subtitle">Müşteri numarasını girerek kayıtları bulun</string>
@@ -298,7 +299,9 @@
 
     <string name="merchant_info_subtitle">İşletme ve kişisel bilgilerinizi buradan düzenleyebilirsiniz.</string>
     <string name="camera_product_number_note">ÜRÜN NOTUNA YAZILMASI GEREKEN NUMARA:</string>
-    <string name="camera_product_number_subnote">ÜRÜN NUMARASI BULUNAN NOTUN KAMERA ÇERÇEVESİ İÇERİSİNDE OLDUĞUNDAN EMİN OLUN</string>
+    <string name="camera_product_number_subnote">ÜRÜNÜN KAMERA ÇERÇEVESİ İÇERİSİNDE OLDUĞUNDAN EMİN OLUN</string>
+
+    <string name="extra_note_optional">Ürün Açıklaması</string>
 
 
 

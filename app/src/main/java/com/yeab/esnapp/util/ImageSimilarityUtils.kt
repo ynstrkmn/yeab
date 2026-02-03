@@ -112,6 +112,82 @@ object ImageSimilarityUtils {
         }
     }
 
+    fun calculateSimilarityFromText(
+        text: String,
+        merchantUid: String,
+        threshold: Int = 20,
+        onResult: (List<MatchResult>) -> Unit,
+        onError: ((Exception) -> Unit)? = null
+    ) {
+        try {
+            val queryText = text.trim()
+            if (queryText.isEmpty()) {
+                onResult(emptyList())
+                return
+            }
+
+            val queryTokens = normalizeTokens(queryText)
+            if (queryTokens.isEmpty()) {
+                onResult(emptyList())
+                return
+            }
+
+            val minPercent = threshold.coerceIn(1, 100)
+
+            val dbRef = FirebaseDatabase.getInstance().reference
+                .child("image_hashes")
+                .child(merchantUid)
+
+            dbRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    try {
+                        val matches = ArrayList<MatchResult>()
+
+                        for (child in snapshot.children) {
+                            val storedText =
+                                child.child("recognizedText").getValue(String::class.java)
+                            val otherImageUrl =
+                                child.child("imageUrl").getValue(String::class.java)
+                            val imageId = child.key ?: continue
+
+                            if (storedText.isNullOrBlank()) continue
+
+                            val storedTokens = normalizeTokens(storedText)
+                            if (storedTokens.isEmpty()) continue
+
+                            val sim = tokenSetSimilarity(queryTokens, storedTokens)
+                            val percentage = (sim * 100).toInt()
+
+                            if (percentage >= minPercent) {
+                                val distance = 100 - percentage
+                                matches.add(
+                                    MatchResult(
+                                        imageId = imageId,
+                                        imageUrl = otherImageUrl,
+                                        phash = "",
+                                        distance = distance,
+                                        percentage = percentage
+                                    )
+                                )
+                            }
+                        }
+
+                        matches.sortBy { it.distance }
+                        onResult(matches)
+                    } catch (e: Exception) {
+                        onError?.invoke(e)
+                    }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    onError?.invoke(Exception(error.message))
+                }
+            })
+        } catch (e: Exception) {
+            onError?.invoke(e)
+        }
+    }
+
     /**
      * Metni normalize edip kelime seti döner:
      * - Büyük harfe çevirir

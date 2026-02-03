@@ -25,6 +25,8 @@ import java.util.*
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import com.yeab.esnapp.R
+import kotlin.collections.addAll
+import kotlin.text.clear
 
 class MerchantOrdersActivity : BaseActivity() {
     private lateinit var binding: ActivityMerchantOrdersBinding
@@ -32,7 +34,7 @@ class MerchantOrdersActivity : BaseActivity() {
     private lateinit var databaseUser: DatabaseReference
     private val adapter = MerchantOrderAdapter()
 
-    private var pageSize = 5
+    private var pageSize = 20
     private var isLoading = false
 
     private val allItems = mutableListOf<OrderItem>()
@@ -140,6 +142,7 @@ class MerchantOrdersActivity : BaseActivity() {
         }
     }
 
+    // app/src/main/java/com/yeab/esnapp/ui/order/MerchantOrdersActivity.kt
     private fun fetchAllProductsOnce() {
         if (isLoading) return
         isLoading = true
@@ -151,37 +154,35 @@ class MerchantOrdersActivity : BaseActivity() {
         database.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 lifecycleScope.launch {
-                    repeatOnLifecycle(Lifecycle.State.STARTED) {
-                        val temp = mutableListOf<OrderItem>()
-                        for (orderSnap in snapshot.children) {
-                            val productNodes = orderSnap.children
-                                .toList()
-                            for (productNode in productNodes) {
-                                val items = mapProductNode(
-                                    orderId = productNode.key.orEmpty(),
-                                    orderSnap = orderSnap,
-                                    productNode = productNode
-                                )
-                                if (items.isNotEmpty()) temp.add(items.first())
-                            }
+                    val temp = mutableListOf<OrderItem>()
+                    for (orderSnap in snapshot.children) {
+                        val productNodes = orderSnap.children.toList()
+                        for (productNode in productNodes) {
+                            val items = mapProductNode(
+                                orderId = productNode.key.orEmpty(),
+                                orderSnap = orderSnap,
+                                productNode = productNode
+                            )
+                            if (items.isNotEmpty()) temp.add(items.first())
                         }
-                        allItems.addAll(temp)
-
-                        allItems.sortWith { a, b ->
-                            val da = parseDate(a.createdDate)
-                            val db = parseDate(b.createdDate)
-                            when {
-                                da == null && db == null -> 0
-                                da == null -> 1
-                                db == null -> -1
-                                else -> db.compareTo(da)
-                            }
-                        }
-
-                        applyPaging()
-                        isLoading = false
-                        binding.progress.visibility = View.GONE
                     }
+                    allItems.clear()
+                    allItems.addAll(temp)
+
+                    allItems.sortWith { a, b ->
+                        val da = parseDate(a.createdDate)
+                        val db = parseDate(b.createdDate)
+                        when {
+                            da == null && db == null -> 0
+                            da == null -> 1
+                            db == null -> -1
+                            else -> db.compareTo(da)
+                        }
+                    }
+
+                    applyPaging()
+                    isLoading = false
+                    binding.progress.visibility = View.GONE
                 }
             }
             override fun onCancelled(error: DatabaseError) {
@@ -191,6 +192,7 @@ class MerchantOrdersActivity : BaseActivity() {
             }
         })
     }
+
 
     private fun applyPaging() {
         val totalPages = totalPages()

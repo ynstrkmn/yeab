@@ -34,14 +34,14 @@
     <!-- Search Order -->
     <string name="search_order_button_by_image">Search by Image</string>
     <string name="search_order_button_by_phone">Search by Phone</string>
-    <string name="search_order_button_by_id">Search by Product Number</string>
+    <string name="search_order_button_by_id">Search by Product Text</string>
 
     <!-- Search By Phone -->
     <string name="search_by_phone_phone_hint">Phone (10 digits)</string>
     <string name="search_by_phone_button_search">Search</string>
 
     <!-- Search By Order ID -->
-    <string name="search_by_order_id_hint">Product Number</string>
+    <string name="search_by_order_id_hint">Product Information</string>
     <string name="search_by_order_id_button_search">Search</string>
 
     <!-- Message Template -->
@@ -156,12 +156,13 @@
     <string name="phone_number_component">Phone Number</string>
     <string name="payment_done">Payment Done</string>
     <string name="order_process_completed">Process Completed</string>
-    <string name="order_number_note">Please note the Product Number for product and continue.</string>
+    <string name="order_number_note">Please note the Product Number for product or enter a note for product and continue.</string>
     <string name="order_number_continue">Continue.</string>
     <string name="back">Back</string>
 
     <string name="dialog_no_match_title">No Match Found</string>
-    <string name="dialog_no_match_message">No product matching the image was found. You are being redirected to the search by Product Number screen.</string>
+    <string name="dialog_no_match_message">No product matching the image was found. You are being redirected to the search by Product Text screen.</string>
+    <string name="dialog_no_match_for_order_message">Bu bilgiler ile herhangi bir ürün bulamadım. İsterseniz işlemde olan ürünlerim sayfasına yönlendirebilirim.</string>
     <string name="ok">OK</string>
     <string name="user_info">User Info</string>
     <string name="profile_info">Profile Info</string>
@@ -247,7 +248,7 @@
     <string name="search_image_desc">Find products quickly using visuals\nor product photos</string>
     <string name="search_image_action">TAKE PHOTO</string>
 
-    <string name="search_id_title">Search by Product ID</string>
+    <string name="search_id_title">Search by Product Text</string>
     <string name="search_id_desc">Enter specific order ID or\ninvoice number</string>
     <string name="search_id_action">QUERY</string>
 
@@ -271,7 +272,7 @@
     <string name="search_button">Search</string>
 
     <string name="search_id_page_title">Search by Product ID</string>
-    <string name="search_id_page_subtitle">Enter product ID to see details</string>
+    <string name="search_id_page_subtitle">Enter product Number or Text to see details</string>
 
     <string name="search_phone_page_title">Search by Phone</string>
     <string name="search_phone_page_subtitle">Find records by entering customer number</string>
@@ -284,6 +285,7 @@
     <string name="merchant_info_subtitle">İşletme ve kişisel bilgilerinizi buradan düzenleyebilirsiniz.</string>
 
     <string name="camera_product_number_note">ÜRÜN NOTUNA YAZILMASI GEREKEN NUMARA:</string>
-    <string name="camera_product_number_subnote">KAMERAYI ÜRÜN NOTUNA TUTUN</string>
+    <string name="camera_product_number_subnote">PLEASE BE SURE THAT THE PRODUCT IS ON THE CAMERA LINE.</string>
 
+    <string name="extra_note_optional">Product Explanation</string>
 </resources>

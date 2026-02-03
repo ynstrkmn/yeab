@@ -73,7 +73,25 @@
                 android:textColor="#546E7A"
                 android:textSize="16sp"
                 android:lineSpacingExtra="4dp"/>
+            <!-- app/src/main/res/layout/activity_order_preparation.xml -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilExtraNote"
+                android:layout_width="match_parent"
+                android:layout_height="110dp"
+                android:hint="@string/extra_note_optional"
+                android:paddingVertical="12dp"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                app:boxStrokeColor="#1ABC9C"
+                app:hintTextColor="#1ABC9C"
+                android:textColorHint="#757575">
 
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etExtraNote"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:textColor="#171717"
+                    android:inputType="textPersonName" />
+            </com.google.android.material.textfield.TextInputLayout>
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
