@@ -641,20 +641,12 @@ class MessageTemplateActivity : BaseActivity() {
         orderId: String,
         messageText: String
     ) {
-        val bmp = capturedBitmap ?: return;
-        val baos = ByteArrayOutputStream()
-        bmp.compress(Bitmap.CompressFormat.JPEG, 90, baos)
-        val data = baos.toByteArray()
-
-        val uri = Uri.parse(
-            MediaStore.Images.Media.insertImage(
-                contentResolver,
-                bmp,
-                "temp",
-                null
-            )
-        )
-        customCompressImageFromCamera(FileUtils.from(this, uri), orderId, merchantUid, messageText)
+        val uri = this::photoUri.isInitialized.takeIf { it }?.let { photoUri } ?: return
+        val file = FileUtils.from(this, uri) ?: run {
+            showError("Fotoğraf bulunamadı, lütfen tekrar deneyin.")
+            return
+        }
+        customCompressImageFromCamera(file, orderId, merchantUid, messageText)
     }
 
     private var compressedImage: File? = null

@@ -289,6 +289,64 @@
                         android:background="#F2F4F6"/>
 
                     <LinearLayout
+                        android:id="@+id/btnListActiveOrders"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:clickable="true"
+                        android:background="?android:attr/selectableItemBackground"
+                        android:padding="20dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <FrameLayout
+                            android:layout_width="44dp"
+                            android:layout_height="44dp"
+                            android:background="@drawable/circle_bg_light"
+                            android:backgroundTint="#F2F4F6">
+                            <ImageView
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
+                                android:layout_gravity="center"
+                                android:src="@android:drawable/ic_menu_search"
+                                app:tint="#1ABC9C"/>
+                        </FrameLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="16dp"
+                            android:orientation="vertical">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/orders_active_title"
+                                android:textSize="16sp"
+                                android:textColor="#2D3436"
+                                android:textStyle="bold"/>
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/orders_active_title"
+                                android:textSize="12sp"
+                                android:textColor="#95A5A6"/>
+                        </LinearLayout>
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@android:drawable/arrow_up_float"
+                            android:rotation="90"
+                            app:tint="#CFD8DC"/>
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginStart="80dp"
+                        android:background="#F2F4F6"/>
+
+                    <LinearLayout
                         android:id="@+id/btnMessageTemplates"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -340,7 +398,10 @@
                             app:tint="#CFD8DC"/>
                     </LinearLayout>
 
+
+
                 </LinearLayout>
+
             </com.google.android.material.card.MaterialCardView>
 
             <androidx.cardview.widget.CardView
@@ -379,20 +440,7 @@
         </LinearLayout>
     </ScrollView>
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fabVoiceCommand"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="24dp"
-        android:layout_marginBottom="24dp"
-        android:clickable="true"
-        android:focusable="true"
-        android:src="@android:drawable/ic_btn_speak_now"
-        app:backgroundTint="#1ABC9C"
-        app:tint="#FFFFFF"
-        app:elevation="6dp"
-        app:layout_constraintBottom_toTopOf="@+id/layoutBottomButtons"
-        app:layout_constraintEnd_toEndOf="parent" />
+
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/layoutBottomButtons"
@@ -421,6 +469,22 @@
                 app:tint="#E74C3C"/>
         </androidx.cardview.widget.CardView>
 
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fabVoiceCommand"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_marginTop="12dp"
+            android:layout_gravity="center_horizontal"
+            android:clickable="true"
+            android:focusable="true"
+            android:src="@android:drawable/ic_btn_speak_now"
+            app:backgroundTint="#1ABC9C"
+            app:tint="#FFFFFF"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:elevation="6dp"/>
+
         <androidx.cardview.widget.CardView
             android:id="@+id/btnProfile"
             android:layout_width="40dp"
@@ -429,7 +493,6 @@
             android:foreground="?android:attr/selectableItemBackground"
             app:cardCornerRadius="20dp"
             app:cardElevation="4dp"
-            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintHorizontal_bias="0.5">
@@ -442,25 +505,7 @@
                 tools:src="@tools:sample/avatars"/>
         </androidx.cardview.widget.CardView>
 
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/btnInfo"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:clickable="true"
-            android:foreground="?android:attr/selectableItemBackground"
-            app:cardCornerRadius="20dp"
-            app:cardElevation="4dp"
-            app:cardBackgroundColor="#FFFFFF"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent">
 
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_gravity="center"
-                android:src="@android:drawable/ic_menu_help"
-                app:tint="#2D3436"/>
-        </com.google.android.material.card.MaterialCardView>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

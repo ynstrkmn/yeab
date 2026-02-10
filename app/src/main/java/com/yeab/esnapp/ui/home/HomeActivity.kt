@@ -19,6 +19,7 @@ import com.yeab.esnapp.model.Merchant
 import com.yeab.esnapp.ui.auth.MerchantLoginActivity
 import com.yeab.esnapp.ui.base.BaseActivity
 import com.yeab.esnapp.ui.messages.MerchantMessageTemplatesActivity
+import com.yeab.esnapp.ui.order.MerchantOrdersActivity
 import com.yeab.esnapp.ui.order.NewOrderActivity
 import com.yeab.esnapp.ui.order.OrdersActivity
 import com.yeab.esnapp.ui.order.SearchOrderActivity
@@ -83,6 +84,14 @@ class HomeActivity : BaseActivity() {
             startActivity(i)
         }
 
+        // Ürün Listele
+        binding.btnListActiveOrders.setOnClickListener {
+            val uid = FirebaseAuth.getInstance().currentUser?.uid
+            val intent = Intent(this, MerchantOrdersActivity::class.java)
+            intent.putExtra("merchantUid", uid)
+            startActivity(intent)
+        }
+
         binding.btnMessageTemplates.setOnClickListener {
             val i = Intent(this, MerchantMessageTemplatesActivity::class.java)
             i.putExtra(IntentKeys.MERCHANT_UID, merchantUid)
@@ -91,10 +100,6 @@ class HomeActivity : BaseActivity() {
 
         binding.btnMyOrders.setOnClickListener {
             startActivity(Intent(this, OrdersActivity::class.java))
-        }
-
-        binding.btnInfo.setOnClickListener {
-            startActivity(Intent(this, UserManualActivity::class.java))
         }
 
         binding.btnProfile.setOnClickListener {
