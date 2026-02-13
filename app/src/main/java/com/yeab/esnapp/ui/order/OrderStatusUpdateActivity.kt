@@ -560,7 +560,9 @@ class OrderStatusUpdateActivity : BaseActivity() {
 
             // Ödeme durumunu güncelle
             order.isPaymentDone = binding.chkPaymentDone.isChecked
-            order.productAdditionalImageUrl = productAdditionalmageUrl
+            if (!productAdditionalmageUrl.isNullOrEmpty()) {
+                order.productAdditionalImageUrl = productAdditionalmageUrl
+            }
 
             // CreatedDate yoksa set et
             if (order.createdDate.isNullOrEmpty()) {

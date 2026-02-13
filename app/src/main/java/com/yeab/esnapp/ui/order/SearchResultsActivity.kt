@@ -14,6 +14,7 @@ import com.yeab.esnapp.databinding.ActivityMerchantOrdersBinding
 import com.yeab.esnapp.ui.base.BaseActivity
 import com.yeab.esnapp.ui.model.OrderItem
 import com.yeab.esnapp.ui.order.dialog.UserInfoDialogFragment
+import com.yeab.esnapp.util.DateFormats
 import com.yeab.esnapp.util.IntentKeys
 import kotlinx.coroutines.launch
 import kotlin.coroutines.resume
@@ -22,6 +23,7 @@ import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
+import java.util.Date
 import kotlin.coroutines.resumeWithException
 
 class SearchResultsActivity : BaseActivity() {
@@ -31,6 +33,7 @@ class SearchResultsActivity : BaseActivity() {
     private lateinit var dbUsers: DatabaseReference
     private val adapter = MerchantOrderAdapter()
     private val sdf = SimpleDateFormat("yyyyMMdd", Locale.US)
+    private val isoSdf = SimpleDateFormat(DateFormats.ORDER_STATUS_ISO, Locale.getDefault())
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -117,6 +120,7 @@ class SearchResultsActivity : BaseActivity() {
                         val mapped = mapProductToOrderItem(orderId, orderSnap, knownPhone = phone)
                         if (mapped != null) items.add(mapped)
                     }
+                    sortOrdersByDateDesc(items)
                     adapter.setData(items)
                     binding.progress.visibility = View.GONE
                 }
@@ -147,6 +151,7 @@ class SearchResultsActivity : BaseActivity() {
                         if (mapped != null) items.add(mapped)
                     }
                 }
+                sortOrdersByDateDesc(items)
                 adapter.setData(items)
             } catch (e: Exception) {
                 Toast.makeText(this@SearchResultsActivity, "Veri alınamadı", Toast.LENGTH_SHORT).show()
@@ -246,4 +251,17 @@ class SearchResultsActivity : BaseActivity() {
     private fun parse(s: String): Calendar? = try {
         Calendar.getInstance().apply { time = sdf.parse(s)!! }
     } catch (_: ParseException) { null }
+
+    private fun sortOrdersByDateDesc(items: MutableList<OrderItem>) {
+        items.sortWith(compareByDescending<OrderItem> {
+            parseCreatedDate(it.createdDate)
+        })
+    }
+
+    private fun parseCreatedDate(value: String?): Date {
+        if (value.isNullOrBlank()) return Date(0)
+        return runCatching { isoSdf.parse(value) }.getOrElse {
+            runCatching { sdf.parse(value) }.getOrElse { Date(0) }
+        }
+    }
 }

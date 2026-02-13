@@ -263,6 +263,7 @@ class MessageTemplateActivity : BaseActivity() {
         }
 
         val selectedChipId = binding.radioGroupTemplates.checkedChipId
+
         val selectedTemplateText = if (selectedChipId != -1) {
             binding.radioGroupTemplates.findViewById<Chip>(selectedChipId)?.text?.toString()
         } else null
@@ -499,6 +500,11 @@ class MessageTemplateActivity : BaseActivity() {
         val statusList = mutableListOf(ProductStatus(messageText, nowIso))
         paymentDate = if (isPaymentDone) nowIso else ""
 
+        val checkedId = binding.radioGroupTemplates.checkedChipId
+        val selectedTemplate = if (checkedId != View.NO_ID) {
+            templateMap[checkedId]
+        } else null
+
         val order = Order(
             false,
             productImageUrl,
@@ -512,63 +518,186 @@ class MessageTemplateActivity : BaseActivity() {
             orderNumber
         )
 
+        val moveToCompleted = selectedTemplate?.Finish ?: false
+
         // \`path.toString()\` yerine açık string yollar
         val merchantOrderPath = "${FirebasePaths.ORDERS_ROOT}/${FirebasePaths.ORDERS_MERCHANT_ORDERS}/$uid/$phone/$orderId"
         val userOrderPath = "${FirebasePaths.USER_ORDERS_ROOT}/$phone/$uid/$orderId"
 
-        val updates = hashMapOf<String, Any>(
+        val updates = hashMapOf<String, Any?>(
             merchantOrderPath to order,
             userOrderPath to order
         )
 
-        // DateOrders için YYYYMMDD
-        val dateKey = try {
-            val parser =
-                SimpleDateFormat(DateFormats.ORDER_STATUS_ISO, Locale.getDefault())
-            val created = parser.parse(order.createdDate!!)
-            val ymd = SimpleDateFormat("yyyyMMdd", Locale.getDefault())
-            ymd.format(created!!)
-        } catch (_: Exception) {
-            SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(now)
-        }
+        if (moveToCompleted) {
+            // JSON yapısına uygun ek alanlar
+            order.isFinished = true
+            order.phoneNumber = phone
 
-        dbRef.updateChildren(updates).addOnSuccessListener {
-            // EKLEME: Kaydetme sonrası OrderNumber'ı +1 olarak güncelle
-            incrementMerchantOrderNumber(uid) {
-                hideLoading()
-
-                val displayFormatter = SimpleDateFormat(DateFormats.ORDER_STATUS_DISPLAY, Locale.getDefault())
-                val displayDate = displayFormatter.format(now)
-
-                val customerDisplayName = if (customerNameSurname.isNotEmpty()) customerNameSurname else phone
-                val safeProductName = if (productDesc.isNotEmpty()) productDesc else getString(R.string.app_name)
-                val detailLink = "https://esnaf.online/index.html?merchantId=$uid&orderId=$orderId&orderDate=$dateKey"
-                val paymentStatus = if (isPaymentDone) getString(R.string.order_status_paid) else getString(R.string.order_status_not_paid)
-
-                val trLocale = Locale.forLanguageTag("tr-TR")
-                val customerDisplayNameUpper = customerDisplayName.uppercase(trLocale)
-                val safeProductNameUpper = safeProductName.uppercase(trLocale)
-                val messageTextUpper = messageText.uppercase(trLocale)
-                val merchantNameUpper = (MerchantSession.merchant?.MerchantName ?: "").uppercase(trLocale)
-
-                val formattedMessage = getString(
-                    R.string.whatsapp_status_message,
-                    customerDisplayNameUpper,
-                    displayDate,
-                    orderId,
-                    safeProductNameUpper,
-                    messageTextUpper,
-                    detailLink,
-                    merchantNameUpper,
-                    paymentStatus
-                )
-
-                WhatsAppUtils.sendMessage(this, phone, formattedMessage)
-                finish()
+            // DateOrders için YYYYMMDD
+            val dateKey = try {
+                val parser = SimpleDateFormat(DateFormats.ORDER_STATUS_ISO, Locale.getDefault())
+                val created = parser.parse(order.createdDate!!)
+                val ymd = SimpleDateFormat("yyyyMMdd", Locale.getDefault())
+                ymd.format(created!!)
+            } catch (_: Exception) {
+                SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(now)
             }
-        }.addOnFailureListener {
-            hideLoading()
-            Toast.makeText(this, it.message ?: getString(R.string.error_generic), Toast.LENGTH_SHORT).show()
+
+            updates["CompletedOrders/MerchantOrders/PhoneOrders/$uid/$phone/$orderId"] = order
+            updates["CompletedOrders/MerchantOrders/DateOrders/$uid/$dateKey/$orderId"] = order
+            updates["CompletedOrders/UserOrders/$phone/$uid/$orderId"] = order
+            updates["${FirebasePaths.ORDERS_ROOT}/${FirebasePaths.ORDERS_MERCHANT_ORDERS}/$uid/$phone/$orderId"] = null
+            updates["${FirebasePaths.USER_ORDERS_ROOT}/$phone/$uid/$orderId"] = null
+
+            // Image_hashes -> CompletedImageHashes taşıması: önce oku sonra updateChildren içinde işle
+            val imageHashRef = dbRef.child("image_hashes").child(uid).child(orderId)
+            imageHashRef.get().addOnSuccessListener { imgSnap ->
+                if (imgSnap.exists()) {
+                    // Mevcut veriyi CompletedImageHashes altına ekle ve eskiyi null yap
+                    updates["CompletedImageHashes/$uid/$orderId"] = imgSnap.value
+                    updates["image_hashes/$uid/$orderId"] = null
+                    dbRef.updateChildren(updates).addOnSuccessListener {
+
+                        // WhatsApp mesajı hazırlığı
+                        val displayDate = try {
+                            val createdIso = order.createdDate
+                            if (!createdIso.isNullOrEmpty()) {
+                                val parser =
+                                    SimpleDateFormat(DateFormats.ORDER_STATUS_ISO, Locale.getDefault())
+                                val createdDate = parser.parse(createdIso)
+                                val displayFormatter = SimpleDateFormat(
+                                    DateFormats.ORDER_STATUS_DISPLAY,
+                                    Locale.getDefault()
+                                )
+                                displayFormatter.format(createdDate!!)
+                            } else {
+                                val displayFormatter = SimpleDateFormat(
+                                    DateFormats.ORDER_STATUS_DISPLAY,
+                                    Locale.getDefault()
+                                )
+                                displayFormatter.format(now)
+                            }
+                        } catch (e: Exception) {
+                            val displayFormatter =
+                                SimpleDateFormat(DateFormats.ORDER_STATUS_DISPLAY, Locale.getDefault())
+                            displayFormatter.format(now)
+                        }
+
+                        val customerDisplayName =
+                            if (customerNameSurname.isNotEmpty()) customerNameSurname else phone
+                        val safeProductName = if (productDesc.isNotEmpty()) {
+                            productDesc
+                        } else {
+                            order.productName ?: getString(R.string.app_name)
+                        }
+                        // DateOrders için YYYYMMDD
+                        val dateKey = try {
+                            val parser =
+                                SimpleDateFormat(DateFormats.ORDER_STATUS_ISO, Locale.getDefault())
+                            val created = parser.parse(order.createdDate!!)
+                            val ymd = SimpleDateFormat("yyyyMMdd", Locale.getDefault())
+                            ymd.format(created!!)
+                        } catch (_: Exception) {
+                            SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(now)
+                        }
+                        val paymentStatus = if (order.isPaymentDone) getString(R.string.order_status_paid) else getString(R.string.order_status_not_paid)
+
+                        val detailLink =
+                            "https://esnaf.online/index.html?merchantId=$uid&orderId=$orderId&orderDate=$dateKey"
+
+                        val trLocale = Locale.forLanguageTag("tr-TR")
+                        val customerDisplayNameUpper = customerDisplayName.uppercase(trLocale)
+                        val safeProductNameUpper = safeProductName.uppercase(trLocale)
+                        val messageTextUpper = messageText.uppercase(trLocale)
+                        val merchantNameUpper = (MerchantSession.merchant?.MerchantName ?: "").uppercase(trLocale)
+
+                        val formattedMessage = getString(
+                            R.string.whatsapp_status_message,
+                            customerDisplayNameUpper,
+                            displayDate,
+                            orderId,
+                            safeProductNameUpper,
+                            messageTextUpper,
+                            detailLink,
+                            merchantNameUpper,
+                            paymentStatus
+                        )
+
+                        hideLoading()
+                        WhatsAppUtils.sendMessage(this, phone, formattedMessage)
+                        finish()
+                    }.addOnFailureListener {
+                        hideLoading()
+                        Toast.makeText(
+                            this,
+                            it.message ?: getString(R.string.error_generic),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            }
+        }
+        else {
+            // DateOrders için YYYYMMDD
+            val dateKey = try {
+                val parser =
+                    SimpleDateFormat(DateFormats.ORDER_STATUS_ISO, Locale.getDefault())
+                val created = parser.parse(order.createdDate!!)
+                val ymd = SimpleDateFormat("yyyyMMdd", Locale.getDefault())
+                ymd.format(created!!)
+            } catch (_: Exception) {
+                SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(now)
+            }
+
+            dbRef.updateChildren(updates).addOnSuccessListener {
+                // EKLEME: Kaydetme sonrası OrderNumber'ı +1 olarak güncelle
+                incrementMerchantOrderNumber(uid) {
+                    hideLoading()
+
+                    val displayFormatter =
+                        SimpleDateFormat(DateFormats.ORDER_STATUS_DISPLAY, Locale.getDefault())
+                    val displayDate = displayFormatter.format(now)
+
+                    val customerDisplayName =
+                        if (customerNameSurname.isNotEmpty()) customerNameSurname else phone
+                    val safeProductName =
+                        if (productDesc.isNotEmpty()) productDesc else getString(R.string.app_name)
+                    val detailLink =
+                        "https://esnaf.online/index.html?merchantId=$uid&orderId=$orderId&orderDate=$dateKey"
+                    val paymentStatus =
+                        if (isPaymentDone) getString(R.string.order_status_paid) else getString(R.string.order_status_not_paid)
+
+                    val trLocale = Locale.forLanguageTag("tr-TR")
+                    val customerDisplayNameUpper = customerDisplayName.uppercase(trLocale)
+                    val safeProductNameUpper = safeProductName.uppercase(trLocale)
+                    val messageTextUpper = messageText.uppercase(trLocale)
+                    val merchantNameUpper =
+                        (MerchantSession.merchant?.MerchantName ?: "").uppercase(trLocale)
+
+                    val formattedMessage = getString(
+                        R.string.whatsapp_status_message,
+                        customerDisplayNameUpper,
+                        displayDate,
+                        orderId,
+                        safeProductNameUpper,
+                        messageTextUpper,
+                        detailLink,
+                        merchantNameUpper,
+                        paymentStatus
+                    )
+
+                    WhatsAppUtils.sendMessage(this, phone, formattedMessage)
+                    finish()
+                }
+            }.addOnFailureListener {
+                hideLoading()
+                Toast.makeText(
+                    this,
+                    it.message ?: getString(R.string.error_generic),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
         }
     }
 
